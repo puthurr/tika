@@ -13,6 +13,8 @@ For an internal project, we require the HTML to contain more informations around
 
 This version is trying to harmonize the way embedded images are showing in the XHTML in a nutshell. 
 
+Once stabilized our plan is to propose our changes to the Apache Tika coomunity. 
+
 License (see also LICENSE.txt)
 ------------------------------
 
