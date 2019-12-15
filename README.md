@@ -1,11 +1,17 @@
-Welcome to Apache Tika  <https://tika.apache.org/>
-=================================================
+Welcome to our version of Apache Tika  <https://tika.apache.org/>
+==================================================================
 
 Apache Tika(TM) is a toolkit for detecting and extracting metadata and structured text content from various documents using existing parser libraries.
 
 Tika is a project of the [Apache Software Foundation](https://www.apache.org).
 
 Apache Tika, Tika, Apache, the Apache feather logo, and the Apache Tika project logo are trademarks of The Apache Software Foundation.
+
+Why our version ? 
+-----------------
+For an internal project, we require the HTML to contain more informations around embedded images. For instance the embedded images links for PowerPoint were missing. The links for PDF are there etc. 
+
+Our version is trying to harmonize the way embedded images are showing in the XHTML in a nutshell. 
 
 Getting Started
 ---------------
