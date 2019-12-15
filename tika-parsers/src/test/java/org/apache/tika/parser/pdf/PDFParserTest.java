@@ -485,7 +485,7 @@ public class PDFParserTest extends TikaTest {
         // Column text is now interleaved:
         assertContains("Left column line 1 Right column line 1 Left colu mn line 2 Right column line 2", content);
 
-        //now try setting autodetect via parsecontext        
+        //now try setting autodetect via parsecontext
         ParseContext context = new ParseContext();
         PDFParserConfig config = new PDFParserConfig();
         context.set(PDFParserConfig.class, config);
@@ -784,7 +784,7 @@ public class PDFParserTest extends TikaTest {
         assertContains("Sample Author 1", authors);
         assertContains("Sample Author 2", authors);
 
-    }
+        }
 
     //STUB test for once TIKA-1295 is fixed
     @Test
@@ -927,7 +927,7 @@ public class PDFParserTest extends TikaTest {
         //regular attachment
         assertContains("<div source=\"attachment\" class=\"embedded\" id=\"Unit10.doc\" />", r.xml);
         //inline image
-        assertContains("<img src=\"embedded:image1.tif\" alt=\"image1.tif\" />", r.xml);
+        assertContains("<img src=\"embedded:image1.tif\" alt=\"image1.tif\"", r.xml);
 
         //doc embedded inside an annotation
         r = getXML("testPDFFileEmbInAnnotation.pdf");

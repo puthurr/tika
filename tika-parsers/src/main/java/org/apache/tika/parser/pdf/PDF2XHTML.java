@@ -16,19 +16,6 @@
  */
 package org.apache.tika.parser.pdf;
 
-import java.awt.image.BufferedImage;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.Writer;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 import org.apache.pdfbox.cos.COSArray;
 import org.apache.pdfbox.cos.COSBase;
 import org.apache.pdfbox.cos.COSName;
@@ -57,6 +44,19 @@ import org.apache.tika.sax.EmbeddedContentHandler;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.AttributesImpl;
+
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.Writer;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Utility class that overrides the {@link PDFTextStripper} functionality
@@ -231,18 +231,28 @@ class PDF2XHTML extends AbstractPDF2XHTML {
             } else {
                 //TODO: determine if we need to add more image types
 //                    throw new RuntimeException("EXTEN:" + extension);
-            }
+                }
+            
             Integer imageNumber = processedInlineImages.get(cosStream);
             if (imageNumber == null) {
                 imageNumber = inlineImageCounter++;
             }
-            String fileName = "image" + imageNumber + "." + extension;
+            String fileName = "image" + imageNumber + "."+extension;
             embeddedMetadata.set(TikaCoreProperties.RESOURCE_NAME_KEY, fileName);
 
             // Output the img tag
             AttributesImpl attr = new AttributesImpl();
             attr.addAttribute("", "src", "src", "CDATA", "embedded:" + fileName);
             attr.addAttribute("", "alt", "alt", "CDATA", fileName);
+            //Adding extra attributes to the image tag for consistency
+            try {
+                attr.addAttribute("", "id", "id", "CDATA", String.valueOf(imageNumber));                
+                attr.addAttribute("", "contenttype", "contenttype", "CDATA", embeddedMetadata.get(Metadata.CONTENT_TYPE));
+                attr.addAttribute("", "width", "witdh", "CDATA", String.valueOf(image.getWidth()));                       
+                attr.addAttribute("", "height", "height", "CDATA", String.valueOf(image.getHeight()));                       
+            } catch (Exception e)
+            {                       
+            }
             xhtml.startElement("img", attr);
             xhtml.endElement("img");
 
