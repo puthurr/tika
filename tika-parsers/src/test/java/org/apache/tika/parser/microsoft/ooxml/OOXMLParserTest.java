@@ -417,9 +417,9 @@ public class OOXMLParserTest extends TikaTest {
         xml = result.xml;
 
         // Images 2-4 (there is no 1!)
-        assertTrue("Image not found in:\n" + xml, xml.contains("<img src=\"embedded:image2.png\" alt=\"A description...\" />"));
-        assertTrue("Image not found in:\n" + xml, xml.contains("<img src=\"embedded:image3.jpeg\" alt=\"A description...\" />"));
-        assertTrue("Image not found in:\n" + xml, xml.contains("<img src=\"embedded:image4.png\" alt=\"A description...\" />"));
+        assertTrue("Image not found in:\n" + xml, xml.contains("<img src=\"embedded:image2.png\" alt=\"A description...\""));
+        assertTrue("Image not found in:\n" + xml, xml.contains("<img src=\"embedded:image3.jpeg\" alt=\"A description...\""));
+        assertTrue("Image not found in:\n" + xml, xml.contains("<img src=\"embedded:image4.png\" alt=\"A description...\""));
 
         // Text too
         assertTrue(xml.contains("<p>The end!</p>"));
@@ -902,9 +902,10 @@ public class OOXMLParserTest extends TikaTest {
     @Test
     public void testEmbeddedZipInPPTX() throws Exception {
         String xml = getXML("test_embedded_zip.pptx").xml;
-        int h = xml.indexOf("<div class=\"embedded\" id=\"slide1_rId3\" />");
+        //PUTHURR The first embedded object is an image
+        int h = xml.indexOf("<img class=\"embedded\" id=\"slide1_rId3\"");
         int i = xml.indexOf("Send me a note");
-        int j = xml.indexOf("<div class=\"embedded\" id=\"slide2_rId4\" />");
+        int j = xml.indexOf("<div class=\"embedded\" id=\"slide2_rId4\"");
         int k = xml.indexOf("<p>No title</p>");
         assertTrue(h != -1);
         assertTrue(i != -1);
@@ -976,8 +977,8 @@ public class OOXMLParserTest extends TikaTest {
     @Test
     public void testEmbeddedPPTXTwoSlides() throws Exception {
         String xml = getXML("testPPT_embedded_two_slides.pptx").xml;
-        assertContains("<div class=\"embedded\" id=\"slide1_rId7\" />", xml);
-        assertContains("<div class=\"embedded\" id=\"slide2_rId7\" />", xml);
+        assertContains("<div class=\"embedded\" id=\"slide1_rId7\"", xml);
+        assertContains("<div class=\"embedded\" id=\"slide2_rId7\"", xml);
     }
 
     /**
@@ -1054,7 +1055,7 @@ public class OOXMLParserTest extends TikaTest {
     public void testDOCXThumbnail() throws Exception {
         String xml = getXML("testDOCX_Thumbnail.docx").xml;
         int a = xml.indexOf("This file contains a thumbnail");
-        int b = xml.indexOf("<div class=\"embedded\" id=\"/docProps/thumbnail.emf\" />");
+        int b = xml.indexOf("<div class=\"embedded\" id=\"/docProps/thumbnail.emf\"");
 
         assertTrue(a != -1);
         assertTrue(b != -1);
@@ -1065,7 +1066,7 @@ public class OOXMLParserTest extends TikaTest {
     public void testXLSXThumbnail() throws Exception {
         String xml = getXML("testXLSX_Thumbnail.xlsx").xml;
         int a = xml.indexOf("This file contains an embedded thumbnail by default");
-        int b = xml.indexOf("<div class=\"embedded\" id=\"/docProps/thumbnail.wmf\" />");
+        int b = xml.indexOf("<div class=\"embedded\" id=\"/docProps/thumbnail.wmf\"");
 
         assertTrue(a != -1);
         assertTrue(b != -1);
@@ -1075,8 +1076,8 @@ public class OOXMLParserTest extends TikaTest {
     @Test
     public void testPPTXThumbnail() throws Exception {
         String xml = getXML("testPPTX_Thumbnail.pptx").xml;
-        int a = xml.indexOf("<body><div class=\"slide-content\"><p>This file contains an embedded thumbnail");
-        int b = xml.indexOf("<div class=\"embedded\" id=\"/docProps/thumbnail.jpeg\" />");
+        int a = xml.indexOf("<div class=\"slide-content\"><p>This file contains an embedded thumbnail");
+        int b = xml.indexOf("<div class=\"embedded\" id=\"/docProps/thumbnail.jpeg\"");
         assertTrue(a != -1);
         assertTrue(b != -1);
         assertTrue(a < b);

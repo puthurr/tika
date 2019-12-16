@@ -490,9 +490,6 @@ public class HSLFExtractor extends AbstractPOIFSExtractor {
         
         try (TikaInputStream picIs = TikaInputStream.get(data)){
             handleEmbeddedResource(picIs, embeddedMetadata, null, null, null, mediaType, xhtml, false);
-//                handleEmbeddedResource(picIs, null, null, mediaType, xhtml, false);
-//                handleEmbeddedResource(picIs, Integer.toString(pic.getIndex()), null, mediaType, xhtml, false);
-//                handleEmbeddedResource(picIs, Integer.toString(pic.getIndex()), Integer.toString(pic.getIndex()), mediaType, xhtml, false);
         }        
     }
 
@@ -538,10 +535,13 @@ public class HSLFExtractor extends AbstractPOIFSExtractor {
                         String mediaType = null;
                         if ("Excel.Chart.8".equals(oleShape.getProgId())) {
                             mediaType = "application/vnd.ms-excel";
+                            //If this is chart there ia an associated picture...
+                            handleEmbeddedPictureObject(shape,xhtml);                        
                         } else {
                             MediaType mt = getTikaConfig().getDetector().detect(stream, new Metadata());
                             mediaType = mt.toString();
                         }
+                        
                         if (mediaType.equals("application/x-tika-msoffice-embedded; format=comp_obj")
                                 || mediaType.equals("application/x-tika-msoffice")) {
                             POIFSFileSystem poifs = null;
@@ -568,51 +568,7 @@ public class HSLFExtractor extends AbstractPOIFSExtractor {
             }
             // Handling of images links in corresponding slide 
             else if (shape instanceof HSLFPictureShape) {
-                HSLFPictureShape img = (HSLFPictureShape) shape;
-                HSLFPictureData imgdata = null;
-                try {
-                    imgdata = img.getPictureData();
-                } catch (NullPointerException e) {
-                    /* getObjectData throws NPE some times. */
-                    EmbeddedDocumentUtil.recordEmbeddedStreamException(e, parentMetadata);
-                    continue;
-                }
-                if (imgdata != null) {
-                    String objID = Integer.toString(imgdata.getIndex());
-
-                    AttributesImpl attributes = new AttributesImpl();
-                    attributes.addAttribute("", "class", "class", "CDATA", "embedded");
-                    attributes.addAttribute("", "id", "id", "CDATA", objID);
-                    try {                        
-                        attributes.addAttribute("", "idx", "idx", "CDATA", String.valueOf(img.getPictureIndex())); 
-                        if ( img.getPictureName() != null)
-                            attributes.addAttribute("", "title", "title", "CDATA", img.getPictureName().trim());
-                        if ( imgdata.getContentType() != null) {
-                            attributes.addAttribute("", "contenttype", "contenttype", "CDATA", imgdata.getContentType());
-                            String ext = getTikaConfig().getMimeRepository().forName(imgdata.getContentType()).getExtension();
-                            attributes.addAttribute("", "src", "src", "CDATA", "image"+objID+ext);
-                        }
-                        attributes.addAttribute("", "width", "witdh", "CDATA", String.valueOf(imgdata.getImageDimensionInPixels().width));                       
-                        attributes.addAttribute("", "height", "height", "CDATA", String.valueOf(imgdata.getImageDimensionInPixels().height));                       
-                    } catch (Exception e)
-                    {                       
-                    }
-                    xhtml.startElement("img", attributes);
-                    xhtml.endElement("img");
-                    
-//                    InputStream dataStream = null;
-//                    try {
-//                        dataStream = new ByteArrayInputStream (imgdata.getRawData());
-//                    } catch (Exception e) {
-//                        EmbeddedDocumentUtil.recordEmbeddedStreamException(e, parentMetadata);
-//                        continue;
-//                    }
-//                    try (TikaInputStream stream = TikaInputStream.get(dataStream)) {
-//                        handleEmbeddedResource(stream, objID, objID, imgdata.getContentType(), xhtml, false);
-//                    } catch (IOException e) {
-//                        EmbeddedDocumentUtil.recordEmbeddedStreamException(e, parentMetadata);
-//                    }
-                }            
+                    handleEmbeddedPictureObject(shape,xhtml); 
             }
         }
     }
@@ -626,6 +582,42 @@ public class HSLFExtractor extends AbstractPOIFSExtractor {
             // Please open POI bugs for any you come across!
             EmbeddedDocumentUtil.recordEmbeddedStreamException(e, parentMetadata);
             return null;
+        }
+    }
+
+    private void handleEmbeddedPictureObject(HSLFShape shape, XHTMLContentHandler xhtml) 
+            throws TikaException, SAXException, IOException {
+        HSLFPictureShape img = (HSLFPictureShape) shape;
+        HSLFPictureData imgdata = null;
+        try {
+            imgdata = img.getPictureData();
+        } catch (NullPointerException e) {
+            /* getObjectData throws NPE some times. */
+            EmbeddedDocumentUtil.recordEmbeddedStreamException(e, parentMetadata);
+            return;
+        }
+        if (imgdata != null) {
+            String objID = Integer.toString(imgdata.getIndex());
+
+            AttributesImpl attributes = new AttributesImpl();
+            attributes.addAttribute("", "class", "class", "CDATA", "embedded");
+            attributes.addAttribute("", "id", "id", "CDATA", objID);
+            try {                        
+                attributes.addAttribute("", "idx", "idx", "CDATA", String.valueOf(img.getPictureIndex())); 
+                if ( img.getPictureName() != null)
+                    attributes.addAttribute("", "title", "title", "CDATA", img.getPictureName().trim());
+                if ( imgdata.getContentType() != null) {
+                    attributes.addAttribute("", "contenttype", "contenttype", "CDATA", imgdata.getContentType());
+                    String ext = getTikaConfig().getMimeRepository().forName(imgdata.getContentType()).getExtension();
+                    attributes.addAttribute("", "src", "src", "CDATA", "image"+objID+ext);
+                }
+                attributes.addAttribute("", "width", "witdh", "CDATA", String.valueOf(imgdata.getImageDimensionInPixels().width));                       
+                attributes.addAttribute("", "height", "height", "CDATA", String.valueOf(imgdata.getImageDimensionInPixels().height));                       
+            } catch (Exception e)
+            {                       
+            }
+            xhtml.startElement("img", attributes);
+            xhtml.endElement("img");
         }
     }
 

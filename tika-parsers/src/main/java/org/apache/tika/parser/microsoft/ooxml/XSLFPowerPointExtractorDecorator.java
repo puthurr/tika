@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import org.apache.poi.common.usermodel.Hyperlink;
+import org.apache.poi.hslf.usermodel.HSLFPictureData;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.openxml4j.opc.PackagePart;
 import org.apache.poi.openxml4j.opc.PackagePartName;
@@ -42,6 +43,7 @@ import org.apache.poi.xslf.usermodel.XSLFGroupShape;
 import org.apache.poi.xslf.usermodel.XSLFHyperlink;
 import org.apache.poi.xslf.usermodel.XSLFNotes;
 import org.apache.poi.xslf.usermodel.XSLFNotesMaster;
+import org.apache.poi.xslf.usermodel.XSLFPictureData;
 import org.apache.poi.xslf.usermodel.XSLFPictureShape;
 import org.apache.poi.xslf.usermodel.XSLFRelation;
 import org.apache.poi.xslf.usermodel.XSLFShape;
@@ -56,6 +58,7 @@ import org.apache.poi.xslf.usermodel.XSLFTextParagraph;
 import org.apache.poi.xslf.usermodel.XSLFTextRun;
 import org.apache.poi.xslf.usermodel.XSLFTextShape;
 import org.apache.tika.exception.TikaException;
+import org.apache.tika.extractor.EmbeddedDocumentUtil;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.parser.ParseContext;
 import org.apache.tika.sax.XHTMLContentHandler;
@@ -104,6 +107,15 @@ public class XSLFPowerPointExtractorDecorator extends AbstractOOXMLExtractor {
             } else {
                 slideDesc = null;
             }
+            AttributesImpl attributes = new AttributesImpl();
+            attributes.addAttribute("", "class", "class", "CDATA", "slide");
+            try { 
+                attributes.addAttribute("", "id", "id", "CDATA", String.valueOf(slide.getSlideNumber()));
+                if ( slide.getTitle() != null)
+                    attributes.addAttribute("", "title", "title", "CDATA", slide.getTitle().trim());
+            } catch (Exception e) {            
+            }
+            xhtml.startElement("div", attributes);
 
             // slide content
             xhtml.startElement("div", "class", "slide-content");
@@ -115,11 +127,13 @@ public class XSLFPowerPointExtractorDecorator extends AbstractOOXMLExtractor {
                 xhtml.startElement("div", "class", "slide-master-content");
                 XSLFSlideLayout slideLayout = slide.getMasterSheet();
                 extractContent(slideLayout.getShapes(), true, xhtml, null);
-                xhtml.endElement("div");
 
                 // slide master which is the master sheet for all text layouts
                 XSLFSheet slideMaster = slideLayout.getMasterSheet();
                 extractContent(slideMaster.getShapes(), true, xhtml, null);
+                
+                //Bound the master content data into a single div
+                xhtml.endElement("div");
             }
             if (config.getIncludeSlideNotes()) {
                 // notes (if present)
@@ -190,6 +204,10 @@ public class XSLFPowerPointExtractorDecorator extends AbstractOOXMLExtractor {
                             new HashMap<String, String>()//empty
                     )
             );
+            
+            // Slide complete
+            xhtml.endElement("div");
+            
         }
     }
 
@@ -257,6 +275,7 @@ public class XSLFPowerPointExtractorDecorator extends AbstractOOXMLExtractor {
                 }
             } else if (sh instanceof XSLFPictureShape) {
                 if (!skipPlaceholders && (sh.getXmlObject() instanceof CTPicture)) {
+                    XSLFPictureShape img = (XSLFPictureShape) sh;
                     CTPicture ctPic = ((CTPicture) sh.getXmlObject());
                     if (ctPic.getBlipFill() != null && ctPic.getBlipFill().getBlip() != null) {
                         String relID = ctPic.getBlipFill().getBlip().getEmbed();
@@ -267,8 +286,30 @@ public class XSLFPowerPointExtractorDecorator extends AbstractOOXMLExtractor {
                             AttributesImpl attributes = new AttributesImpl();
                             attributes.addAttribute("", "class", "class", "CDATA", "embedded");
                             attributes.addAttribute("", "id", "id", "CDATA", relID);
-                            xhtml.startElement("div", attributes);
-                            xhtml.endElement("div");
+                            //PUTHURR
+                            XSLFPictureData imgdata = null;
+                            try {
+                                imgdata = img.getPictureData();
+                            } catch (NullPointerException e) {
+                                continue;
+                            }
+
+                            if (imgdata != null) {
+                                try {                        
+                                    if ( imgdata.getContentType() != null) {
+                                        attributes.addAttribute("", "contenttype", "contenttype", "CDATA", imgdata.getContentType());
+//                                        String ext = getTikaConfig().getMimeRepository().forName(imgdata.getContentType()).getExtension();
+//                                        attributes.addAttribute("", "src", "src", "CDATA", "image"+ String.valueOf(img.getShapeId()) +ext);
+                                    }
+                                    attributes.addAttribute("", "width", "witdh", "CDATA", String.valueOf(imgdata.getImageDimensionInPixels().width));                       
+                                    attributes.addAttribute("", "height", "height", "CDATA", String.valueOf(imgdata.getImageDimensionInPixels().height));                       
+                                } catch (Exception e)
+                                {                       
+                                }
+                            }                         
+
+                            xhtml.startElement("img", attributes);
+                            xhtml.endElement("img");
                         }
                     }
                 }

@@ -29,7 +29,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.poi.extractor.POITextExtractor;
 import org.apache.poi.ooxml.POIXMLDocument;
 import org.apache.poi.ooxml.extractor.POIXMLTextExtractor;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
