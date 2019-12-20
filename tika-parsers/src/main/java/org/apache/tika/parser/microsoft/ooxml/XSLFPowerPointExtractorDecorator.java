@@ -23,7 +23,6 @@ import java.util.HashMap;
 import java.util.List;
 
 import org.apache.poi.common.usermodel.Hyperlink;
-import org.apache.poi.hslf.usermodel.HSLFPictureData;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.openxml4j.opc.PackagePart;
 import org.apache.poi.openxml4j.opc.PackagePartName;
@@ -31,13 +30,11 @@ import org.apache.poi.openxml4j.opc.PackageRelationship;
 import org.apache.poi.openxml4j.opc.PackageRelationshipCollection;
 import org.apache.poi.openxml4j.opc.PackagingURIHelper;
 import org.apache.poi.openxml4j.opc.TargetMode;
-import org.apache.poi.sl.extractor.SlideShowExtractor;
 import org.apache.poi.sl.usermodel.Placeholder;
 import org.apache.poi.xslf.extractor.XSLFPowerPointExtractor;
 import org.apache.poi.xslf.usermodel.XMLSlideShow;
 import org.apache.poi.xslf.usermodel.XSLFComment;
 import org.apache.poi.xslf.usermodel.XSLFCommentAuthors;
-import org.apache.poi.xslf.usermodel.XSLFComments;
 import org.apache.poi.xslf.usermodel.XSLFGraphicFrame;
 import org.apache.poi.xslf.usermodel.XSLFGroupShape;
 import org.apache.poi.xslf.usermodel.XSLFHyperlink;
@@ -58,7 +55,6 @@ import org.apache.poi.xslf.usermodel.XSLFTextParagraph;
 import org.apache.poi.xslf.usermodel.XSLFTextRun;
 import org.apache.poi.xslf.usermodel.XSLFTextShape;
 import org.apache.tika.exception.TikaException;
-import org.apache.tika.extractor.EmbeddedDocumentUtil;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.parser.ParseContext;
 import org.apache.tika.sax.XHTMLContentHandler;
@@ -139,7 +135,7 @@ public class XSLFPowerPointExtractorDecorator extends AbstractOOXMLExtractor {
                 // notes (if present)
                 XSLFNotes slideNotes = slide.getNotes();
                 if (slideNotes != null) {
-                    xhtml.startElement("div", "class", "slide-notes");
+                    xhtml.startElement("div", "class", "slide-notes-content");
 
                     extractContent(slideNotes.getShapes(), false, xhtml, slideDesc);
 
@@ -214,7 +210,6 @@ public class XSLFPowerPointExtractorDecorator extends AbstractOOXMLExtractor {
     private void extractContent(List<? extends XSLFShape> shapes, boolean skipPlaceholders, XHTMLContentHandler xhtml, String slideDesc)
             throws SAXException {
         for (XSLFShape sh : shapes) {
-
             if (sh instanceof XSLFTextShape) {
                 XSLFTextShape txt = (XSLFTextShape) sh;
                 Placeholder ph = txt.getTextType();

@@ -231,7 +231,7 @@ public class HSLFExtractor extends AbstractPOIFSExtractor {
             xhtml.characters(notesHeaderFooters.getHeaderText());
             xhtml.endElement("p");
         }
-        xhtml.startElement("div", "class", "notes-content");
+        xhtml.startElement("div", "class", "slide-notes-content");
         // Notes text
         textRunsToText(xhtml, notes.getTextParagraphs());
 
