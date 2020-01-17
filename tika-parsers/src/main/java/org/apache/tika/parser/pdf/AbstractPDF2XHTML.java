@@ -182,7 +182,15 @@ class AbstractPDF2XHTML extends PDFTextStripper {
     @Override
     protected void startPage(PDPage page) throws IOException {
         try {
-            xhtml.startElement("div", "class", "page");
+            //xhtml.startElement("div", "class", "page");
+            AttributesImpl attributes = new AttributesImpl();
+            attributes.addAttribute("", "class", "class", "CDATA", "page");
+            try { 
+                attributes.addAttribute("", "id", "id", "CDATA", String.valueOf(getCurrentPageNo()));
+            } catch (Exception e) {
+            }
+            xhtml.startElement("div", attributes);            
+            
         } catch (SAXException e) {
             throw new IOExceptionWithCause("Unable to start a page", e);
         }

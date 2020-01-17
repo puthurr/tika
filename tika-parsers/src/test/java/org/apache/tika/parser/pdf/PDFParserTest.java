@@ -1424,7 +1424,7 @@ public class PDFParserTest extends TikaTest {
         parseContext.set(PDFParserConfig.class, pdfParserConfig);
         String xml = getXML("testPDF_angles.pdf", parseContext).xml;
         //make sure there is only one page!
-        assertContainsCount("<div class=\"page\">", xml, 1);
+        assertContainsCount("<div class=\"page\"", xml, 1);
         assertContains("IN-DEMAND", xml);
         assertContains("natural underground", xml);
         assertContains("transport mined materials", xml);

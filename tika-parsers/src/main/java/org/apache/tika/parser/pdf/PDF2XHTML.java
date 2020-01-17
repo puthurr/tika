@@ -249,13 +249,15 @@ class PDF2XHTML extends AbstractPDF2XHTML {
                 attr.addAttribute("", "id", "id", "CDATA", String.valueOf(imageNumber));                
                 attr.addAttribute("", "contenttype", "contenttype", "CDATA", embeddedMetadata.get(Metadata.CONTENT_TYPE));
                 attr.addAttribute("", "width", "witdh", "CDATA", String.valueOf(image.getWidth()));                       
-                attr.addAttribute("", "height", "height", "CDATA", String.valueOf(image.getHeight()));                       
+                attr.addAttribute("", "height", "height", "CDATA", String.valueOf(image.getHeight()));             
+                //attr.addAttribute("", "size", "size", "CDATA", String.valueOf(image.getMetadata().getLength()));                       
             } catch (Exception e)
             {                       
             }
             xhtml.startElement("img", attr);
             xhtml.endElement("img");
-
+            xhtml.newline();
+            
             //Do we only want to process unique COSObject ids?
             //If so, have we already processed this one?
             if (config.getExtractUniqueInlineImagesOnly() == true) {
