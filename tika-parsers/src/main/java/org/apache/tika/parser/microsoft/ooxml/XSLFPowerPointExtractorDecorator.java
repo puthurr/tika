@@ -294,7 +294,7 @@ public class XSLFPowerPointExtractorDecorator extends AbstractOOXMLExtractor {
                                     if ( imgdata.getContentType() != null) {
                                         attributes.addAttribute("", "contenttype", "contenttype", "CDATA", imgdata.getContentType());
 //                                        String ext = getTikaConfig().getMimeRepository().forName(imgdata.getContentType()).getExtension();
-//                                        attributes.addAttribute("", "src", "src", "CDATA", "image"+ String.valueOf(img.getShapeId()) +ext);
+                                        attributes.addAttribute("", "src", "src", "CDATA", imgdata.getFileName());
                                     }
                                     attributes.addAttribute("", "width", "witdh", "CDATA", String.valueOf(imgdata.getImageDimensionInPixels().width));                       
                                     attributes.addAttribute("", "height", "height", "CDATA", String.valueOf(imgdata.getImageDimensionInPixels().height));                       
