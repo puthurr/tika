@@ -27,6 +27,7 @@ import java.util.List;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.openxml4j.opc.PackagePart;
 import org.apache.poi.openxml4j.opc.PackageRelationshipCollection;
+import org.apache.poi.xslf.usermodel.XSLFPictureData;
 import org.apache.poi.xssf.usermodel.XSSFRelation;
 import org.apache.poi.xwpf.extractor.XWPFWordExtractor;
 import org.apache.poi.xwpf.model.XWPFCommentsDecorator;
@@ -62,6 +63,7 @@ import org.apache.tika.sax.XHTMLContentHandler;
 import org.apache.xmlbeans.XmlCursor;
 import org.apache.xmlbeans.XmlException;
 import org.apache.xmlbeans.XmlObject;
+import org.openxmlformats.schemas.drawingml.x2006.picture.CTPicture;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTBookmark;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTObject;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTP;
@@ -375,14 +377,40 @@ public class XWPFWordExtractorDecorator extends AbstractOOXMLExtractor {
         // If we have any pictures, output them
         for (XWPFPicture picture : run.getEmbeddedPictures()) {
             if (paragraph.getDocument() != null) {
-                XWPFPictureData data = picture.getPictureData();
-                if (data != null) {
-                    AttributesImpl attr = new AttributesImpl();
+                
+                XWPFPictureData imgdata = null ; 
+                
+                try {
+                    imgdata = picture.getPictureData();
+                } catch (NullPointerException e) {
+                    continue;
+                }
+                if (imgdata != null) {
+                    AttributesImpl attributes = new AttributesImpl();
+                    
+                    attributes.addAttribute("", "class", "class", "CDATA", "embedded");
+                    CTPicture ctPic = picture.getCTPicture();
+                    if (ctPic.getBlipFill() != null && ctPic.getBlipFill().getBlip() != null) {
+                        attributes.addAttribute("", "id", "id", "CDATA", picture.getCTPicture().getBlipFill().getBlip().getEmbed());
+                    }
+                    attributes.addAttribute("", "src", "src", "CDATA", getImageResourceName(imgdata.getFileName()));
+                    attributes.addAttribute("", "title", "title", "CDATA", picture.getDescription());
+                    attributes.addAttribute("", "alt", "alt", "CDATA", imgdata.getFileName());
+                    
+                    try {                        
+//                        if ( imgdata.getContentType() != null) {
+//                            attributes.addAttribute("", "contenttype", "contenttype", "CDATA", imgdata.getContentType());
+//                                        String ext = getTikaConfig().getMimeRepository().forName(imgdata.getContentType()).getExtension();
+//                        }
+                        attributes.addAttribute("", "width", "witdh", "CDATA", String.valueOf(picture.getWidth()));                       
+                        attributes.addAttribute("", "height", "height", "CDATA", String.valueOf(picture.getDepth()));
 
-                    attr.addAttribute("", "src", "src", "CDATA", "embedded:" + data.getFileName());
-                    attr.addAttribute("", "alt", "alt", "CDATA", picture.getDescription());
+                        attributes.addAttribute("", "size", "size", "CDATA", String.valueOf(imgdata.getData().length));                       
+                    } catch (Exception e)
+                    {                       
+                    }
 
-                    xhtml.startElement("img", attr);
+                    xhtml.startElement("img", attributes);
                     xhtml.endElement("img");
                 }
             }

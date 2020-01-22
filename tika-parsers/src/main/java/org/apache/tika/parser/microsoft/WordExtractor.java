@@ -542,15 +542,30 @@ public class WordExtractor extends AbstractPOIFSExtractor {
         // Make up a name for the picture
         // There isn't one in the file, but we need to be able to reference
         //  the picture from the img tag and the embedded resource
-        String filename = "image" + pictureNumber + (extension.length() > 0 ? "." + extension : "");
+        String filename = String.format(Locale.ROOT,"image%05d", pictureNumber) + (extension.length() > 0 ? "." + extension : "");
 
         // Grab the mime type for the picture
         String mimeType = picture.getMimeType();
 
         // Output the img tag
         AttributesImpl attr = new AttributesImpl();
-        attr.addAttribute("", "src", "src", "CDATA", "embedded:" + filename);
-        attr.addAttribute("", "alt", "alt", "CDATA", filename);
+        attr.addAttribute("", "id", "id", "CDATA", String.valueOf(pictureNumber));                       
+        attr.addAttribute("", "class", "class", "CDATA", "embedded");
+        attr.addAttribute("", "src", "src", "CDATA", filename);
+        
+        try {
+            if ( picture.getDescription() != null) {
+                attr.addAttribute("", "title", "title", "CDATA", picture.getDescription());
+            }
+            if ( picture.getMimeType() != null) {
+                attr.addAttribute("", "contenttype", "contenttype", "CDATA", picture.getMimeType());            
+            }
+            attr.addAttribute("", "width", "witdh", "CDATA", String.valueOf(picture.getWidth()));                       
+            attr.addAttribute("", "height", "height", "CDATA", String.valueOf(picture.getHeight()));                       
+            attr.addAttribute("", "size", "size", "CDATA", String.valueOf(picture.getSize()));            
+        } catch (Exception e) {
+        }
+
         xhtml.startElement("img", attr);
         xhtml.endElement("img");
 

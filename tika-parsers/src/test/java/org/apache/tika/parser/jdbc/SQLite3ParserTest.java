@@ -83,9 +83,9 @@ public class SQLite3ParserTest extends TikaTest {
             //timestamp test
             assertContains("2015-01-03 15:17:03", x);
             //first embedded doc's image tag
-            assertContains("alt=\"image1.png\"", x);
+            assertContains("src=\"image00001.png\"", x);
             //second embedded doc's image tag
-            assertContains("alt=\"A description...\"", x);
+            assertContains("title=\"A description...\"", x);
             //second table name
             assertContains("<table name=\"my_table2\"><thead><tr>\t<th>INT_COL2</th>", x);
 
@@ -132,7 +132,7 @@ public class SQLite3ParserTest extends TikaTest {
         assertContains("<td><span type=\"blob\" column_name=\"BYTES_COL\" row_number=\"0\"><div class=\"package-entry\"><h1>BYTES_COL_0.doc</h1>", xml);
         //but no other content
         assertNotContained("dog", xml);
-        assertNotContained("alt=\"image1.png\"", xml);
+        assertNotContained("alt=\"image00001.png\"", xml);
         //second embedded doc's image tag
         assertNotContained("alt=\"A description...\"", xml);
     }
@@ -169,7 +169,7 @@ public class SQLite3ParserTest extends TikaTest {
         assertContains("The quick brown fox", metadataList.get(4).get(AbstractRecursiveParserWrapperHandler.TIKA_CONTENT));
 
         //confirm .doc was added to blob
-        assertEquals("/BYTES_COL_0.doc/image1.png", metadataList.get(1).get(AbstractRecursiveParserWrapperHandler.EMBEDDED_RESOURCE_PATH));
+        assertEquals("/BYTES_COL_0.doc/image00001.png", metadataList.get(1).get(AbstractRecursiveParserWrapperHandler.EMBEDDED_RESOURCE_PATH));
     }
 
     @Test

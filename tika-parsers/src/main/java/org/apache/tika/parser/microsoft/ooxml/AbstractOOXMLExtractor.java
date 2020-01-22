@@ -26,8 +26,10 @@ import java.net.URI;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import org.apache.commons.io.FilenameUtils;
 
 import org.apache.poi.ooxml.POIXMLDocument;
 import org.apache.poi.ooxml.extractor.POIXMLTextExtractor;
@@ -220,11 +222,13 @@ public abstract class AbstractOOXMLExtractor implements OOXMLExtractor {
                                     ContentHandler handler, Metadata parentMetadata, Set<String> handledTarget)
             throws IOException, SAXException, TikaException, InvalidFormatException {
         URI targetURI = rel.getTargetURI();
+        // Ensure we only process a single Embedded part target once. 
         if (targetURI != null) {
             if (handledTarget.contains(targetURI.toString())) {
                 return;
             }
         }
+        
         URI sourceURI = rel.getSourceURI();
         String sourceDesc;
         if (sourceURI != null) {
@@ -366,19 +370,25 @@ public abstract class AbstractOOXMLExtractor implements OOXMLExtractor {
         }
     }
 
+    protected String getImageResourceName(String inputname)
+    {
+        String name = getJustFileName(inputname);
+        
+        String partstem = name.replaceAll("[0-9]", "");
+        int partnumber = Integer.parseInt(name.replaceAll("[^0-9]", ""));
+        String extension = FilenameUtils.getExtension(inputname); 
+        
+        return (partstem+String.format(Locale.ROOT,"%05d", partnumber) + "." + extension);
+    }
+    
     /**
      * Handles an embedded file in the document
      */
     protected void handleEmbeddedFile(PackagePart part, ContentHandler handler, String rel)
             throws SAXException, IOException {
         Metadata metadata = new Metadata();
-        metadata.set(TikaCoreProperties.EMBEDDED_RELATIONSHIP_ID, rel);
-
-        // Get the name
-        String name = part.getPartName().getName();
-        metadata.set(
-                TikaCoreProperties.RESOURCE_NAME_KEY,
-                name.substring(name.lastIndexOf('/') + 1));
+        metadata.set(TikaCoreProperties.EMBEDDED_RELATIONSHIP_ID, rel);       
+        metadata.set(TikaCoreProperties.RESOURCE_NAME_KEY,getImageResourceName(part.getPartName().getName()));
 
         // Get the content type
         metadata.set(

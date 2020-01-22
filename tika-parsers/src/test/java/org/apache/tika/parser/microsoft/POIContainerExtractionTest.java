@@ -89,7 +89,7 @@ public class POIContainerExtractionTest extends AbstractPOIContainerExtractionTe
         assertEquals(1, handler.filenames.size());
         assertEquals(1, handler.mediaTypes.size());
 
-        assertEquals("image1.png", handler.filenames.get(0));
+        assertEquals("image00001.png", handler.filenames.get(0));
         assertEquals(TYPE_PNG, handler.mediaTypes.get(0));
 
 
@@ -98,9 +98,9 @@ public class POIContainerExtractionTest extends AbstractPOIContainerExtractionTe
         assertEquals(3, handler.filenames.size());
         assertEquals(3, handler.mediaTypes.size());
 
-        assertEquals("image1.png", handler.filenames.get(0));
-        assertEquals("image2.jpg", handler.filenames.get(1));
-        assertEquals("image3.png", handler.filenames.get(2));
+        assertEquals("image00001.png", handler.filenames.get(0));
+        assertEquals("image00002.jpg", handler.filenames.get(1));
+        assertEquals("image00003.png", handler.filenames.get(2));
         assertEquals(TYPE_PNG, handler.mediaTypes.get(0));
         assertEquals(TYPE_JPG, handler.mediaTypes.get(1));
         assertEquals(TYPE_PNG, handler.mediaTypes.get(2));
@@ -157,10 +157,10 @@ public class POIContainerExtractionTest extends AbstractPOIContainerExtractionTe
         assertEquals("1", handler.filenames.get(4));
         assertEquals(null, handler.filenames.get(5));
         assertEquals("2", handler.filenames.get(6));
-        assertEquals("image1.png", handler.filenames.get(7));
-        assertEquals("image2.jpg", handler.filenames.get(8));
-        assertEquals("image3.png", handler.filenames.get(9));
-        assertEquals("image1.png", handler.filenames.get(16));
+        assertEquals("image00001.png", handler.filenames.get(7));
+        assertEquals("image00002.jpg", handler.filenames.get(8));
+        assertEquals("image00003.png", handler.filenames.get(9));
+        assertEquals("image00001.png", handler.filenames.get(16));
 
         assertEquals(TYPE_EMF, handler.mediaTypes.get(0)); // Icon of embedded office doc
         assertEquals(TYPE_EMF, handler.mediaTypes.get(1)); // Icon of embedded office doc
@@ -182,12 +182,12 @@ public class POIContainerExtractionTest extends AbstractPOIContainerExtractionTe
 
         // Filenames are a bit iffy...
         // Should really be 3*embedded pictures then 3*icons then embedded docs
-        assertEquals("image1.emf", handler.filenames.get(0));
-        assertEquals("image4.png", handler.filenames.get(1));
-        assertEquals("image5.jpg", handler.filenames.get(2));
-        assertEquals("image6.png", handler.filenames.get(3));
-        assertEquals("image2.emf", handler.filenames.get(4));
-        assertEquals("image3.emf", handler.filenames.get(5));
+        assertEquals("image00001.emf", handler.filenames.get(0));
+        assertEquals("image00004.png", handler.filenames.get(1));
+        assertEquals("image00005.jpg", handler.filenames.get(2));
+        assertEquals("image00006.png", handler.filenames.get(3));
+        assertEquals("image00002.emf", handler.filenames.get(4));
+        assertEquals("image00003.emf", handler.filenames.get(5));
         assertEquals(null, handler.filenames.get(6));
         assertEquals("_1345471035.ppt", handler.filenames.get(7));
         assertEquals("_1345470949.xls", handler.filenames.get(8));
@@ -210,16 +210,16 @@ public class POIContainerExtractionTest extends AbstractPOIContainerExtractionTe
         assertEquals(16, handler.mediaTypes.size());
 
         // We don't know their filenames, except for doc images + docx
-        assertEquals("image1.emf", handler.filenames.get(0));
-        assertEquals("image4.png", handler.filenames.get(1));
-        assertEquals("image5.jpg", handler.filenames.get(2));
-        assertEquals("image6.png", handler.filenames.get(3));
-        assertEquals("image2.emf", handler.filenames.get(4));
-        assertEquals("image3.emf", handler.filenames.get(5));
+        assertEquals("image00001.emf", handler.filenames.get(0));
+        assertEquals("image00004.png", handler.filenames.get(1));
+        assertEquals("image00005.jpg", handler.filenames.get(2));
+        assertEquals("image00006.png", handler.filenames.get(3));
+        assertEquals("image00002.emf", handler.filenames.get(4));
+        assertEquals("image00003.emf", handler.filenames.get(5));
         assertEquals(null, handler.filenames.get(6));
-        assertEquals("image2.png", handler.filenames.get(7));
-        assertEquals("image3.jpeg", handler.filenames.get(8));
-        assertEquals("image4.png", handler.filenames.get(9));
+        assertEquals("image00002.png", handler.filenames.get(7));
+        assertEquals("image00003.jpeg", handler.filenames.get(8));
+        assertEquals("image00004.png", handler.filenames.get(9));
 //        for (int i = 11; i < 14; i++) {
 //            assertNull(handler.filenames.get(i));
 //        }
@@ -270,9 +270,9 @@ public class POIContainerExtractionTest extends AbstractPOIContainerExtractionTe
         assertEquals("1", handler.filenames.get(0));
         assertEquals(null, handler.filenames.get(1));
         assertEquals("2", handler.filenames.get(2));
-        assertEquals("image1.png", handler.filenames.get(3));
-        assertEquals("image2.jpg", handler.filenames.get(4));
-        assertEquals("image3.png", handler.filenames.get(5));
+        assertEquals("image00001.png", handler.filenames.get(3));
+        assertEquals("image00002.jpg", handler.filenames.get(4));
+        assertEquals("image00003.png", handler.filenames.get(5));
 //        assertEquals(null, handler.filenames.get(6));
 //        assertEquals(null, handler.filenames.get(7));
 //        assertEquals(null, handler.filenames.get(8));
@@ -297,7 +297,7 @@ public class POIContainerExtractionTest extends AbstractPOIContainerExtractionTe
         assertEquals(2, handler.filenames.size());
         assertEquals(2, handler.mediaTypes.size());
 
-        assertEquals("image1.emf", handler.filenames.get(0));
+        assertEquals("image00001.emf", handler.filenames.get(0));
         assertEquals("_1402837031.pdf", handler.filenames.get(1));
 
         assertEquals(TYPE_EMF, handler.mediaTypes.get(0)); // Icon of embedded pdf
@@ -334,7 +334,7 @@ public class POIContainerExtractionTest extends AbstractPOIContainerExtractionTe
         TrackingHandler handler;
 
         handler = process("EmbeddedDocument.docx", extractor, false);
-        assertTrue(handler.filenames.contains("Microsoft_Office_Excel_97-2003_Worksheet1.bin"));
+        assertTrue(handler.filenames.contains("Microsoft_Office_Excel_-_Worksheet9720031.bin"));
         assertEquals(2, handler.filenames.size());
     }
     

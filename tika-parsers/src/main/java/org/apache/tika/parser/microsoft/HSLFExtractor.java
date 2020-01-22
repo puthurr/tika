@@ -59,6 +59,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import org.apache.poi.hslf.usermodel.HSLFPictureShape;
 import org.apache.tika.metadata.TikaCoreProperties;
 
@@ -486,7 +487,7 @@ public class HSLFExtractor extends AbstractPOIFSExtractor {
         embeddedMetadata.set(TikaCoreProperties.EMBEDDED_RESOURCE_TYPE,
                 TikaCoreProperties.EmbeddedResourceType.INLINE.toString());
         String ext = getTikaConfig().getMimeRepository().forName(mediaType).getExtension();
-        embeddedMetadata.set(TikaCoreProperties.RESOURCE_NAME_KEY,"image"+pic.getIndex()+ext);
+        embeddedMetadata.set(TikaCoreProperties.RESOURCE_NAME_KEY,String.format(Locale.ROOT,"image%05d", pic.getIndex())+ext);
         
         try (TikaInputStream picIs = TikaInputStream.get(data)){
             handleEmbeddedResource(picIs, embeddedMetadata, null, null, null, mediaType, xhtml, false);
@@ -600,19 +601,20 @@ public class HSLFExtractor extends AbstractPOIFSExtractor {
             String objID = Integer.toString(imgdata.getIndex());
 
             AttributesImpl attributes = new AttributesImpl();
-            attributes.addAttribute("", "class", "class", "CDATA", "embedded");
             attributes.addAttribute("", "id", "id", "CDATA", objID);
+            attributes.addAttribute("", "class", "class", "CDATA", "embedded");
             try {                        
-                attributes.addAttribute("", "idx", "idx", "CDATA", String.valueOf(img.getPictureIndex())); 
+//                attributes.addAttribute("", "idx", "idx", "CDATA", String.valueOf(img.getPictureIndex())); 
                 if ( img.getPictureName() != null)
                     attributes.addAttribute("", "title", "title", "CDATA", img.getPictureName().trim());
                 if ( imgdata.getContentType() != null) {
-                    attributes.addAttribute("", "contenttype", "contenttype", "CDATA", imgdata.getContentType());
+                    attributes.addAttribute("", "contenttype", "contenttype", "CDATA", imgdata.getContentType());                    
                     String ext = getTikaConfig().getMimeRepository().forName(imgdata.getContentType()).getExtension();
-                    attributes.addAttribute("", "src", "src", "CDATA", "image"+objID+ext);
+                    attributes.addAttribute("", "src", "src", "CDATA", String.format(Locale.ROOT,"image%05d", imgdata.getIndex())+ext);
                 }
                 attributes.addAttribute("", "width", "witdh", "CDATA", String.valueOf(imgdata.getImageDimensionInPixels().width));                       
                 attributes.addAttribute("", "height", "height", "CDATA", String.valueOf(imgdata.getImageDimensionInPixels().height));                       
+                attributes.addAttribute("", "size", "size", "CDATA", String.valueOf(imgdata.getRawData().length));                
             } catch (Exception e)
             {                       
             }

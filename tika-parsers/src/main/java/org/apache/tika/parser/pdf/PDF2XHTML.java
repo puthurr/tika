@@ -55,6 +55,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -237,22 +238,24 @@ class PDF2XHTML extends AbstractPDF2XHTML {
             if (imageNumber == null) {
                 imageNumber = inlineImageCounter++;
             }
-            String fileName = "image" + imageNumber + "."+extension;
+            String fileName = String.format(Locale.ROOT,"image%05d", imageNumber) + "." + extension;
             embeddedMetadata.set(TikaCoreProperties.RESOURCE_NAME_KEY, fileName);
 
             // Output the img tag
             AttributesImpl attr = new AttributesImpl();
-            attr.addAttribute("", "src", "src", "CDATA", "embedded:" + fileName);
+            attr.addAttribute("", "src", "src", "CDATA", fileName);
             attr.addAttribute("", "alt", "alt", "CDATA", fileName);
+            attr.addAttribute("", "class", "class", "CDATA", "embedded");
             //Adding extra attributes to the image tag for consistency
             try {
-                attr.addAttribute("", "id", "id", "CDATA", String.valueOf(imageNumber));                
+                attr.addAttribute("", "id", "id", "CDATA", String.format(Locale.ROOT,"%05d", imageNumber));                
                 attr.addAttribute("", "contenttype", "contenttype", "CDATA", embeddedMetadata.get(Metadata.CONTENT_TYPE));
                 attr.addAttribute("", "width", "witdh", "CDATA", String.valueOf(image.getWidth()));                       
-                attr.addAttribute("", "height", "height", "CDATA", String.valueOf(image.getHeight()));             
-                //attr.addAttribute("", "size", "size", "CDATA", String.valueOf(image.getMetadata().getLength()));                       
+                attr.addAttribute("", "height", "height", "CDATA", String.valueOf(image.getHeight()));       
+                attr.addAttribute("", "size", "size", "CDATA", String.valueOf(image.getStream().getLength()));                       
             } catch (Exception e)
             {                       
+                
             }
             xhtml.startElement("img", attr);
             xhtml.endElement("img");
