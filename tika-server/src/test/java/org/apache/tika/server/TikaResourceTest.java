@@ -336,9 +336,10 @@ public class TikaResourceTest extends CXFTestBase {
                 ClassLoader.getSystemResourceAsStream("2pic.docx")
         );
 
+        // Changed the Accept to HTML since I don't know it was Text before (this document has no textual data, only 2 pictures). 
         Response response = WebClient.create(endPoint + TIKA_PATH + "/form")
                 .type("multipart/form-data")
-                .accept("text/plain")
+                .accept("text/html")
                 .post(attachmentPart);
 
         String responseMsg = getStringFromInputStream((InputStream) response.getEntity());
