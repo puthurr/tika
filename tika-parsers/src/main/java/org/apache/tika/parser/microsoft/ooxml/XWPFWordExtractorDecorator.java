@@ -17,6 +17,7 @@
 package org.apache.tika.parser.microsoft.ooxml;
 
 import javax.xml.namespace.QName;
+import java.awt.*;
 import java.io.IOException;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -27,6 +28,10 @@ import java.util.List;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.openxml4j.opc.PackagePart;
 import org.apache.poi.openxml4j.opc.PackageRelationshipCollection;
+import org.apache.poi.sl.image.*;
+import org.apache.poi.sl.usermodel.PictureData;
+import org.apache.poi.util.IOUtils;
+import org.apache.poi.util.Units;
 import org.apache.poi.xslf.usermodel.XSLFPictureData;
 import org.apache.poi.xssf.usermodel.XSSFRelation;
 import org.apache.poi.xwpf.extractor.XWPFWordExtractor;
@@ -398,14 +403,16 @@ public class XWPFWordExtractorDecorator extends AbstractOOXMLExtractor {
                     attributes.addAttribute("", "alt", "alt", "CDATA", imgdata.getFileName());
                     
                     try {                        
-//                        if ( imgdata.getContentType() != null) {
-//                            attributes.addAttribute("", "contenttype", "contenttype", "CDATA", imgdata.getContentType());
+                        if ( imgdata.getPackagePart().getContentType() != null) {
+                            attributes.addAttribute("", "contenttype", "contenttype", "CDATA", imgdata.getPackagePart().getContentType());
 //                                        String ext = getTikaConfig().getMimeRepository().forName(imgdata.getContentType()).getExtension();
-//                        }
-                        attributes.addAttribute("", "width", "witdh", "CDATA", String.valueOf(picture.getWidth()));                       
-                        attributes.addAttribute("", "height", "height", "CDATA", String.valueOf(picture.getDepth()));
+                        }
+                        Dimension imgdim = getImageDimensionInPixels(imgdata);
+                        attributes.addAttribute("", "width", "witdh", "CDATA", String.valueOf(imgdim.width));
+                        attributes.addAttribute("", "height", "height", "CDATA", String.valueOf(imgdim.height));
 
-                        attributes.addAttribute("", "size", "size", "CDATA", String.valueOf(imgdata.getData().length));                       
+                        attributes.addAttribute("", "size", "size", "CDATA", String.valueOf(imgdata.getData().length));
+
                     } catch (Exception e)
                     {                       
                     }
@@ -415,6 +422,40 @@ public class XWPFWordExtractorDecorator extends AbstractOOXMLExtractor {
                 }
             }
         }
+    }
+
+    /*
+        The below two method required to output the image dimension in the img tag (HTML).
+        They are inspired by the XSLFPictureData class.
+    */
+    protected Dimension getImageDimension(XWPFPictureData imgdata) {
+        Dimension origSize;
+        byte[] data = imgdata.getData();
+        int pt = imgdata.getPictureType();
+
+        if (pt == 0) {
+            origSize = new Dimension(1, 1);
+        }
+        else {
+            switch(pt) {
+                case 2:
+                    origSize = (new ImageHeaderEMF(data, 0)).getSize();
+                    break;
+                case 3:
+                    origSize = (new ImageHeaderWMF(data, 0)).getSize();
+                    break;
+                case 4:
+                    origSize = (new ImageHeaderPICT(data, 0)).getSize();
+                    break;
+                default:
+                    origSize = (new ImageHeaderBitmap(data, 0)).getSize();
+            }
+        }
+        return origSize;
+    }
+    protected Dimension getImageDimensionInPixels(XWPFPictureData imgdata) {
+        Dimension dim = this.getImageDimension(imgdata);
+        return new Dimension(Units.pointsToPixel(dim.getWidth()), Units.pointsToPixel(dim.getHeight()));
     }
 
     private void processSDTRun(XWPFSDT run, XHTMLContentHandler xhtml)
