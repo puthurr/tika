@@ -16,33 +16,22 @@
  */
 package org.apache.tika.parser.microsoft;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.Set;
-
-import org.apache.poi.hpsf.CustomProperties;
-import org.apache.poi.hpsf.DocumentSummaryInformation;
-import org.apache.poi.hpsf.MarkUnsupportedException;
-import org.apache.poi.hpsf.NoPropertySetStreamException;
-import org.apache.poi.hpsf.PropertySet;
-import org.apache.poi.hpsf.SummaryInformation;
-import org.apache.poi.hpsf.UnexpectedPropertySetTypeException;
+import org.apache.poi.hpsf.*;
 import org.apache.poi.poifs.filesystem.DirectoryNode;
 import org.apache.poi.poifs.filesystem.DocumentEntry;
 import org.apache.poi.poifs.filesystem.DocumentInputStream;
 import org.apache.poi.poifs.filesystem.POIFSFileSystem;
 import org.apache.tika.exception.TikaException;
-import org.apache.tika.metadata.Metadata;
-import org.apache.tika.metadata.Office;
-import org.apache.tika.metadata.OfficeOpenXMLCore;
-import org.apache.tika.metadata.OfficeOpenXMLExtended;
-import org.apache.tika.metadata.PagedText;
 import org.apache.tika.metadata.Property;
-import org.apache.tika.metadata.TikaCoreProperties;
+import org.apache.tika.metadata.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Extractor for Common OLE2 (HPSF) metadata
@@ -77,6 +66,9 @@ public class SummaryExtractor {
             DirectoryNode root, String entryName)
             throws IOException, TikaException {
         try {
+            if (! root.hasEntry(entryName)) {
+                return;
+            }
             DocumentEntry entry =
                     (DocumentEntry) root.getEntry(entryName);
             PropertySet properties =
@@ -93,6 +85,8 @@ public class SummaryExtractor {
             // no property stream, just skip it
         } catch (UnexpectedPropertySetTypeException e) {
             throw new TikaException("Unexpected HPSF document", e);
+        } catch (SecurityException e) {
+            throw e;
         } catch (Exception e) {
             LOG.warn("Ignoring unexpected exception while parsing summary entry {}", entryName, e);
         }

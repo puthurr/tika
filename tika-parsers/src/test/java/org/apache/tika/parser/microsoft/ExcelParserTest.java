@@ -16,15 +16,6 @@
  */
 package org.apache.tika.parser.microsoft;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
-import java.io.InputStream;
-import java.text.DecimalFormatSymbols;
-import java.util.List;
-import java.util.Locale;
-
 import org.apache.poi.util.LocaleUtil;
 import org.apache.tika.TikaTest;
 import org.apache.tika.config.TikaConfig;
@@ -36,14 +27,18 @@ import org.apache.tika.metadata.Office;
 import org.apache.tika.metadata.OfficeOpenXMLExtended;
 import org.apache.tika.metadata.TikaCoreProperties;
 import org.apache.tika.mime.MediaType;
-import org.apache.tika.parser.AutoDetectParser;
-import org.apache.tika.parser.ParseContext;
-import org.apache.tika.parser.PasswordProvider;
-import org.apache.tika.parser.RecursiveParserWrapper;
+import org.apache.tika.parser.*;
 import org.apache.tika.parser.microsoft.ooxml.OOXMLParser;
 import org.apache.tika.sax.BodyContentHandler;
 import org.junit.Test;
 import org.xml.sax.ContentHandler;
+
+import java.io.InputStream;
+import java.text.DecimalFormatSymbols;
+import java.util.List;
+import java.util.Locale;
+
+import static org.junit.Assert.*;
 
 public class ExcelParserTest extends TikaTest {
     @Test
@@ -488,8 +483,8 @@ public class ExcelParserTest extends TikaTest {
         Locale locale = LocaleUtil.getUserLocale();
         DecimalFormatSymbols symbols = new DecimalFormatSymbols(locale);
         //16 digit number is treated as scientific notation as is the 16 digit formula
-        assertContains("1"+symbols.getDecimalSeparator()+"23456789012345E15</td>\t"+
-                "<td>1"+symbols.getDecimalSeparator()+"23456789012345E15", xml);
+        assertContains("1"+symbols.getDecimalSeparator()+"23456789012345E+15</td>\t"+
+                "<td>1"+symbols.getDecimalSeparator()+"23456789012345E+15", xml);
     }
 
     @Test
@@ -568,5 +563,21 @@ public class ExcelParserTest extends TikaTest {
     public void testLabelsAreExtracted() throws Exception {
         String xml = getXML("testEXCEL_labels-govdocs-515858.xls").xml;
         assertContains("Morocco", xml);
+    }
+
+    @Test
+    public void testWorkBookInCapitals() throws Exception {
+        String xml = getXML("testEXCEL_WORKBOOK_in_capitals.xls").xml;
+        assertContains("Inventarliste", xml);
+    }
+
+    @Test
+    public void testDateFormat() throws Exception {
+        TikaConfig tikaConfig = new TikaConfig(
+                this.getClass().getResourceAsStream("tika-config-custom-date-override.xml"));
+        Parser p = new AutoDetectParser(tikaConfig);
+        String xml = getXML("testEXCEL_dateFormats.xls", p).xml;
+        assertContains("2018-09-20", xml);
+        assertContains("1996-08-10", xml);
     }
 }

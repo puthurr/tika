@@ -16,13 +16,6 @@
  */
 package org.apache.tika.parser.crypto;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-
-import java.io.InputStream;
-import java.util.Arrays;
-import java.util.List;
-
 import org.apache.tika.TikaTest;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.parser.ParseContext;
@@ -30,6 +23,13 @@ import org.apache.tika.sax.BodyContentHandler;
 import org.apache.tika.utils.ParserUtils;
 import org.junit.Test;
 import org.xml.sax.ContentHandler;
+
+import java.io.InputStream;
+import java.util.Arrays;
+import java.util.List;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 public class TSDParserTest extends TikaTest {
 
@@ -175,5 +175,12 @@ public class TSDParserTest extends TikaTest {
         assertEquals("application/pdf", list.get(1).get(Metadata.CONTENT_TYPE));
         assertNotNull(list.get(1).get(ParserUtils.EMBEDDED_EXCEPTION));
         assertContains("org.apache.pdfbox.pdmodel.PDDocument.load", list.get(1).get(ParserUtils.EMBEDDED_EXCEPTION));
+    }
+
+    @Test
+    public void testToXML() throws Exception {
+        String xml = getXML("Test4.pdf.tsd").xml;
+        assertContains("Empty doc",
+                xml);
     }
 }

@@ -16,9 +16,6 @@
  */
 package org.apache.tika.parser.microsoft;
 
-import static org.apache.tika.parser.microsoft.AbstractPOIContainerExtractionTest.getTestFile;
-import static org.junit.Assert.assertEquals;
-
 import org.apache.tika.TikaTest;
 import org.apache.tika.detect.DefaultDetector;
 import org.apache.tika.detect.Detector;
@@ -31,6 +28,9 @@ import org.apache.tika.sax.BodyContentHandler;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.xml.sax.ContentHandler;
+
+import static org.apache.tika.parser.microsoft.AbstractPOIContainerExtractionTest.getTestFile;
+import static org.junit.Assert.assertEquals;
 
 /**
  * Tests for the Old Excel (2-4) parser
@@ -110,5 +110,13 @@ public class OldExcelParserTest extends TikaTest {
         // Number cells
         assertContains("<p>(1)</p>", xml);
         assertContains("<p>5.0</p>", xml);
+    }
+
+
+    @Test
+    public void testToXMLInOldExcelParser() throws Exception {
+        String xml = getXML("testEXCEL_5.xls").xml;
+        assertContains("Written and saved in Microsoft Excel X for Mac Service Release 1",
+                xml);
     }
 }

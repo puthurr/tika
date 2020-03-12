@@ -16,16 +16,11 @@
  */
 package org.apache.tika.io;
 
-import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
+import org.apache.tika.metadata.Metadata;
+import org.apache.tika.metadata.TikaCoreProperties;
+import org.apache.tika.parser.Parser;
 
-import java.io.BufferedInputStream;
-import java.io.ByteArrayInputStream;
-import java.io.Closeable;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -37,9 +32,7 @@ import java.nio.file.Paths;
 import java.sql.Blob;
 import java.sql.SQLException;
 
-import org.apache.tika.metadata.Metadata;
-import org.apache.tika.metadata.TikaCoreProperties;
-import org.apache.tika.parser.Parser;
+import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
 /**
  * Input stream with extended capabilities. The purpose of this class is
@@ -650,18 +643,21 @@ public class TikaInputStream extends TaggedInputStream {
             if (position > 0) {
                 throw new IOException("Stream is already being read");
             } else {
-                path = tmp.createTempFile();
+                Path tmpFile = tmp.createTempFile();
                 if (maxBytes > -1) {
                     try (InputStream lookAhead = new LookaheadInputStream(in, maxBytes)) {
-                        Files.copy(lookAhead, path, REPLACE_EXISTING);
-                        if (Files.size(path) >= maxBytes) {
+                        Files.copy(lookAhead, tmpFile, REPLACE_EXISTING);
+                        if (Files.size(tmpFile) >= maxBytes) {
+                            //tmpFile will be cleaned up when this TikaInputStream is closed
                             return null;
                         }
                     }
                 } else {
                     // Spool the entire stream into a temporary file
-                    Files.copy(in, path, REPLACE_EXISTING);
+                    Files.copy(in, tmpFile, REPLACE_EXISTING);
                 }
+                //successful so far, set tis' path to tmpFile
+                path = tmpFile;
 
                 // Create a new input stream and make sure it'll get closed
                 InputStream newStream = Files.newInputStream(path);

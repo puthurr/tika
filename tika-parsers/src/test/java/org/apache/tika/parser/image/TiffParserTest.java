@@ -16,13 +16,6 @@
  */
 package org.apache.tika.parser.image;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
-import java.io.InputStream;
-import java.util.Arrays;
-import java.util.List;
-
 import org.apache.tika.TikaTest;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.metadata.TIFF;
@@ -31,6 +24,13 @@ import org.apache.tika.parser.ParseContext;
 import org.apache.tika.parser.Parser;
 import org.junit.Test;
 import org.xml.sax.helpers.DefaultHandler;
+
+import java.io.InputStream;
+import java.util.Arrays;
+import java.util.List;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class TiffParserTest extends TikaTest {
 
@@ -70,12 +70,6 @@ public class TiffParserTest extends TikaTest {
                 (long)getXML("testTIFF_multipage.tif")
                 .metadata
                 .getInt(TIFF.EXIF_PAGE_COUNT));
-
-        //Comment \u000A System.out.println("actual code");
     }
 
-    @Test
-    public void testUnicodeNewLine() throws Exception {
-        //Comment \u000A System.out.println("actual code");
-    }
 }

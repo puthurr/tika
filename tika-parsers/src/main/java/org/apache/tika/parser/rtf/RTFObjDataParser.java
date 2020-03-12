@@ -18,34 +18,22 @@
 
 package org.apache.tika.parser.rtf;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
-import java.util.Locale;
-import java.util.concurrent.atomic.AtomicInteger;
-
 import org.apache.commons.io.FilenameUtils;
-import org.apache.poi.poifs.filesystem.DirectoryNode;
-import org.apache.poi.poifs.filesystem.DocumentEntry;
-import org.apache.poi.poifs.filesystem.DocumentInputStream;
-import org.apache.poi.poifs.filesystem.Entry;
-import org.apache.poi.poifs.filesystem.FileMagic;
-import org.apache.poi.poifs.filesystem.POIFSFileSystem;
-import org.apache.poi.poifs.filesystem.Ole10Native;
-import org.apache.poi.poifs.filesystem.Ole10NativeException;
+import org.apache.poi.poifs.filesystem.*;
 import org.apache.poi.util.IOUtils;
 import org.apache.tika.exception.TikaException;
 import org.apache.tika.exception.TikaMemoryLimitException;
 import org.apache.tika.extractor.EmbeddedDocumentUtil;
+import org.apache.tika.io.BoundedInputStream;
 import org.apache.tika.io.EndianUtils;
-import org.apache.tika.io.TikaInputStream;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.metadata.RTFMetadata;
 import org.apache.tika.metadata.TikaCoreProperties;
 import org.apache.tika.parser.microsoft.OfficeParser.POIFSDocumentType;
+
+import java.io.*;
+import java.util.Locale;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Many thanks to Simon Mourier for:
@@ -137,7 +125,7 @@ class RTFObjDataParser {
     //can return null byte[]
     private byte[] handleEmbeddedPOIFS(InputStream is, Metadata metadata,
                                        AtomicInteger unknownFilenameCount)
-            throws IOException {
+            throws TikaException, IOException {
 
         byte[] ret = null;
         try (POIFSFileSystem fs = new POIFSFileSystem(is)) {
@@ -150,11 +138,14 @@ class RTFObjDataParser {
 
             if (root.hasEntry("Package")) {
                 Entry ooxml = root.getEntry("Package");
-                TikaInputStream stream = TikaInputStream.get(new DocumentInputStream((DocumentEntry) ooxml));
-
                 ByteArrayOutputStream out = new ByteArrayOutputStream();
-
-                IOUtils.copy(stream, out);
+                try (BoundedInputStream bis = new BoundedInputStream(memoryLimitInKb*1024,
+                            new DocumentInputStream((DocumentEntry)ooxml))) {
+                    IOUtils.copy(bis, out);
+                    if (bis.hasHitBound()) {
+                        throw new TikaMemoryLimitException("Hit memory limit exception. Tried to copy > "+memoryLimitInKb*1024);
+                    }
+                }
                 ret = out.toByteArray();
             } else {
                 //try poifs
@@ -184,7 +175,11 @@ class RTFObjDataParser {
 
                     ByteArrayOutputStream out = new ByteArrayOutputStream();
                     is.reset();
+                    BoundedInputStream bis = new BoundedInputStream(memoryLimitInKb*1024, is);
                     IOUtils.copy(is, out);
+                    if (bis.hasHitBound()) {
+                        throw new TikaMemoryLimitException("Hit memory limit exception. Tried to copy > "+memoryLimitInKb*1024);
+                    }
                     ret = out.toByteArray();
                     metadata.set(TikaCoreProperties.RESOURCE_NAME_KEY, "file_" + unknownFilenameCount.getAndIncrement() + "." + type.getExtension());
                     metadata.set(Metadata.CONTENT_TYPE, type.getType().toString());

@@ -16,14 +16,6 @@
  */
 package org.apache.tika.parser.iwork;
 
-import static org.apache.tika.TikaTest.assertContains;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
-import java.io.InputStream;
-import java.util.Arrays;
-import java.util.List;
-
 import org.apache.tika.TikaTest;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.metadata.Office;
@@ -32,6 +24,13 @@ import org.apache.tika.sax.BodyContentHandler;
 import org.junit.Before;
 import org.junit.Test;
 import org.xml.sax.ContentHandler;
+
+import java.io.InputStream;
+import java.util.Arrays;
+import java.util.List;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Tests if the IWork parser parses the content and metadata properly of the supported formats.
@@ -375,5 +374,18 @@ public class IWorkParserTest extends TikaTest {
         assertContains("Expenditure by Category", content);
         assertContains("Currency Chart name", content);
         assertContains("Chart 2", content);
+    }
+
+    //TIKA-3020
+    @Test
+    public void testKeyNoteTableMarkup() throws Exception {
+        String expected = "<table><tr>\t<td>Cell one</td>\t<td>Cell two</td>\t<td>Cell three</td></tr>" +
+                "<tr>\t<td>Cell four</td>\t<td>Cell 5</td>\t<td>Cell six</td></tr>" +
+                "<tr>\t<td>7</td>\t<td>Cell eight</td>\t<td>5/5/1985</td></tr>" +
+                "</table>";
+        String xml = getXML("testKeynote.key", iWorkParser).xml;
+        xml = xml.replaceAll("[\r\n]", "");
+        assertContains(expected, xml);
+
     }
 }

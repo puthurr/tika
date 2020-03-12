@@ -17,20 +17,8 @@
 package org.apache.tika.parser.pkg;
 
 
-import java.io.BufferedInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.Set;
-
 import org.apache.commons.compress.PasswordRequiredException;
-import org.apache.commons.compress.archivers.ArchiveEntry;
-import org.apache.commons.compress.archivers.ArchiveException;
-import org.apache.commons.compress.archivers.ArchiveInputStream;
-import org.apache.commons.compress.archivers.ArchiveStreamFactory;
-import org.apache.commons.compress.archivers.StreamingNotSupportedException;
+import org.apache.commons.compress.archivers.*;
 import org.apache.commons.compress.archivers.ar.ArArchiveInputStream;
 import org.apache.commons.compress.archivers.cpio.CpioArchiveInputStream;
 import org.apache.commons.compress.archivers.dump.DumpArchiveInputStream;
@@ -58,6 +46,14 @@ import org.apache.tika.sax.XHTMLContentHandler;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.AttributesImpl;
+
+import java.io.BufferedInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Parser for various packaging formats. Package entries will be written to
@@ -160,6 +156,13 @@ public class PackageParser extends AbstractParser {
                 "application/x-xliff+zip",
                 "application/x-xmind",
                 "model/vnd.dwfx+xps",
+                "application/vnd.sun.xml.calc",
+                "application/vnd.sun.xml.writer",
+                "application/vnd.sun.xml.writer.template",
+                "application/vnd.sun.xml.draw",
+                "application/vnd.sun.xml.impress",
+                "application/vnd.openofficeorg.autotext",
+
 
                 "application/x-gtar" //specialization of tar
         }) {

@@ -16,25 +16,6 @@
  */
 package org.apache.tika;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
-import java.io.ByteArrayOutputStream;
-import java.io.EOFException;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
 import org.apache.tika.extractor.EmbeddedResourceHandler;
 import org.apache.tika.io.IOUtils;
 import org.apache.tika.io.TikaInputStream;
@@ -50,6 +31,14 @@ import org.apache.tika.sax.BodyContentHandler;
 import org.apache.tika.sax.RecursiveParserWrapperHandler;
 import org.apache.tika.sax.ToXMLContentHandler;
 import org.xml.sax.ContentHandler;
+
+import java.io.*;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.file.Path;
+import java.util.*;
+
+import static org.junit.Assert.*;
 
 /**
  * Parent class of Tika tests
@@ -254,6 +243,11 @@ public abstract class TikaTest {
             return getRecursiveMetadata(tis, new ParseContext(), new Metadata(), suppressException);
         }
     }
+    protected List<Metadata> getRecursiveMetadata(Path filePath) throws Exception {
+        try (TikaInputStream tis = TikaInputStream.get(filePath)) {
+            return getRecursiveMetadata(tis, true);
+        }
+    }
 
     protected List<Metadata> getRecursiveMetadata(InputStream is, boolean suppressException) throws Exception {
         return getRecursiveMetadata(is, new ParseContext(), new Metadata(), suppressException);
@@ -448,7 +442,9 @@ public abstract class TikaTest {
     public static void debug(List<Metadata> list) {
         int i = 0;
         for (Metadata m : list) {
-            for (String n : m.names()) {
+            List<String> names = Arrays.asList(m.names());
+            Collections.sort(names);
+            for (String n : names) {
                 for (String v : m.getValues(n)) {
                     System.out.println(i + ": "+n + " : "+v);
                 }
@@ -458,7 +454,9 @@ public abstract class TikaTest {
     }
 
     public static void debug(Metadata metadata) {
-        for (String n : metadata.names()) {
+        List<String> names = Arrays.asList(metadata.names());
+        Collections.sort(names);
+        for (String n : names) {
             for (String v : metadata.getValues(n)) {
                 System.out.println(n + " : "+v);
             }

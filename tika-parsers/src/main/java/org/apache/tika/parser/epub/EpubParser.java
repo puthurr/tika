@@ -16,25 +16,6 @@
  */
 package org.apache.tika.parser.epub;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
-import java.util.zip.ZipException;
-
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream;
 import org.apache.commons.compress.archivers.zip.ZipFile;
@@ -64,6 +45,16 @@ import org.xml.sax.Attributes;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.nio.file.Path;
+import java.util.*;
+import java.util.zip.ZipException;
+
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  * Epub parser
@@ -151,7 +142,8 @@ public class EpubParser extends AbstractParser {
                 meta.parse(zip, new DefaultHandler(), metadata, context);
             } else if (entry.getName().endsWith(".htm") ||
                     entry.getName().endsWith(".html") ||
-                    entry.getName().endsWith(".xhtml")) {
+                    entry.getName().endsWith(".xhtml") ||
+                    entry.getName().endsWith(".xml")) {
                 content.parse(zip, bodyHandler, metadata, context);
             }
             entry = zip.getNextZipEntry();
@@ -276,10 +268,20 @@ public class EpubParser extends AbstractParser {
         Set<String> processed = new HashSet<>();
         for (String id : contentOrderScraper.contentItems) {
             HRefMediaPair hRefMediaPair = contentOrderScraper.locationMap.get(id);
-            if (hRefMediaPair != null &&
-                    hRefMediaPair.href != null) {
+            if (hRefMediaPair != null && hRefMediaPair.href != null) {
+                //we need to test for xhtml/xml because the content parser
+                //expects that.
+                boolean shouldParse = false;
                 String href = hRefMediaPair.href.toLowerCase(Locale.US);
-                if (href.endsWith("htm") || href.endsWith("html")) {
+                if (hRefMediaPair.media != null) {
+                    String mediaType = hRefMediaPair.media.toLowerCase(Locale.US);
+                    if (mediaType.contains("html")) {
+                        shouldParse = true;
+                    }
+                } else if (href.endsWith("htm") || href.endsWith("html") || href.endsWith(".xml")) {
+                    shouldParse = true;
+                }
+                if (shouldParse) {
                     zae = zipFile.getEntry(relativePath + hRefMediaPair.href);
                     if (zae != null) {
                         try (InputStream is = zipFile.getInputStream(zae)) {
@@ -318,6 +320,8 @@ public class EpubParser extends AbstractParser {
         } else if (lc.endsWith("/xml")) {
             return false;
         } else if (lc.contains("x-ibooks")) {
+            return false;
+        } else if (lc.equals("application/x-dtbncx+xml")) {
             return false;
         }
         return true;

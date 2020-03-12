@@ -67,6 +67,7 @@ public class XLIFF12Parser extends AbstractParser {
         metadata.set(Metadata.CONTENT_TYPE, XLF_CONTENT_TYPE.toString());
 
         final XHTMLContentHandler xhtml = new XHTMLContentHandler(handler, metadata);
+
         XMLReaderUtils.parseSAX(
                 new CloseShieldInputStream(stream),
                 new OfflineContentHandler(new XLIFF12ContentHandler(xhtml, metadata)),

@@ -16,30 +16,11 @@
  */
 package org.apache.tika.parser.microsoft.ooxml;
 
-import static org.apache.tika.sax.XHTMLContentHandler.XHTML;
-
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URI;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
 import org.apache.commons.io.FilenameUtils;
-
 import org.apache.poi.ooxml.POIXMLDocument;
 import org.apache.poi.ooxml.extractor.POIXMLTextExtractor;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
-import org.apache.poi.openxml4j.opc.OPCPackage;
-import org.apache.poi.openxml4j.opc.PackagePart;
-import org.apache.poi.openxml4j.opc.PackageRelationship;
-import org.apache.poi.openxml4j.opc.PackageRelationshipCollection;
-import org.apache.poi.openxml4j.opc.PackageRelationshipTypes;
-import org.apache.poi.openxml4j.opc.TargetMode;
+import org.apache.poi.openxml4j.opc.*;
 import org.apache.poi.openxml4j.opc.internal.FileHelper;
 import org.apache.poi.poifs.filesystem.DirectoryNode;
 import org.apache.poi.poifs.filesystem.Ole10Native;
@@ -66,6 +47,15 @@ import org.apache.xmlbeans.XmlException;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.AttributesImpl;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URI;
+import java.util.*;
+
+import static org.apache.tika.sax.XHTMLContentHandler.XHTML;
 
 /**
  * Base class for all Tika OOXML extractors.
@@ -222,13 +212,11 @@ public abstract class AbstractOOXMLExtractor implements OOXMLExtractor {
                                     ContentHandler handler, Metadata parentMetadata, Set<String> handledTarget)
             throws IOException, SAXException, TikaException, InvalidFormatException {
         URI targetURI = rel.getTargetURI();
-        // Ensure we only process a single Embedded part target once. 
         if (targetURI != null) {
             if (handledTarget.contains(targetURI.toString())) {
                 return;
             }
         }
-        
         URI sourceURI = rel.getSourceURI();
         String sourceDesc;
         if (sourceURI != null) {

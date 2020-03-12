@@ -16,32 +16,6 @@
  */
 package org.apache.tika.parser.microsoft.ooxml;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
-import javax.xml.transform.OutputKeys;
-import javax.xml.transform.sax.SAXTransformerFactory;
-import javax.xml.transform.sax.TransformerHandler;
-import javax.xml.transform.stream.StreamResult;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.InputStream;
-import java.io.PrintStream;
-import java.io.StringWriter;
-import java.text.DecimalFormatSymbols;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import org.apache.poi.util.LocaleUtil;
 import org.apache.tika.TikaTest;
 import org.apache.tika.config.TikaConfig;
@@ -49,18 +23,9 @@ import org.apache.tika.detect.DefaultDetector;
 import org.apache.tika.detect.Detector;
 import org.apache.tika.exception.EncryptedDocumentException;
 import org.apache.tika.io.TikaInputStream;
-import org.apache.tika.metadata.Metadata;
-import org.apache.tika.metadata.Office;
-import org.apache.tika.metadata.OfficeOpenXMLCore;
-import org.apache.tika.metadata.OfficeOpenXMLExtended;
-import org.apache.tika.metadata.TikaCoreProperties;
+import org.apache.tika.metadata.*;
 import org.apache.tika.mime.MediaType;
-import org.apache.tika.parser.AutoDetectParser;
-import org.apache.tika.parser.EmptyParser;
-import org.apache.tika.parser.ParseContext;
-import org.apache.tika.parser.Parser;
-import org.apache.tika.parser.PasswordProvider;
-import org.apache.tika.parser.RecursiveParserWrapper;
+import org.apache.tika.parser.*;
 import org.apache.tika.parser.microsoft.ExcelParserTest;
 import org.apache.tika.parser.microsoft.OfficeParser;
 import org.apache.tika.parser.microsoft.OfficeParserConfig;
@@ -71,6 +36,19 @@ import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.xml.sax.ContentHandler;
+
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.sax.SAXTransformerFactory;
+import javax.xml.transform.sax.TransformerHandler;
+import javax.xml.transform.stream.StreamResult;
+import java.io.*;
+import java.text.DecimalFormatSymbols;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.junit.Assert.*;
 
 public class OOXMLParserTest extends TikaTest {
 
@@ -1758,6 +1736,25 @@ public class OOXMLParserTest extends TikaTest {
         m = getXML("testPPT_signed.pptx").metadata;
         assertEquals("true", m.get(TikaCoreProperties.HAS_SIGNATURE));
 
+    }
+
+    @Test(expected = org.apache.tika.exception.TikaException.class)
+    public void testTruncatedSAXDocx() throws Exception {
+        ParseContext pc = new ParseContext();
+        OfficeParserConfig c = new OfficeParserConfig();
+        c.setUseSAXDocxExtractor(true);
+        pc.set(OfficeParserConfig.class, c);
+        getRecursiveMetadata("testWORD_truncated.docx", pc);
+    }
+
+    @Test
+    public void testDateFormat() throws Exception {
+        TikaConfig tikaConfig = new TikaConfig(
+                this.getClass().getResourceAsStream("tika-config-custom-date-override.xml"));
+        Parser p = new AutoDetectParser(tikaConfig);
+        String xml = getXML("testEXCEL_dateFormats.xlsx", p).xml;
+        assertContains("2018-09-20", xml);
+        assertContains("1996-08-10", xml);
     }
 }
 

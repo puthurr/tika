@@ -18,23 +18,6 @@
 package org.apache.tika.eval;
 
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.sql.Types;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.mutable.MutableInt;
 import org.apache.commons.lang3.tuple.Pair;
@@ -42,7 +25,6 @@ import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
 import org.apache.tika.batch.FileResource;
 import org.apache.tika.batch.FileResourceConsumer;
 import org.apache.tika.batch.fs.FSProperties;
-import org.apache.tika.config.TikaConfig;
 import org.apache.tika.eval.db.ColInfo;
 import org.apache.tika.eval.db.Cols;
 import org.apache.tika.eval.db.TableInfo;
@@ -50,34 +32,31 @@ import org.apache.tika.eval.io.ExtractReaderException;
 import org.apache.tika.eval.io.IDBWriter;
 import org.apache.tika.eval.langid.Language;
 import org.apache.tika.eval.langid.LanguageIDWrapper;
-import org.apache.tika.eval.textstats.BasicTokenCountStatsCalculator;
-import org.apache.tika.eval.textstats.CommonTokens;
-import org.apache.tika.eval.textstats.CompositeTextStatsCalculator;
-import org.apache.tika.eval.textstats.ContentLengthCalculator;
-import org.apache.tika.eval.textstats.TextStatsCalculator;
-import org.apache.tika.eval.textstats.TokenEntropy;
-import org.apache.tika.eval.textstats.TokenLengths;
-import org.apache.tika.eval.textstats.TopNTokens;
-import org.apache.tika.eval.textstats.UnicodeBlockCounter;
-import org.apache.tika.eval.tokens.AnalyzerManager;
-import org.apache.tika.eval.tokens.CommonTokenCountManager;
-import org.apache.tika.eval.tokens.CommonTokenResult;
-import org.apache.tika.eval.tokens.TokenCounts;
-import org.apache.tika.eval.tokens.TokenIntPair;
+import org.apache.tika.eval.textstats.*;
+import org.apache.tika.eval.tokens.*;
 import org.apache.tika.eval.util.ContentTagParser;
 import org.apache.tika.eval.util.ContentTags;
 import org.apache.tika.eval.util.EvalExceptionUtils;
 import org.apache.tika.exception.TikaException;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.metadata.PagedText;
-import org.apache.tika.metadata.TikaCoreProperties;
 import org.apache.tika.sax.AbstractRecursiveParserWrapperHandler;
 import org.apache.tika.sax.RecursiveParserWrapperHandler;
 import org.apache.tika.sax.ToXMLContentHandler;
-import org.apache.tika.utils.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.sql.Types;
+import java.util.*;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public abstract class AbstractProfiler extends FileResourceConsumer {
 
@@ -390,9 +369,11 @@ public abstract class AbstractProfiler extends FileResourceConsumer {
         Map<Cols, String> data = new HashMap<>();
         data.put(Cols.ID, fileId);
         if (textStats.containsKey(ContentLengthCalculator.class)) {
-            data.put(Cols.CONTENT_LENGTH, Integer.toString((Integer) textStats.get(ContentLengthCalculator.class)));
-        } else {
-            data.put(Cols.CONTENT_LENGTH, "0");
+            int length = (int)textStats.get(ContentLengthCalculator.class);
+            if (length == 0) {
+                return;
+            }
+            data.put(Cols.CONTENT_LENGTH, Integer.toString(length));
         }
         langid(textStats, data);
 

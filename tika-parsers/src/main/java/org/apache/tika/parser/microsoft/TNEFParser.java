@@ -16,13 +16,6 @@
  */
 package org.apache.tika.parser.microsoft;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
-
 import org.apache.poi.hmef.Attachment;
 import org.apache.poi.hmef.HMEFMessage;
 import org.apache.poi.hmef.attribute.MAPIAttribute;
@@ -38,8 +31,16 @@ import org.apache.tika.mime.MediaType;
 import org.apache.tika.parser.AbstractParser;
 import org.apache.tika.parser.ParseContext;
 import org.apache.tika.sax.EmbeddedContentHandler;
+import org.apache.tika.sax.XHTMLContentHandler;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * A POI-powered Tika Parser for TNEF (Transport Neutral
@@ -80,7 +81,8 @@ public class TNEFParser extends AbstractParser {
             metadata.set(TikaCoreProperties.TITLE, subject);
             metadata.set(TikaCoreProperties.SUBJECT, subject);
         }
-
+        XHTMLContentHandler xhtml = new XHTMLContentHandler(handler, metadata);
+        xhtml.startDocument();
         // Recurse into the message body RTF
         MAPIAttribute attr = msg.getMessageMAPIAttribute(MAPIProperty.RTF_COMPRESSED);
         if (attr != null && attr instanceof MAPIRtfAttribute) {
@@ -88,7 +90,7 @@ public class TNEFParser extends AbstractParser {
             handleEmbedded(
                     "message.rtf", "application/rtf",
                     rtf.getData(),
-                    embeddedExtractor, handler
+                    embeddedExtractor, xhtml
             );
         }
 
@@ -106,9 +108,10 @@ public class TNEFParser extends AbstractParser {
             }
             handleEmbedded(
                     name, null, attachment.getContents(),
-                    embeddedExtractor, handler
+                    embeddedExtractor, xhtml
             );
         }
+        xhtml.endDocument();
     }
 
     private void handleEmbedded(String name, String type, byte[] contents,

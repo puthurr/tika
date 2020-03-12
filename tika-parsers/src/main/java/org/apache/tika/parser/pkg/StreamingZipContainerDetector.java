@@ -16,14 +16,6 @@
  */
 package org.apache.tika.parser.pkg;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
-
-import java.io.InputStream;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream;
 import org.apache.commons.io.IOUtils;
@@ -32,18 +24,34 @@ import org.apache.poi.xslf.usermodel.XSLFRelation;
 import org.apache.poi.xssf.usermodel.XSSFRelation;
 import org.apache.poi.xwpf.usermodel.XWPFRelation;
 import org.apache.tika.detect.Detector;
+import org.apache.tika.io.BoundedInputStream;
 import org.apache.tika.io.CloseShieldInputStream;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.mime.MediaType;
 import org.apache.tika.parser.ParseContext;
 import org.apache.tika.parser.iwork.IWorkPackageParser;
+import org.apache.tika.parser.iwork.iwana.IWork13PackageParser;
+import org.apache.tika.parser.iwork.iwana.IWork18PackageParser;
 import org.apache.tika.sax.OfflineContentHandler;
 import org.apache.tika.utils.XMLReaderUtils;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 public class StreamingZipContainerDetector extends ZipContainerDetectorBase implements Detector {
+
+    private static final int MAX_MIME_TYPE = 1024;
+    private static final int MAX_MANIFEST = 20 * 1024 * 1024;
 
     static Map<String, MediaType> OOXML_CONTENT_TYPES = new ConcurrentHashMap<>();
     static {
@@ -125,15 +133,44 @@ public class StreamingZipContainerDetector extends ZipContainerDetectorBase impl
                         return type.getType();
                     }
                 } else if (name.equals("mimetype")) {
-                    //odt -- TODO -- bound the read and check that the results are
-                    //valid
-                    return MediaType.parse(IOUtils.toString(zipArchiveInputStream, UTF_8));
+                    //can't rely on zae.getSize to determine if there is any
+                    //content here. :(
+                    ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                    BoundedInputStream bis = new BoundedInputStream(MAX_MIME_TYPE, zipArchiveInputStream);
+                    IOUtils.copy(bis, bos);
+                    //do anything with an inputstream > MAX_MIME_TYPE?
+                    if (bos.toByteArray().length > 0)  {
+                        //odt -- TODO -- check that the results are valid
+                        return MediaType.parse(new String(bos.toByteArray(), UTF_8));
+                    }
+                } else if (name.equals("META-INF/manifest.xml")) {
+                    //for an unknown reason, passing in the zipArchiveInputStream
+                    //"as is" can cause the iteration of the entries to stop early
+                    //without exception or warning.  So, copy the full stream, then
+                    //process.  TIKA-3061
+                    ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                    BoundedInputStream bis = new BoundedInputStream(MAX_MANIFEST, zipArchiveInputStream);
+                    IOUtils.copy(bis, bos);
+                    //TODO: do something if the full stream hasn't been read?
+                    MediaType mt = detectStarOfficeX(new ByteArrayInputStream(bos.toByteArray()));
+                    if (mt != null) {
+                        return mt;
+                    }
+                }
+                MediaType mt = IWork18PackageParser.IWork18DocumentType.detectIfPossible(zae);
+                if (mt != null) {
+                    return mt;
+                }
+                mt = IWork13PackageParser.IWork13DocumentType.detectIfPossible(zae);
+                if (mt != null) {
+                    return mt;
                 }
                 zae = zipArchiveInputStream.getNextZipEntry();
             }
         } catch (SecurityException e) {
             throw e;
         } catch (Exception e) {
+            e.printStackTrace();
             //swallow
         }
         //entrynames is the union of directory names and file names
@@ -242,7 +279,5 @@ public class StreamingZipContainerDetector extends ZipContainerDetectorBase impl
         }
     }
 
-    private static class StoppingEarlyException extends SAXException {
 
-    }
 }

@@ -46,18 +46,9 @@ import org.xml.sax.SAXException;
 import org.xml.sax.helpers.AttributesImpl;
 
 import java.awt.image.BufferedImage;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.Writer;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
+import java.io.*;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Utility class that overrides the {@link PDFTextStripper} functionality
@@ -89,8 +80,8 @@ class PDF2XHTML extends AbstractPDF2XHTML {
      * TIKA-1742, we're limiting the export to one image per page.
      */
     private Map<COSStream, Integer> processedInlineImages = new HashMap<>();
-    private int inlineImageCounter = 0;
-    private PDF2XHTML(PDDocument document, ContentHandler handler, ParseContext context, Metadata metadata,
+    private AtomicInteger inlineImageCounter = new AtomicInteger(0);
+    PDF2XHTML(PDDocument document, ContentHandler handler, ParseContext context, Metadata metadata,
                       PDFParserConfig config)
             throws IOException {
         super(document, handler, context, metadata, config);
@@ -158,12 +149,60 @@ class PDF2XHTML extends AbstractPDF2XHTML {
         }
     }
 
+
+//            if ( false )
+//    {
+//        // "presence of Graphics"
+//        // Cover the page into a single image
+//
+//    }
+//
+//            if ( false )
+//    {
+//        // Striping Images from Scanned PDF for instance
+//        //
+//        // Striping means we need the images in the right order first aka the order of rendering.
+//        // The order information is in the Contents stream where we can intercept the Do operations
+//        //
+//        try {
+//            // READ THE Page content stream
+//            // Extract all /xxxxx DO action
+//            PDFStreamParser parser = new PDFStreamParser(page);
+//            parser.parse();
+//            List tokens = parser.getTokens();
+//            for (Object token : tokens) {
+//                if (token instanceof Operator) {
+//                    Operator op = (Operator) token;
+//                    if (op.getName().equals("Do")) {
+//                        continue;
+//                    }
+//                }
+//            }
+//
+//            // Stripe Case#1
+//            // PDF Scanned TIF/TIFF
+//            // Convert the page into a single image and output it
+//
+//            // Stripe Case#2
+//            // Images striping in normal PDF
+//
+//            // List of Images to stich / Remaining
+//
+//
+//
+//        }
+//        catch  (Exception ex)
+//        {
+//
+//        }
+
     @Override
     protected void endPage(PDPage page) throws IOException {
         try {
             writeParagraphEnd();
             try {
-                extractImages(page.getResources(), new HashSet<COSBase>());
+                extractImages(page);
+//                extractImages(page.getResources(),new HashSet<COSBase>());
             } catch (IOException e) {
                 handleCatchableIOE(e);
             }
@@ -175,13 +214,28 @@ class PDF2XHTML extends AbstractPDF2XHTML {
         }
     }
 
+    private void extractImages(PDPage page) throws SAXException, IOException {
+        if (config.getExtractInlineImages() == false) {
+            return;
+        }
+        ImageGraphicsEngine engine = new ImageGraphicsEngine(page, embeddedDocumentExtractor,
+                config, processedInlineImages, inlineImageCounter, xhtml, metadata, context);
+        engine.run();
+        List<IOException> engineExceptions = engine.getExceptions();
+        if (engineExceptions.size() > 0) {
+            IOException first = engineExceptions.remove(0);
+            if (config.getCatchIntermediateIOExceptions()) {
+                exceptions.addAll(engineExceptions);
+            }
+            throw first;
+        }
+    }
+
     private void extractImages(PDResources resources, Set<COSBase> seenThisPage) throws SAXException, IOException {
         if (resources == null || config.getExtractInlineImages() == false) {
             return;
         }
-
         for (COSName name : resources.getXObjectNames()) {
-
             PDXObject object = null;
             try {
                 object = resources.getXObject(name);
@@ -236,7 +290,7 @@ class PDF2XHTML extends AbstractPDF2XHTML {
             
             Integer imageNumber = processedInlineImages.get(cosStream);
             if (imageNumber == null) {
-                imageNumber = inlineImageCounter++;
+                imageNumber = inlineImageCounter.incrementAndGet();
             }
             String fileName = String.format(Locale.ROOT,"image%05d", imageNumber) + "." + extension;
             embeddedMetadata.set(TikaCoreProperties.RESOURCE_NAME_KEY, fileName);

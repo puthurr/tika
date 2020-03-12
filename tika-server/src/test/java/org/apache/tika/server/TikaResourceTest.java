@@ -26,7 +26,6 @@ import org.apache.cxf.jaxrs.lifecycle.SingletonResourceProvider;
 import org.apache.tika.parser.ocr.TesseractOCRConfig;
 import org.apache.tika.parser.ocr.TesseractOCRParser;
 import org.apache.tika.server.resource.TikaResource;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import javax.ws.rs.ProcessingException;
@@ -36,9 +35,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 public class TikaResourceTest extends CXFTestBase {
     public static final String TEST_DOC = "test.doc";
@@ -336,14 +333,14 @@ public class TikaResourceTest extends CXFTestBase {
                 ClassLoader.getSystemResourceAsStream("2pic.docx")
         );
 
-        // Changed the Accept to HTML since I don't know it was Text before (this document has no textual data, only 2 pictures). 
         Response response = WebClient.create(endPoint + TIKA_PATH + "/form")
                 .type("multipart/form-data")
-                .accept("text/html")
+                .accept("text/plain")
                 .post(attachmentPart);
 
         String responseMsg = getStringFromInputStream((InputStream) response.getEntity());
-        assertTrue(responseMsg.contains("P1040893.JPG"));
+//        assertTrue(responseMsg.contains("P1040893.JPG"));
+        assertTrue(responseMsg.contains("image1.jpeg"));
         assertNotFound(
                 STREAM_CLOSED_FAULT,
                 responseMsg

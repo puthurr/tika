@@ -17,16 +17,6 @@
 
 package org.apache.tika.parser.iwork.iwana;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Enumeration;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
-
 import org.apache.commons.compress.archivers.zip.ZipFile;
 import org.apache.tika.exception.TikaException;
 import org.apache.tika.io.TikaInputStream;
@@ -36,6 +26,12 @@ import org.apache.tika.parser.AbstractParser;
 import org.apache.tika.parser.ParseContext;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.*;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 public class IWork13PackageParser extends AbstractParser {
 
@@ -71,7 +67,7 @@ public class IWork13PackageParser extends AbstractParser {
         /**
          * @return Specific type if this identifies one, otherwise null
          */
-        protected static MediaType detectIfPossible(ZipEntry entry) {
+        public static MediaType detectIfPossible(ZipEntry entry) {
            String name = entry.getName();
            if (! name.endsWith(".iwa")) return null;
 

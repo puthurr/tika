@@ -23,20 +23,7 @@ import org.apache.poi.hslf.record.DocInfoListContainer;
 import org.apache.poi.hslf.record.RecordTypes;
 import org.apache.poi.hslf.record.VBAInfoAtom;
 import org.apache.poi.hslf.record.VBAInfoContainer;
-import org.apache.poi.hslf.usermodel.HSLFGroupShape;
-import org.apache.poi.hslf.usermodel.HSLFMasterSheet;
-import org.apache.poi.hslf.usermodel.HSLFNotes;
-import org.apache.poi.hslf.usermodel.HSLFObjectData;
-import org.apache.poi.hslf.usermodel.HSLFObjectShape;
-import org.apache.poi.hslf.usermodel.HSLFPictureData;
-import org.apache.poi.hslf.usermodel.HSLFShape;
-import org.apache.poi.hslf.usermodel.HSLFSlide;
-import org.apache.poi.hslf.usermodel.HSLFSlideShow;
-import org.apache.poi.hslf.usermodel.HSLFTable;
-import org.apache.poi.hslf.usermodel.HSLFTableCell;
-import org.apache.poi.hslf.usermodel.HSLFTextParagraph;
-import org.apache.poi.hslf.usermodel.HSLFTextRun;
-import org.apache.poi.hslf.usermodel.HSLFTextShape;
+import org.apache.poi.hslf.usermodel.*;
 import org.apache.poi.poifs.filesystem.DirectoryNode;
 import org.apache.poi.poifs.filesystem.POIFSFileSystem;
 import org.apache.poi.sl.usermodel.Comment;
@@ -49,6 +36,7 @@ import org.apache.tika.io.CloseShieldInputStream;
 import org.apache.tika.io.IOExceptionWithCause;
 import org.apache.tika.io.TikaInputStream;
 import org.apache.tika.metadata.Metadata;
+import org.apache.tika.metadata.TikaCoreProperties;
 import org.apache.tika.mime.MediaType;
 import org.apache.tika.parser.ParseContext;
 import org.apache.tika.sax.XHTMLContentHandler;
@@ -60,8 +48,6 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import org.apache.poi.hslf.usermodel.HSLFPictureShape;
-import org.apache.tika.metadata.TikaCoreProperties;
 
 public class HSLFExtractor extends AbstractPOIFSExtractor {
 
@@ -479,7 +465,7 @@ public class HSLFExtractor extends AbstractPOIFSExtractor {
             data = pic.getData();
         } catch (Exception e) {
             EmbeddedDocumentUtil.recordEmbeddedStreamException(e, parentMetadata);
-            return;
+                return;
         }
 
         Metadata embeddedMetadata = new Metadata();

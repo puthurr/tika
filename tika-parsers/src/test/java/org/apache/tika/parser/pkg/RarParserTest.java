@@ -16,14 +16,6 @@
  */
 package org.apache.tika.parser.pkg;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
-import java.io.InputStream;
-
 import org.apache.tika.exception.EncryptedDocumentException;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.parser.ParseContext;
@@ -32,6 +24,10 @@ import org.apache.tika.parser.PasswordProvider;
 import org.apache.tika.sax.BodyContentHandler;
 import org.junit.Test;
 import org.xml.sax.ContentHandler;
+
+import java.io.InputStream;
+
+import static org.junit.Assert.*;
 
 /**
  * Test case for parsing rar files.
@@ -48,7 +44,7 @@ public class RarParserTest extends AbstractPkgTest {
             AUTO_DETECT_PARSER.parse(stream, handler, metadata, recursingContext);
         }
 
-        assertEquals("application/x-rar-compressed", metadata.get(Metadata.CONTENT_TYPE));
+        assertEquals("application/x-rar-compressed; version=4", metadata.get(Metadata.CONTENT_TYPE));
         String content = handler.toString();
         assertContains("test-documents/testEXCEL.xls", content);
         assertContains("Sample Excel Worksheet", content);

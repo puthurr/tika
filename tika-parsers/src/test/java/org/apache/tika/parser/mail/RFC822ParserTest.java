@@ -1,4 +1,4 @@
-/*
+	/*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -16,54 +16,47 @@
  */
 package org.apache.tika.parser.mail;
 
-import static java.nio.charset.StandardCharsets.US_ASCII;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static org.junit.Assume.assumeTrue;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
+    import org.apache.james.mime4j.stream.MimeConfig;
+    import org.apache.tika.TikaTest;
+    import org.apache.tika.config.TikaConfig;
+    import org.apache.tika.exception.TikaException;
+    import org.apache.tika.extractor.ContainerExtractor;
+    import org.apache.tika.extractor.ParserContainerExtractor;
+    import org.apache.tika.io.TikaInputStream;
+    import org.apache.tika.metadata.Message;
+    import org.apache.tika.metadata.Metadata;
+    import org.apache.tika.metadata.TikaCoreProperties;
+    import org.apache.tika.mime.MediaType;
+    import org.apache.tika.parser.AutoDetectParser;
+    import org.apache.tika.parser.ParseContext;
+    import org.apache.tika.parser.Parser;
+    import org.apache.tika.parser.PasswordProvider;
+    import org.apache.tika.parser.ocr.TesseractOCRParserTest;
+    import org.apache.tika.sax.AbstractRecursiveParserWrapperHandler;
+    import org.apache.tika.sax.BodyContentHandler;
+    import org.apache.tika.sax.XHTMLContentHandler;
+    import org.junit.BeforeClass;
+    import org.junit.Test;
+    import org.xml.sax.Attributes;
+    import org.xml.sax.ContentHandler;
+    import org.xml.sax.helpers.DefaultHandler;
 
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
-import java.text.DateFormat;
-import java.text.DateFormatSymbols;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.List;
-import java.util.Locale;
+    import java.io.ByteArrayInputStream;
+    import java.io.InputStream;
+    import java.nio.charset.StandardCharsets;
+    import java.text.DateFormat;
+    import java.text.DateFormatSymbols;
+    import java.text.SimpleDateFormat;
+    import java.util.Date;
+    import java.util.List;
+    import java.util.Locale;
 
-import org.apache.james.mime4j.stream.MimeConfig;
-import org.apache.tika.TikaTest;
-import org.apache.tika.config.TikaConfig;
-import org.apache.tika.exception.TikaException;
-import org.apache.tika.extractor.ContainerExtractor;
-import org.apache.tika.extractor.ParserContainerExtractor;
-import org.apache.tika.io.TikaInputStream;
-import org.apache.tika.metadata.Message;
-import org.apache.tika.metadata.Metadata;
-import org.apache.tika.metadata.TikaCoreProperties;
-import org.apache.tika.mime.MediaType;
-import org.apache.tika.parser.AutoDetectParser;
-import org.apache.tika.parser.ParseContext;
-import org.apache.tika.parser.Parser;
-import org.apache.tika.parser.PasswordProvider;
-import org.apache.tika.parser.ocr.TesseractOCRParserTest;
-import org.apache.tika.sax.AbstractRecursiveParserWrapperHandler;
-import org.apache.tika.sax.BodyContentHandler;
-import org.apache.tika.sax.XHTMLContentHandler;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.xml.sax.Attributes;
-import org.xml.sax.ContentHandler;
-import org.xml.sax.helpers.DefaultHandler;
+    import static java.nio.charset.StandardCharsets.US_ASCII;
+    import static org.junit.Assert.*;
+    import static org.junit.Assume.assumeTrue;
+    import static org.mockito.Matchers.any;
+    import static org.mockito.Matchers.eq;
+    import static org.mockito.Mockito.*;
 
 public class RFC822ParserTest extends TikaTest {
 
@@ -695,5 +688,13 @@ public class RFC822ParserTest extends TikaTest {
         List<Metadata> metadataList = getRecursiveMetadata("testRFC822_simple_inline_body.txt");
         assertEquals(1, metadataList.size());
         assertContains("asked", metadataList.get(0).get(AbstractRecursiveParserWrapperHandler.TIKA_CONTENT));
+    }
+
+    @Test
+    public void testGroupwise() throws Exception {
+        //TODO -- this should treat attachments as attachments, no?
+        List<Metadata>  metadataList = getRecursiveMetadata("testGroupWiseEml.eml");
+        assertEquals(1, metadataList.size());
+        assertContains("ssssss", metadataList.get(0).get(AbstractRecursiveParserWrapperHandler.TIKA_CONTENT));
     }
 }

@@ -16,11 +16,6 @@
  */
 package org.apache.tika.parser.mail;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Collections;
-import java.util.Set;
-
 import org.apache.james.mime4j.MimeException;
 import org.apache.james.mime4j.message.DefaultBodyDescriptorBuilder;
 import org.apache.james.mime4j.parser.MimeStreamParser;
@@ -37,6 +32,11 @@ import org.apache.tika.parser.ParseContext;
 import org.apache.tika.sax.XHTMLContentHandler;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Collections;
+import java.util.Set;
 
 /**
  * Uses apache-mime4j to parse emails. Each part is treated with the
@@ -94,7 +94,7 @@ public class RFC822Parser extends AbstractParser {
                 extractAllAlternatives);
         parser.setContentHandler(mch);
         parser.setContentDecoding(true);
-        
+        xhtml.startDocument();
         TikaInputStream tstream = TikaInputStream.get(stream);
         try {
             parser.parse(tstream);
@@ -112,6 +112,7 @@ public class RFC822Parser extends AbstractParser {
                 throw new TikaException("Failed to parse an email message", e);
             }
         }
+        xhtml.endDocument();
     }
 
     /**

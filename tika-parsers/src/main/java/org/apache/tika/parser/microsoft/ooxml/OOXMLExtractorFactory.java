@@ -16,13 +16,6 @@
  */
 package org.apache.tika.parser.microsoft.ooxml;
 
-import java.io.EOFException;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Locale;
-
-import org.apache.commons.io.input.CloseShieldInputStream;
 import org.apache.poi.ooxml.POIXMLDocument;
 import org.apache.poi.ooxml.extractor.ExtractorFactory;
 import org.apache.poi.ooxml.extractor.POIXMLTextExtractor;
@@ -63,6 +56,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
+
+import java.io.EOFException;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Locale;
 
 /**
  * Figures out the correct {@link OOXMLExtractor} for the supplied document and
@@ -240,7 +239,7 @@ public class OOXMLExtractorFactory {
         }
     }
 
-    private static POIXMLTextExtractor trySXWPF(OPCPackage pkg) throws XmlException, OpenXML4JException, IOException {
+    private static POIXMLTextExtractor trySXWPF(OPCPackage pkg) throws TikaException, XmlException, OpenXML4JException, IOException {
         PackageRelationshipCollection packageRelationshipCollection = pkg.getRelationshipsByType("http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument");
         if (packageRelationshipCollection.size() == 0) {
             packageRelationshipCollection = pkg.getRelationshipsByType("http://purl.oclc.org/ooxml/officeDocument/relationships/officeDocument");
@@ -250,6 +249,9 @@ public class OOXMLExtractorFactory {
             return null;
         }
         PackagePart corePart = pkg.getPart(packageRelationshipCollection.getRelationship(0));
+        if (corePart == null) {
+            throw new TikaException("Couldn't find core part.");
+        }
         String targetContentType = corePart.getContentType();
         for (XWPFRelation relation : XWPFWordExtractor.SUPPORTED_TYPES) {
             if (targetContentType.equals(relation.getContentType())) {
@@ -259,7 +261,8 @@ public class OOXMLExtractorFactory {
         return null;
     }
 
-    private static POIXMLTextExtractor tryXSLF(OPCPackage pkg, boolean eventBased) throws XmlException, OpenXML4JException, IOException {
+    private static POIXMLTextExtractor tryXSLF(OPCPackage pkg, boolean eventBased) throws TikaException, XmlException,
+            OpenXML4JException, IOException {
 
         PackageRelationshipCollection packageRelationshipCollection = pkg.getRelationshipsByType("http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument");
         if (packageRelationshipCollection.size() == 0) {
@@ -270,6 +273,9 @@ public class OOXMLExtractorFactory {
             return null;
         }
         PackagePart corePart = pkg.getPart(packageRelationshipCollection.getRelationship(0));
+        if (corePart == null) {
+            throw new TikaException("Couldn't find core part");
+        }
         String targetContentType = corePart.getContentType();
 
         XSLFRelation[] xslfRelations = org.apache.poi.xslf.extractor.XSLFPowerPointExtractor.SUPPORTED_TYPES;

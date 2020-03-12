@@ -16,31 +16,19 @@
  */
 package org.apache.tika.cli;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InvalidObjectException;
-import java.io.OutputStream;
-import java.io.PrintStream;
-import java.net.URI;
-import java.nio.charset.StandardCharsets;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
-import java.util.zip.ZipOutputStream;
-
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.FilenameUtils;
 import org.apache.tika.exception.TikaException;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
+
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.PrintStream;
+import java.net.URI;
+
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.junit.Assert.*;
 
 /**
  * Tests the Tika's cli
@@ -408,7 +396,7 @@ public class TikaCLITest {
         new File("subdir/foo.txt").delete();
         new File("subdir").delete();
         TikaCLI.main(params);
-        String content = errContent.toString(UTF_8.name());
+        String content = outContent.toString(UTF_8.name());
         assertTrue(content.contains("Extracting 'subdir/foo.txt'"));
         // clean up. TODO: These should be in target.
         new File("target/subdir/foo.txt").delete();

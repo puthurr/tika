@@ -16,35 +16,28 @@
  */
 package org.apache.tika.eval;
 
-import static org.apache.tika.eval.AbstractProfiler.EXCEPTION_TYPE;
-import static org.apache.tika.eval.io.ExtractReader.IGNORE_LENGTH;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.SortedSet;
-import java.util.TreeSet;
-
 import org.apache.tika.MockDBWriter;
 import org.apache.tika.TikaTest;
 import org.apache.tika.eval.db.Cols;
 import org.apache.tika.eval.db.TableInfo;
 import org.apache.tika.eval.io.ExtractReader;
 import org.apache.tika.eval.io.ExtractReaderException;
-import org.apache.tika.eval.util.ContentTags;
 import org.apache.tika.eval.langid.LanguageIDWrapper;
+import org.apache.tika.eval.util.ContentTags;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.sax.AbstractRecursiveParserWrapperHandler;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
+
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.*;
+
+import static org.apache.tika.eval.AbstractProfiler.EXCEPTION_TYPE;
+import static org.apache.tika.eval.io.ExtractReader.IGNORE_LENGTH;
+import static org.junit.Assert.*;
 
 //These tests ensure that the comparer is extracting the right information
 //into a Map<String,String>.  A full integration test
@@ -281,7 +274,7 @@ public class SimpleComparerTest extends TikaTest {
         List<Map<Cols, String>> tableInfos = WRITER.getTable(ExtractComparer.CONTENT_COMPARISONS);
         assertEquals(3, tableInfos.size());
         for (int i = 0; i < tableInfos.size(); i++) {
-            assertEquals("1.0", tableInfos.get(i).get(Cols.OVERLAP));
+            assertEquals("problem with "+i, "1.0", tableInfos.get(i).get(Cols.OVERLAP));
         }
     }
 
@@ -439,6 +432,5 @@ public class SimpleComparerTest extends TikaTest {
                 ExtractComparer.CONTENT_COMPARISONS}) {
             debugPrintTable(t);
         }
-
     }
 }

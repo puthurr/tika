@@ -16,15 +16,6 @@
  */
 package org.apache.tika.parser.microsoft;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.StringReader;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
-
 import org.apache.poi.hssf.extractor.OldExcelExtractor;
 import org.apache.tika.exception.TikaException;
 import org.apache.tika.metadata.Metadata;
@@ -34,6 +25,15 @@ import org.apache.tika.parser.ParseContext;
 import org.apache.tika.sax.XHTMLContentHandler;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.StringReader;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * A POI-powered Tika Parser for very old versions of Excel, from
@@ -55,10 +55,7 @@ public class OldExcelParser extends AbstractParser {
                                 XHTMLContentHandler xhtml) throws TikaException, IOException, SAXException {
         // Get the whole text, as a single string
         String text = extractor.getText();
-
         // Split and output
-        xhtml.startDocument();
-
         String line;
         BufferedReader reader = new BufferedReader(new StringReader(text));
         while ((line = reader.readLine()) != null) {
@@ -66,8 +63,6 @@ public class OldExcelParser extends AbstractParser {
             xhtml.characters(line);
             xhtml.endElement("p");
         }
-
-        xhtml.endDocument();
     }
 
     public Set<MediaType> getSupportedTypes(ParseContext context) {
@@ -92,6 +87,8 @@ public class OldExcelParser extends AbstractParser {
 
         // Have the text extracted and given to our Content Handler
         XHTMLContentHandler xhtml = new XHTMLContentHandler(handler, metadata);
+        xhtml.startDocument();
         parse(extractor, xhtml);
+        xhtml.endDocument();
     }
 }

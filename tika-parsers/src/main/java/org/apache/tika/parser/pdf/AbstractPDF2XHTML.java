@@ -16,40 +16,10 @@
  */
 package org.apache.tika.parser.pdf;
 
-import static org.apache.tika.parser.pdf.PDFParserConfig.OCR_STRATEGY.NO_OCR;
-
-import javax.xml.stream.XMLStreamException;
-import java.awt.image.BufferedImage;
-import java.io.BufferedInputStream;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.HashSet;
-import java.util.List;
-import java.util.ListIterator;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
-
 import org.apache.commons.io.IOExceptionWithCause;
 import org.apache.commons.io.IOUtils;
 import org.apache.pdfbox.cos.COSName;
-import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.pdmodel.PDDocumentCatalog;
-import org.apache.pdfbox.pdmodel.PDDocumentNameDictionary;
-import org.apache.pdfbox.pdmodel.PDEmbeddedFilesNameTreeNode;
-import org.apache.pdfbox.pdmodel.PDPage;
-import org.apache.pdfbox.pdmodel.PDPageTree;
+import org.apache.pdfbox.pdmodel.*;
 import org.apache.pdfbox.pdmodel.common.PDDestinationOrAction;
 import org.apache.pdfbox.pdmodel.common.PDNameTreeNode;
 import org.apache.pdfbox.pdmodel.common.filespecification.PDComplexFileSpecification;
@@ -57,16 +27,7 @@ import org.apache.pdfbox.pdmodel.common.filespecification.PDEmbeddedFile;
 import org.apache.pdfbox.pdmodel.common.filespecification.PDFileSpecification;
 import org.apache.pdfbox.pdmodel.common.filespecification.PDSimpleFileSpecification;
 import org.apache.pdfbox.pdmodel.font.PDFont;
-import org.apache.pdfbox.pdmodel.interactive.action.PDAction;
-import org.apache.pdfbox.pdmodel.interactive.action.PDActionImportData;
-import org.apache.pdfbox.pdmodel.interactive.action.PDActionJavaScript;
-import org.apache.pdfbox.pdmodel.interactive.action.PDActionLaunch;
-import org.apache.pdfbox.pdmodel.interactive.action.PDActionRemoteGoTo;
-import org.apache.pdfbox.pdmodel.interactive.action.PDActionURI;
-import org.apache.pdfbox.pdmodel.interactive.action.PDAnnotationAdditionalActions;
-import org.apache.pdfbox.pdmodel.interactive.action.PDDocumentCatalogAdditionalActions;
-import org.apache.pdfbox.pdmodel.interactive.action.PDFormFieldAdditionalActions;
-import org.apache.pdfbox.pdmodel.interactive.action.PDPageAdditionalActions;
+import org.apache.pdfbox.pdmodel.interactive.action.*;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotation;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationFileAttachment;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationMarkup;
@@ -75,11 +36,7 @@ import org.apache.pdfbox.pdmodel.interactive.digitalsignature.PDSignature;
 import org.apache.pdfbox.pdmodel.interactive.documentnavigation.outline.PDDocumentOutline;
 import org.apache.pdfbox.pdmodel.interactive.documentnavigation.outline.PDOutlineItem;
 import org.apache.pdfbox.pdmodel.interactive.documentnavigation.outline.PDOutlineNode;
-import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
-import org.apache.pdfbox.pdmodel.interactive.form.PDField;
-import org.apache.pdfbox.pdmodel.interactive.form.PDNonTerminalField;
-import org.apache.pdfbox.pdmodel.interactive.form.PDSignatureField;
-import org.apache.pdfbox.pdmodel.interactive.form.PDXFAResource;
+import org.apache.pdfbox.pdmodel.interactive.form.*;
 import org.apache.pdfbox.rendering.PDFRenderer;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.apache.pdfbox.tools.imageio.ImageIOUtil;
@@ -94,7 +51,9 @@ import org.apache.tika.metadata.Font;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.metadata.PDF;
 import org.apache.tika.metadata.TikaCoreProperties;
+import org.apache.tika.mime.MediaType;
 import org.apache.tika.parser.ParseContext;
+import org.apache.tika.parser.Parser;
 import org.apache.tika.parser.ocr.TesseractOCRConfig;
 import org.apache.tika.parser.ocr.TesseractOCRParser;
 import org.apache.tika.sax.EmbeddedContentHandler;
@@ -102,6 +61,19 @@ import org.apache.tika.sax.XHTMLContentHandler;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.AttributesImpl;
+
+import javax.xml.stream.XMLStreamException;
+import java.awt.image.BufferedImage;
+import java.io.*;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.text.SimpleDateFormat;
+import java.util.*;
+
+import static org.apache.tika.parser.pdf.PDFParserConfig.OCR_STRATEGY.NO_OCR;
 
 class AbstractPDF2XHTML extends PDFTextStripper {
 
@@ -139,6 +111,12 @@ class AbstractPDF2XHTML extends PDFTextStripper {
     private final static int MAX_ACROFORM_RECURSIONS = 10;
 
     private final static TesseractOCRConfig DEFAULT_TESSERACT_CONFIG = new TesseractOCRConfig();
+
+    private static final MediaType XFA_MEDIA_TYPE = MediaType.application("vnd.adobe.xdp+xml");
+    private static final MediaType XMP_MEDIA_TYPE = MediaType.application("rdf+xml");
+
+    public static final String XMP_DOCUMENT_CATALOG_LOCATION = "documentCatalog";
+    public static final String XMP_PAGE_LOCATION_PREFIX = "page ";
 
     /**
      * Format used for signature dates
@@ -195,6 +173,89 @@ class AbstractPDF2XHTML extends PDFTextStripper {
             throw new IOExceptionWithCause("Unable to start a page", e);
         }
         writeParagraphStart();
+    }
+
+    private void extractXMPXFA(PDDocument pdfDocument, Metadata parentMetadata, ParseContext context) throws IOException, SAXException {
+        Set<MediaType> supportedTypes = Collections.EMPTY_SET;
+        Parser embeddedParser = context.get(Parser.class);
+        if (embeddedParser != null) {
+            supportedTypes = embeddedParser.getSupportedTypes(context);
+        }
+
+        if (supportedTypes.contains(XMP_MEDIA_TYPE)) {
+            //try the main metadata
+            if (pdfDocument.getDocumentCatalog().getMetadata() != null) {
+                try (InputStream is = pdfDocument.getDocumentCatalog().getMetadata().exportXMPMetadata()) {
+                    extractXMPAsEmbeddedFile(is, XMP_DOCUMENT_CATALOG_LOCATION);
+                } catch (IOException e) {
+                    EmbeddedDocumentUtil.recordEmbeddedStreamException(e, parentMetadata);
+                }
+            }
+            //now iterate through the pages
+            int pageNumber = 1;
+            for (PDPage page : pdfDocument.getPages()) {
+                if (page.getMetadata() != null) {
+                    try (InputStream is = page.getMetadata().exportXMPMetadata()) {
+                        extractXMPAsEmbeddedFile(is, XMP_PAGE_LOCATION_PREFIX+pageNumber);
+                    } catch (IOException e) {
+                        EmbeddedDocumentUtil.recordEmbeddedStreamException(e, parentMetadata);
+                    }
+                }
+                pageNumber++;
+            }
+        }
+
+        //now try the xfa
+        if (pdfDocument.getDocumentCatalog().getAcroForm() != null &&
+            pdfDocument.getDocumentCatalog().getAcroForm().getXFA() != null) {
+
+            Metadata xfaMetadata = new Metadata();
+            xfaMetadata.set(Metadata.CONTENT_TYPE, XFA_MEDIA_TYPE.toString());
+            xfaMetadata.set(TikaCoreProperties.EMBEDDED_RESOURCE_TYPE, TikaCoreProperties.EmbeddedResourceType.METADATA.toString());
+            if (embeddedDocumentExtractor.shouldParseEmbedded(xfaMetadata) &&
+                    supportedTypes.contains(XFA_MEDIA_TYPE)) {
+                byte[] bytes = null;
+                try {
+                    bytes = pdfDocument.getDocumentCatalog().getAcroForm().getXFA().getBytes();
+                } catch (IOException e) {
+                    EmbeddedDocumentUtil.recordEmbeddedStreamException(e, parentMetadata);
+                }
+                if (bytes != null) {
+                    try (InputStream is = new ByteArrayInputStream(bytes)) {
+                        parseMetadata(is, xfaMetadata);
+                    }
+                }
+            }
+        }
+    }
+
+    private void extractXMPAsEmbeddedFile(InputStream is, String location) throws IOException, SAXException {
+        if (is == null) {
+            return;
+        }
+        Metadata xmpMetadata = new Metadata();
+        xmpMetadata.set(Metadata.CONTENT_TYPE, XMP_MEDIA_TYPE.toString());
+        xmpMetadata.set(TikaCoreProperties.EMBEDDED_RESOURCE_TYPE, TikaCoreProperties.EmbeddedResourceType.METADATA.toString());
+        xmpMetadata.set(PDF.XMP_LOCATION, location);
+        if (embeddedDocumentExtractor.shouldParseEmbedded(xmpMetadata)) {
+            try {
+                parseMetadata(is, xmpMetadata);
+            } finally {
+                org.apache.tika.io.IOUtils.closeQuietly(is);
+            }
+        }
+
+    }
+
+    private void parseMetadata(InputStream stream, Metadata embeddedMetadata) throws IOException, SAXException {
+        try {
+            embeddedDocumentExtractor.parseEmbedded(
+                    stream,
+                    new EmbeddedContentHandler(xhtml),
+                    embeddedMetadata, false);
+        } catch (IOException e) {
+            handleCatchableIOE(e);
+        }
     }
 
     private void extractEmbeddedDocuments(PDDocument document)
@@ -318,7 +379,7 @@ class AbstractPDF2XHTML extends PDFTextStripper {
     }
 
     void handleCatchableIOE(IOException e) throws IOException {
-        if (config.isCatchIntermediateIOExceptions()) {
+        if (config.getCatchIntermediateIOExceptions()) {
             if (e.getCause() instanceof SAXException && e.getCause().getMessage() != null &&
                     e.getCause().getMessage().contains("Your document contained more than")) {
                 //TODO -- is there a cleaner way of checking for:
@@ -378,6 +439,7 @@ class AbstractPDF2XHTML extends PDFTextStripper {
         metadata.add(PDF.CHARACTERS_PER_PAGE, totalCharsPerPage);
         metadata.add(PDF.UNMAPPED_UNICODE_CHARS_PER_PAGE,
                 unmappedUnicodeCharsPerPage);
+
 
         try {
             for (PDAnnotation annotation : page.getAnnotations()) {
@@ -588,6 +650,8 @@ class AbstractPDF2XHTML extends PDFTextStripper {
             } catch (IOException e) {
                 handleCatchableIOE(e);
             }
+
+            extractXMPXFA(pdf, metadata, context);
 
             //extract acroform data at end of doc
             if (config.getExtractAcroFormContent() == true) {
