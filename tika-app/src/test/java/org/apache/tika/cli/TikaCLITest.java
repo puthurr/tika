@@ -16,19 +16,31 @@
  */
 package org.apache.tika.cli;
 
-import org.apache.commons.io.FileUtils;
-import org.apache.tika.exception.TikaException;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InvalidObjectException;
+import java.io.OutputStream;
 import java.io.PrintStream;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
+import java.util.zip.ZipOutputStream;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
-import static org.junit.Assert.*;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
+import org.apache.tika.exception.TikaException;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
 
 /**
  * Tests the Tika's cli
@@ -173,9 +185,9 @@ public class TikaCLITest {
         //test legacy alphabetic sort of keys
         int enc = json.indexOf("\"Content-Encoding\"");
         int fb = json.indexOf("fb:admins");
-        int title = json.indexOf("\"dc:title\"");
+        int title = json.indexOf("\"title\"");
         assertTrue(enc > -1 && fb > -1 && enc < fb);
-        assertTrue (fb > -1 && title > -1 && fb > title);
+        assertTrue (fb > -1 && title > -1 && fb < title);
         assertTrue(json.contains("\"X-TIKA:digest:MD2\":"));
     }
 
@@ -197,9 +209,9 @@ public class TikaCLITest {
         //test legacy alphabetic sort of keys
         int enc = json.indexOf("\"Content-Encoding\"");
         int fb = json.indexOf("fb:admins");
-        int title = json.indexOf("\"dc:title\"");
+        int title = json.indexOf("\"title\"");
         assertTrue(enc > -1 && fb > -1 && enc < fb);
-        assertTrue (fb > -1 && title > -1 && fb > title);
+        assertTrue (fb > -1 && title > -1 && fb < title);
     }
 
     /**
@@ -421,7 +433,7 @@ public class TikaCLITest {
                 allFiles.append(f);
             }
 
-            File jpeg = new File(tempFile, "image0.jpg");
+            File jpeg = new File(tempFile, "image00000.jpg");
             //tiff isn't extracted without optional image dependency
 //            File tiff = new File(tempFile, "image1.tif");
             File jobOptions = new File(tempFile, "Press Quality(1).joboptions");
@@ -476,10 +488,12 @@ public class TikaCLITest {
         String[] params = new String[]{"-m", "-J", "-r", resourcePrefix+"test_recursive_embedded.docx"};
         TikaCLI.main(params);
         String content = outContent.toString(UTF_8.name());
-        assertTrue(content.contains(
-                "\"extended-properties:AppVersion\": \"15.0000\","));
-        assertTrue(content.contains(
-                "\"extended-properties:Application\": \"Microsoft Office Word\","));
+        assertTrue(content.contains("[\n" +
+                "  {\n" +
+                "    \"Application-Name\": \"Microsoft Office Word\",\n" +
+                "    \"Application-Version\": \"15.0000\",\n" +
+                "    \"Character Count\": \"28\",\n" +
+                "    \"Character-Count-With-Spaces\": \"31\","));
         assertTrue(content.contains("\"X-TIKA:embedded_resource_path\": \"/embed1.zip\""));
         assertFalse(content.contains("X-TIKA:content"));
     }
@@ -557,4 +571,5 @@ public class TikaCLITest {
         String content = outContent.toString(UTF_8.name());
         assertFalse(content.contains("org.apache.tika.parser.executable.Executable"));
     }
+
 }

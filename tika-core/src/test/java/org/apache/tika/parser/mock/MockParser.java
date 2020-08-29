@@ -39,7 +39,7 @@ import org.apache.tika.extractor.EmbeddedDocumentExtractor;
 import org.apache.tika.extractor.ParsingEmbeddedDocumentExtractor;
 import org.apache.tika.io.IOExceptionWithCause;
 import org.apache.tika.metadata.Metadata;
-import org.apache.tika.metadata.TikaCoreProperties;
+import org.apache.tika.metadata.TikaMetadataKeys;
 import org.apache.tika.mime.MediaType;
 import org.apache.tika.parser.AbstractParser;
 import org.apache.tika.parser.ParseContext;
@@ -166,7 +166,7 @@ public class MockParser extends AbstractParser {
         String embeddedText = action.getTextContent();
         EmbeddedDocumentExtractor extractor = getEmbeddedDocumentExtractor(context);
         Metadata m = new Metadata();
-        m.set(TikaCoreProperties.RESOURCE_NAME_KEY, fileName);
+        m.set(TikaMetadataKeys.RESOURCE_NAME_KEY, fileName);
         if (! "".equals(contentType)) {
             m.set(Metadata.CONTENT_TYPE, contentType);
         }

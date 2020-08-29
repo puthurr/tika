@@ -16,6 +16,13 @@
  */
 package org.apache.tika.parser.image;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+import java.io.InputStream;
+import java.util.Arrays;
+import java.util.List;
+
 import org.apache.tika.TikaTest;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.metadata.TIFF;
@@ -24,13 +31,6 @@ import org.apache.tika.parser.ParseContext;
 import org.apache.tika.parser.Parser;
 import org.junit.Test;
 import org.xml.sax.helpers.DefaultHandler;
-
-import java.io.InputStream;
-import java.util.Arrays;
-import java.util.List;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 public class TiffParserTest extends TikaTest {
 
@@ -59,9 +59,12 @@ public class TiffParserTest extends TikaTest {
         assertEquals("3", metadata.get(Metadata.SAMPLES_PER_PIXEL));
 
         // Embedded XMP
-        List<String> keywords = Arrays.asList(metadata.getValues(TikaCoreProperties.SUBJECT));
+        List<String> keywords = Arrays.asList(metadata.getValues(TikaCoreProperties.KEYWORDS));
         assertTrue("got " + keywords, keywords.contains("cat"));
         assertTrue("got " + keywords, keywords.contains("garden"));
+        List<String> subject = Arrays.asList(metadata.getValues(Metadata.SUBJECT));
+        assertTrue("got " + subject, subject.contains("cat"));
+        assertTrue("got " + subject, subject.contains("garden"));
     }
 
     @Test

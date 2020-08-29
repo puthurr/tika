@@ -16,15 +16,15 @@
  */
 package org.apache.tika.parser.pdf;
 
-import org.apache.pdfbox.rendering.ImageType;
-import org.apache.pdfbox.text.PDFTextStripper;
-import org.apache.tika.config.Field;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
 import java.util.Locale;
 import java.util.Properties;
+
+import org.apache.pdfbox.rendering.ImageType;
+import org.apache.pdfbox.text.PDFTextStripper;
+import org.apache.tika.config.Field;
 
 /**
  * Config for PDFParser.
@@ -115,13 +115,16 @@ public class PDFParserConfig implements Serializable {
     private boolean extractMarkedContent = false;
 
     //The character width-based tolerance value used to estimate where spaces in text should be added
-    private Float averageCharTolerance;
+    //Default taken from PDFBox.
+    private Float averageCharTolerance = 0.5f;
 
     //The space width-based tolerance value used to estimate where spaces in text should be added
-    private Float spacingTolerance;
+    //Default taken from PDFBox.
+    private Float spacingTolerance = 0.3f;
 
     // The multiplication factor for line height to decide when a new paragraph starts.
-    private float dropThreshold;
+    //Default taken from PDFBox.
+    private Float dropThreshold = 2.5f;
 
     //If the PDF has an XFA element, process only that and skip extracting
     //content from elsewhere in the document.
@@ -133,6 +136,10 @@ public class PDFParserConfig implements Serializable {
     private ImageType ocrImageType = ImageType.GRAY;
     private String ocrImageFormatName = "png";
     private float ocrImageQuality = 1.0f;
+    /**
+     * deprecated ... use OCRDPI instead
+     */
+    private float ocrImageScale = 2.0f;
 
     private AccessChecker accessChecker;
 
@@ -230,11 +237,17 @@ public class PDFParserConfig implements Serializable {
 
         setOcrImageType(parseImageType(props.getProperty("ocrImageType")));
 
+        setOcrImageScale(getFloatProp(props.getProperty("ocrImageScale"), getOcrImageScale()));
+
         setExtractActions(getBooleanProp(props.getProperty("extractActions"), false));
 
         setExtractMarkedContent(getBooleanProp(props.getProperty("extractMarkedContent"), false));
 
         setSetKCMS(getBooleanProp(props.getProperty("setKCMS"), false));
+
+        setAverageCharTolerance(getFloatProp(props.getProperty("averageCharTolerance"), averageCharTolerance));
+        setSpacingTolerance(getFloatProp(props.getProperty("spacingTolerance"), spacingTolerance));
+        setDropThreshold(getFloatProp(props.getProperty("dropThreshold"), dropThreshold));
 
         boolean checkExtractAccessPermission = getBooleanProp(props.getProperty("checkExtractAccessPermission"), false);
         boolean allowExtractionForAccessibility = getBooleanProp(props.getProperty("allowExtractionForAccessibility"), true);
@@ -514,17 +527,11 @@ public class PDFParserConfig implements Serializable {
         this.spacingTolerance = spacingTolerance;
     }
 
-    /**
-     * @see #setDropThreshold(Float)
-     */
     public Float getDropThreshold() {
         return dropThreshold;
     }
 
-    /**
-     * See {@link PDFTextStripper#setDropThreshold(float)}
-     */
-    public void setDropThreshold(Float dropThreshold) {
+    public void setDropThreshold(float dropThreshold) {
         this.dropThreshold = dropThreshold;
     }
 
@@ -705,6 +712,24 @@ public class PDFParserConfig implements Serializable {
      */
     public void setOcrImageQuality(float ocrImageQuality) {
         this.ocrImageQuality = ocrImageQuality;
+    }
+
+    /**
+     * Scale to use if rendering a page and then running OCR on that rendered image.
+     * Default is 2.0f.
+     * @deprecated as of Tika 1.23, this is no longer used in rendering page images; use {@link #setOcrDPI(int)}
+     */
+    public float getOcrImageScale() {
+        return ocrImageScale;
+    }
+
+    /**
+     *
+     * @param ocrImageScale
+     * @deprecated (as of Tika 1.23, this is no longer used in rendering page images)
+     */
+    public void setOcrImageScale(float ocrImageScale) {
+        this.ocrImageScale = ocrImageScale;
     }
 
     /**

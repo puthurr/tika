@@ -21,7 +21,6 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Arrays;
 import java.util.List;
 
 import org.apache.tika.TikaTest;
@@ -29,7 +28,6 @@ import org.apache.tika.io.TikaInputStream;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.metadata.Office;
 import org.apache.tika.metadata.OfficeOpenXMLCore;
-import org.apache.tika.metadata.OfficeOpenXMLExtended;
 import org.apache.tika.metadata.TikaCoreProperties;
 import org.apache.tika.parser.EmptyParser;
 import org.apache.tika.parser.ParseContext;
@@ -86,15 +84,18 @@ public class ODFParserTest extends TikaTest {
                assertEquals(
                        "application/vnd.oasis.opendocument.text",
                        metadata.get(Metadata.CONTENT_TYPE));
-               assertEquals("en-US", metadata.get(TikaCoreProperties.LANGUAGE));
-               assertEquals("PT1M7S", metadata.get(OfficeOpenXMLExtended.TOTAL_TIME));
+               assertEquals("en-US", metadata.get(Metadata.LANGUAGE));
+               assertEquals("PT1M7S", metadata.get(Metadata.EDIT_TIME));
                assertEquals(
                        "NeoOffice/2.2$Unix OpenOffice.org_project/680m18$Build-9161",
                        metadata.get("generator"));
 
                // Check date metadata, both old-style and new-style
                assertEquals("2007-09-14T11:07:10", metadata.get(TikaCoreProperties.MODIFIED));
+               assertEquals("2007-09-14T11:07:10", metadata.get(Metadata.MODIFIED));
+               assertEquals("2007-09-14T11:07:10", metadata.get(Metadata.DATE));
                assertEquals("2007-09-14T11:06:08", metadata.get(TikaCoreProperties.CREATED));
+               assertEquals("2007-09-14T11:06:08", metadata.get(Metadata.CREATION_DATE));
 
                // Check the document statistics
                assertEquals("1", metadata.get(Office.PAGE_COUNT));
@@ -104,6 +105,24 @@ public class ODFParserTest extends TikaTest {
                assertEquals("0", metadata.get(Office.TABLE_COUNT));
                assertEquals("0", metadata.get(Office.OBJECT_COUNT));
                assertEquals("0", metadata.get(Office.IMAGE_COUNT));
+
+               // Check the Tika-1.0 style document statistics
+               assertEquals("1", metadata.get(Metadata.PAGE_COUNT));
+               assertEquals("1", metadata.get(Metadata.PARAGRAPH_COUNT));
+               assertEquals("14", metadata.get(Metadata.WORD_COUNT));
+               assertEquals("78", metadata.get(Metadata.CHARACTER_COUNT));
+               assertEquals("0", metadata.get(Metadata.TABLE_COUNT));
+               assertEquals("0", metadata.get(Metadata.OBJECT_COUNT));
+               assertEquals("0", metadata.get(Metadata.IMAGE_COUNT));
+
+               // Check the very old style statistics (these will be removed shortly)
+               assertEquals("0", metadata.get("nbTab"));
+               assertEquals("0", metadata.get("nbObject"));
+               assertEquals("0", metadata.get("nbImg"));
+               assertEquals("1", metadata.get("nbPage"));
+               assertEquals("1", metadata.get("nbPara"));
+               assertEquals("14", metadata.get("nbWord"));
+               assertEquals("78", metadata.get("nbCharacter"));
 
                // Custom metadata tags present but without values
                assertEquals(null, metadata.get("custom:Info 1"));
@@ -135,19 +154,21 @@ public class ODFParserTest extends TikaTest {
                     "application/vnd.oasis.opendocument.formula",
                     metadata.get(Metadata.CONTENT_TYPE));
             assertEquals(null, metadata.get(TikaCoreProperties.MODIFIED));
-            assertEquals("2006-01-27T11:55:22", metadata.get(TikaCoreProperties.CREATED));
+            assertEquals("2006-01-27T11:55:22", metadata.get(Metadata.CREATION_DATE));
             assertEquals("The quick brown fox jumps over the lazy dog",
                     metadata.get(TikaCoreProperties.TITLE));
             assertEquals("Gym class featuring a brown fox and lazy dog",
+                    metadata.get(TikaCoreProperties.DESCRIPTION));
+            assertEquals("Gym class featuring a brown fox and lazy dog",
                     metadata.get(OfficeOpenXMLCore.SUBJECT));
-            assertContains("Gym class featuring a brown fox and lazy dog",
-                    Arrays.asList(metadata.getValues(TikaCoreProperties.SUBJECT)));
-            assertEquals("PT0S", metadata.get(OfficeOpenXMLExtended.TOTAL_TIME));
+            assertEquals("Gym class featuring a brown fox and lazy dog",
+                    metadata.get(Metadata.SUBJECT));
+            assertEquals("PT0S", metadata.get(Metadata.EDIT_TIME));
             assertEquals("1", metadata.get("editing-cycles"));
             assertEquals(
                     "OpenOffice.org/2.2$Win32 OpenOffice.org_project/680m14$Build-9134",
                     metadata.get("generator"));
-            assertEquals("Pangram, fox, dog", metadata.get(TikaCoreProperties.SUBJECT));
+            assertEquals("Pangram, fox, dog", metadata.get(Metadata.KEYWORDS));
 
             // User defined metadata
             assertEquals("Text 1", metadata.get("custom:Info 1"));
@@ -156,13 +177,13 @@ public class ODFParserTest extends TikaTest {
             assertEquals("true", metadata.get("custom:Info 4"));
 
             // No statistics present
-            assertEquals(null, metadata.get(Office.PAGE_COUNT));
-            assertEquals(null, metadata.get(Office.PARAGRAPH_COUNT));
-            assertEquals(null, metadata.get(Office.WORD_COUNT));
-            assertEquals(null, metadata.get(Office.CHARACTER_COUNT));
-            assertEquals(null, metadata.get(Office.TABLE_COUNT));
-            assertEquals(null, metadata.get(Office.OBJECT_COUNT));
-            assertEquals(null, metadata.get(Office.IMAGE_COUNT));
+            assertEquals(null, metadata.get(Metadata.PAGE_COUNT));
+            assertEquals(null, metadata.get(Metadata.PARAGRAPH_COUNT));
+            assertEquals(null, metadata.get(Metadata.WORD_COUNT));
+            assertEquals(null, metadata.get(Metadata.CHARACTER_COUNT));
+            assertEquals(null, metadata.get(Metadata.TABLE_COUNT));
+            assertEquals(null, metadata.get(Metadata.OBJECT_COUNT));
+            assertEquals(null, metadata.get(Metadata.IMAGE_COUNT));
             assertEquals(null, metadata.get("nbTab"));
             assertEquals(null, metadata.get("nbObject"));
             assertEquals(null, metadata.get("nbImg"));
@@ -193,19 +214,19 @@ public class ODFParserTest extends TikaTest {
                     metadata.get(Metadata.CONTENT_TYPE));
             assertEquals("2009-10-05T21:22:38", metadata.get(TikaCoreProperties.MODIFIED));
             assertEquals("2009-10-05T19:04:01", metadata.get(TikaCoreProperties.CREATED));
-            assertEquals("2009-10-05T19:04:01", metadata.get(TikaCoreProperties.CREATED));
+            assertEquals("2009-10-05T19:04:01", metadata.get(Metadata.CREATION_DATE));
             assertEquals("Apache Tika", metadata.get(TikaCoreProperties.TITLE));
             assertEquals("Test document", metadata.get(OfficeOpenXMLCore.SUBJECT));
-            assertContains("Test document",
-                    Arrays.asList(metadata.getValues(TikaCoreProperties.SUBJECT)));
+            assertEquals("Test document", metadata.get(Metadata.SUBJECT));
             assertEquals("A rather complex document", metadata.get(TikaCoreProperties.DESCRIPTION));
             assertEquals("Bart Hanssens", metadata.get(TikaCoreProperties.CREATOR));
+            assertEquals("Bart Hanssens", metadata.get("initial-creator"));
             assertEquals("2", metadata.get("editing-cycles"));
-            assertEquals("PT02H03M24S", metadata.get(OfficeOpenXMLExtended.TOTAL_TIME));
+            assertEquals("PT02H03M24S", metadata.get(Metadata.EDIT_TIME));
             assertEquals(
                     "OpenOffice.org/3.1$Unix OpenOffice.org_project/310m19$Build-9420",
                     metadata.get("generator"));
-            assertEquals("Apache, Lucene, Tika", metadata.get(TikaCoreProperties.SUBJECT));
+            assertEquals("Apache, Lucene, Tika", metadata.get(Metadata.KEYWORDS));
 
             // User defined metadata
             assertEquals("Bart Hanssens", metadata.get("custom:Editor"));
@@ -221,6 +242,24 @@ public class ODFParserTest extends TikaTest {
             assertEquals("0", metadata.get(Office.TABLE_COUNT));
             assertEquals("2", metadata.get(Office.OBJECT_COUNT));
             assertEquals("0", metadata.get(Office.IMAGE_COUNT));
+
+            // Check the Tika-1.0 style document statistics
+            assertEquals("2", metadata.get(Metadata.PAGE_COUNT));
+            assertEquals("13", metadata.get(Metadata.PARAGRAPH_COUNT));
+            assertEquals("54", metadata.get(Metadata.WORD_COUNT));
+            assertEquals("351", metadata.get(Metadata.CHARACTER_COUNT));
+            assertEquals("0", metadata.get(Metadata.TABLE_COUNT));
+            assertEquals("2", metadata.get(Metadata.OBJECT_COUNT));
+            assertEquals("0", metadata.get(Metadata.IMAGE_COUNT));
+
+            // Check the old style statistics (these will be removed shortly)
+            assertEquals("0", metadata.get("nbTab"));
+            assertEquals("2", metadata.get("nbObject"));
+            assertEquals("0", metadata.get("nbImg"));
+            assertEquals("2", metadata.get("nbPage"));
+            assertEquals("13", metadata.get("nbPara"));
+            assertEquals("54", metadata.get("nbWord"));
+            assertEquals("351", metadata.get("nbCharacter"));
 
             String content = handler.toString();
             assertTrue(content.contains(

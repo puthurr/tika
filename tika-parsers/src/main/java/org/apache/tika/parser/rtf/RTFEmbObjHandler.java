@@ -153,9 +153,7 @@ class RTFEmbObjHandler {
             throw new TikaException("Requesting I read < 0 bytes ?!");
         }
         if (len > memoryLimitInKb*1024) {
-            throw new TikaMemoryLimitException("File embedded in RTF caused this (" + len +
-                    ") bytes), but maximum allowed is ("+(memoryLimitInKb*1024)+")."+
-                    "If this is a valid RTF file, consider increasing the memory limit via TikaConfig.");
+            throw new TikaMemoryLimitException(len, (memoryLimitInKb*1024));
         }
 
         byte[] bytes = new byte[len];
@@ -184,8 +182,8 @@ class RTFEmbObjHandler {
         } else if (state == EMB_STATE.PICT) {
             String filePath = metadata.get(RTFMetadata.RTF_PICT_META_PREFIX + "wzDescription");
             if (filePath != null && filePath.length() > 0) {
-                metadata.set(TikaCoreProperties.EMBEDDED_RELATIONSHIP_ID, filePath);
-                metadata.set(TikaCoreProperties.RESOURCE_NAME_KEY, FilenameUtils.getName(filePath));
+                metadata.set(Metadata.EMBEDDED_RELATIONSHIP_ID, filePath);
+                metadata.set(Metadata.RESOURCE_NAME_KEY, FilenameUtils.getName(filePath));
                 metadata.set(TikaCoreProperties.ORIGINAL_RESOURCE_NAME, filePath);
             }
             metadata.set(RTFMetadata.THUMBNAIL, Boolean.toString(inObject));
@@ -208,13 +206,13 @@ class RTFEmbObjHandler {
 
         if (embeddedDocumentUtil.shouldParseEmbedded(metadata)) {
             TikaInputStream stream = TikaInputStream.get(bytes);
-            if (metadata.get(TikaCoreProperties.RESOURCE_NAME_KEY) == null) {
+            if (metadata.get(Metadata.RESOURCE_NAME_KEY) == null) {
                 String extension = embeddedDocumentUtil.getExtension(stream, metadata);
                 if (inObject && state == EMB_STATE.PICT) {
-                    metadata.set(TikaCoreProperties.RESOURCE_NAME_KEY, "thumbnail_" + thumbCount++ + extension);
+                    metadata.set(Metadata.RESOURCE_NAME_KEY, "thumbnail_" + thumbCount++ + extension);
                     metadata.set(RTFMetadata.THUMBNAIL, "true");
                 } else {
-                    metadata.set(TikaCoreProperties.RESOURCE_NAME_KEY, "file_" + unknownFilenameCount.getAndIncrement() +
+                    metadata.set(Metadata.RESOURCE_NAME_KEY, "file_" + unknownFilenameCount.getAndIncrement() +
                             extension);
                 }
             }

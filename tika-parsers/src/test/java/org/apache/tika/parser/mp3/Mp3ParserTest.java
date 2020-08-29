@@ -54,6 +54,7 @@ public class Mp3ParserTest extends TikaTest {
         assertEquals("audio/mpeg", metadata.get(Metadata.CONTENT_TYPE));
         assertEquals("Test Title", metadata.get(TikaCoreProperties.TITLE));
         assertEquals("Test Artist", metadata.get(TikaCoreProperties.CREATOR));
+        assertEquals("Test Artist", metadata.get(Metadata.AUTHOR));
 
         assertContains("Test Title", content);
         assertContains("Test Artist", content);
@@ -81,6 +82,7 @@ public class Mp3ParserTest extends TikaTest {
         assertEquals("audio/mpeg", metadata.get(Metadata.CONTENT_TYPE));
         assertEquals("Test Title", metadata.get(TikaCoreProperties.TITLE));
         assertEquals("Test Artist", metadata.get(TikaCoreProperties.CREATOR));
+        assertEquals("Test Artist", metadata.get(Metadata.AUTHOR));
 
         // Check the textual contents
         assertContains("Test Title", content);
@@ -140,6 +142,7 @@ public class Mp3ParserTest extends TikaTest {
         assertEquals("audio/mpeg", metadata.get(Metadata.CONTENT_TYPE));
         assertEquals("Test Title", metadata.get(TikaCoreProperties.TITLE));
         assertEquals("Test Artist", metadata.get(TikaCoreProperties.CREATOR));
+        assertEquals("Test Artist", metadata.get(Metadata.AUTHOR));
 
         assertContains("Test Title", content);
         assertContains("Test Artist", content);
@@ -166,6 +169,7 @@ public class Mp3ParserTest extends TikaTest {
         assertEquals("audio/mpeg", metadata.get(Metadata.CONTENT_TYPE));
         assertEquals("Test Title", metadata.get(TikaCoreProperties.TITLE));
         assertEquals("Test Artist", metadata.get(TikaCoreProperties.CREATOR));
+        assertEquals("Test Artist", metadata.get(Metadata.AUTHOR));
 
         assertContains("Test Title", content);
         assertContains("Test Artist", content);
@@ -205,6 +209,7 @@ public class Mp3ParserTest extends TikaTest {
        assertEquals("audio/mpeg", metadata.get(Metadata.CONTENT_TYPE));
        assertEquals("Une chason en Fran\u00e7ais", metadata.get(TikaCoreProperties.TITLE));
        assertEquals("Test Artist \u2468\u2460", metadata.get(TikaCoreProperties.CREATOR));
+       assertEquals("Test Artist \u2468\u2460", metadata.get(Metadata.AUTHOR));
        assertEquals("Test Artist \u2468\u2460", metadata.get(XMPDM.ARTIST));
        assertEquals("Test Album \u2460\u2468", metadata.get(XMPDM.ALBUM));
 
@@ -261,6 +266,7 @@ public class Mp3ParserTest extends TikaTest {
         assertEquals("audio/mpeg", metadata.get(Metadata.CONTENT_TYPE));
         assertEquals("Test Title", metadata.get(TikaCoreProperties.TITLE));
         assertEquals("Test Artist", metadata.get(TikaCoreProperties.CREATOR));
+        assertEquals("Test Artist", metadata.get(Metadata.AUTHOR));
 
         assertContains("Test Title", content);
         assertContains("Test Artist", content);

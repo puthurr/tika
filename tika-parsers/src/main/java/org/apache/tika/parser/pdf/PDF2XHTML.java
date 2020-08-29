@@ -16,6 +16,11 @@
  */
 package org.apache.tika.parser.pdf;
 
+import java.awt.image.BufferedImage;
+import java.io.*;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import org.apache.pdfbox.cos.COSArray;
 import org.apache.pdfbox.cos.COSBase;
 import org.apache.pdfbox.cos.COSName;
@@ -45,10 +50,9 @@ import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.AttributesImpl;
 
-import java.awt.image.BufferedImage;
-import java.io.*;
-import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
+import static org.apache.tika.parser.pdf.ImageGraphicsEngine.JPEG;
+import static org.apache.tika.parser.pdf.ImageGraphicsEngine.JB2;
+import static org.apache.tika.parser.pdf.ImageGraphicsEngine.JP2;
 
 /**
  * Utility class that overrides the {@link PDFTextStripper} functionality
@@ -57,16 +61,6 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 class PDF2XHTML extends AbstractPDF2XHTML {
 
-
-    private static final List<String> JPEG = Arrays.asList(
-            COSName.DCT_DECODE.getName(),
-            COSName.DCT_DECODE_ABBREVIATION.getName());
-
-    private static final List<String> JP2 =
-            Arrays.asList(COSName.JPX_DECODE.getName());
-
-    private static final List<String> JB2 = Arrays.asList(
-            COSName.JBIG2_DECODE.getName());
 
     /**
      * This keeps track of the pdf object ids for inline
@@ -218,6 +212,7 @@ class PDF2XHTML extends AbstractPDF2XHTML {
         if (config.getExtractInlineImages() == false) {
             return;
         }
+
         ImageGraphicsEngine engine = new ImageGraphicsEngine(page, embeddedDocumentExtractor,
                 config, processedInlineImages, inlineImageCounter, xhtml, metadata, context);
         engine.run();
@@ -293,7 +288,7 @@ class PDF2XHTML extends AbstractPDF2XHTML {
                 imageNumber = inlineImageCounter.incrementAndGet();
             }
             String fileName = String.format(Locale.ROOT,"image%05d", imageNumber) + "." + extension;
-            embeddedMetadata.set(TikaCoreProperties.RESOURCE_NAME_KEY, fileName);
+            embeddedMetadata.set(Metadata.RESOURCE_NAME_KEY, fileName);
 
             // Output the img tag
             AttributesImpl attr = new AttributesImpl();

@@ -16,6 +16,13 @@
  */
 package org.apache.tika.parser.microsoft;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
+
 import org.apache.poi.hmef.Attachment;
 import org.apache.poi.hmef.HMEFMessage;
 import org.apache.poi.hmef.attribute.MAPIAttribute;
@@ -34,13 +41,6 @@ import org.apache.tika.sax.EmbeddedContentHandler;
 import org.apache.tika.sax.XHTMLContentHandler;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
 
 /**
  * A POI-powered Tika Parser for TNEF (Transport Neutral
@@ -78,8 +78,8 @@ public class TNEFParser extends AbstractParser {
         // Set the message subject if known
         String subject = msg.getSubject();
         if (subject != null && subject.length() > 0) {
-            metadata.set(TikaCoreProperties.TITLE, subject);
-            metadata.set(TikaCoreProperties.SUBJECT, subject);
+            // TODO: Move to title in Tika 2.0
+            metadata.set(TikaCoreProperties.TRANSITION_SUBJECT_TO_DC_TITLE, subject);
         }
         XHTMLContentHandler xhtml = new XHTMLContentHandler(handler, metadata);
         xhtml.startDocument();
@@ -119,7 +119,7 @@ public class TNEFParser extends AbstractParser {
             throws IOException, SAXException, TikaException {
         Metadata metadata = new Metadata();
         if (name != null)
-            metadata.set(TikaCoreProperties.RESOURCE_NAME_KEY, name);
+            metadata.set(Metadata.RESOURCE_NAME_KEY, name);
         if (type != null)
             metadata.set(Metadata.CONTENT_TYPE, type);
 

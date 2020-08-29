@@ -16,7 +16,19 @@
  */
 package org.apache.tika.io;
 
-import java.io.*;
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.CharArrayWriter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.Reader;
+import java.io.StringWriter;
+import java.io.Writer;
 import java.nio.channels.Channel;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
@@ -1252,4 +1264,24 @@ public class IOUtils {
         return toSkip - remain;
     }
 
+    public static long skip(final InputStream input, final long toSkip, byte[] buffer) throws IOException {
+        if (toSkip < 0) {
+            throw new IllegalArgumentException("Skip count must be non-negative, actual: " + toSkip);
+        }
+        /*
+         * N.B. no need to synchronize this because: - we don't care if the buffer is created multiple times (the data
+         * is ignored) - we always use the same size buffer, so if it it is recreated it will still be OK (if the buffer
+         * size were variable, we would need to synch. to ensure some other thread did not create a smaller one)
+         */
+        long remain = toSkip;
+        while (remain > 0) {
+            // See https://issues.apache.org/jira/browse/IO-203 for why we use read() rather than delegating to skip()
+            final long n = input.read(buffer, 0, (int) Math.min(remain, buffer.length));
+            if (n < 0) { // EOF
+                break;
+            }
+            remain -= n;
+        }
+        return toSkip - remain;
+    }
 }

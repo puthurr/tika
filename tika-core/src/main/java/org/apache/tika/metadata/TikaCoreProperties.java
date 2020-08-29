@@ -63,24 +63,19 @@ public interface TikaCoreProperties {
     };
 
     /**
-     * The common delimiter used between the namespace abbreviation and the property name
-     */
-    String NAMESPACE_PREFIX_DELIMITER = ":";
-
-    /**
      * Use this to prefix metadata properties that store information
      * about the parsing process.  Users should be able to distinguish
      * between metadata that was contained within the document and
      * metadata about the parsing process.
      * In Tika 2.0 (or earlier?), let's change X-ParsedBy to X-TIKA-Parsed-By.
      */
-    public static String TIKA_META_PREFIX = "X-TIKA"+NAMESPACE_PREFIX_DELIMITER;
+    public static String TIKA_META_PREFIX = "X-TIKA"+Metadata.NAMESPACE_PREFIX_DELIMITER;
 
     /**
      * Use this to store parse exception information in the Metadata object.
      */
     public static String TIKA_META_EXCEPTION_PREFIX = TIKA_META_PREFIX+"EXCEPTION"+
-            NAMESPACE_PREFIX_DELIMITER;
+            Metadata.NAMESPACE_PREFIX_DELIMITER;
 
     /**
      * Use this to store exceptions caught during a parse that are
@@ -99,15 +94,6 @@ public interface TikaCoreProperties {
     Property TIKA_META_EXCEPTION_EMBEDDED_STREAM =
             Property.internalTextBag(TIKA_META_EXCEPTION_PREFIX+"embedded_stream_exception");
 
-
-    String RESOURCE_NAME_KEY = "resourceName";
-
-    String PROTECTED = "protected";
-
-    String EMBEDDED_RELATIONSHIP_ID = "embeddedRelationshipId";
-
-    String EMBEDDED_STORAGE_CLASS_ID = "embeddedStorageClassId";
-
     String EMBEDDED_RESOURCE_TYPE_KEY = "embeddedResourceType";
 
     /**
@@ -124,7 +110,7 @@ public interface TikaCoreProperties {
      , or the value might come from outside the document.  This information
      * may be faulty and should be treated only as a hint.
      */
-    Property CONTENT_TYPE_HINT =
+    public static final Property CONTENT_TYPE_HINT =
             Property.internalText(HttpHeaders.CONTENT_TYPE+"-Hint");
 
     Property CONTENT_TYPE_OVERRIDE =
@@ -133,89 +119,110 @@ public interface TikaCoreProperties {
     /**
      * @see DublinCore#FORMAT
      */
-    Property FORMAT = DublinCore.FORMAT;
+    public static final Property FORMAT = Property.composite(DublinCore.FORMAT,
+            new Property[] { Property.internalText(Metadata.FORMAT) });
     
-    /**
+   /**
     * @see DublinCore#IDENTIFIER
     */
-    Property IDENTIFIER = DublinCore.IDENTIFIER;
+   public static final Property IDENTIFIER = Property.composite(DublinCore.IDENTIFIER,
+            new Property[] { Property.internalText(Metadata.IDENTIFIER) });
     
-    /**
+   /**
     * @see DublinCore#CONTRIBUTOR
     */
-    Property CONTRIBUTOR = DublinCore.CONTRIBUTOR;
+    public static final Property CONTRIBUTOR = Property.composite(DublinCore.CONTRIBUTOR,
+            new Property[] { Property.internalText(Metadata.CONTRIBUTOR) });
     
    /**
     * @see DublinCore#COVERAGE
     */
-     Property COVERAGE = DublinCore.COVERAGE;
+    public static final Property COVERAGE = Property.composite(DublinCore.COVERAGE,
+            new Property[] { Property.internalText(Metadata.COVERAGE) });
     
    /**
     * @see DublinCore#CREATOR
     */
-     Property CREATOR = Property.composite(DublinCore.CREATOR,
+    public static final Property CREATOR = Property.composite(DublinCore.CREATOR,
             new Property[] { 
                 Office.AUTHOR,
+                Property.internalTextBag(Metadata.CREATOR),
+                Property.internalTextBag(Metadata.AUTHOR)
             });
     
     /**
      * @see Office#LAST_AUTHOR
      */
-      Property MODIFIER = Office.LAST_AUTHOR;
+     public static final Property MODIFIER = Property.composite(Office.LAST_AUTHOR,
+             new Property[] { Property.internalText(Metadata.LAST_AUTHOR) });
     
     /**
      * @see XMP#CREATOR_TOOL
      */
-      Property CREATOR_TOOL = XMP.CREATOR_TOOL;
+     public static final Property CREATOR_TOOL = XMP.CREATOR_TOOL;
     
    /**
     * @see DublinCore#LANGUAGE
     */
-     Property LANGUAGE = DublinCore.LANGUAGE;
+    public static final Property LANGUAGE = Property.composite(DublinCore.LANGUAGE,
+            new Property[] { Property.internalText(Metadata.LANGUAGE) });
     
    /**
     * @see DublinCore#PUBLISHER
     */
-     Property PUBLISHER = DublinCore.PUBLISHER;
+    public static final Property PUBLISHER = Property.composite(DublinCore.PUBLISHER,
+            new Property[] { Property.internalText(Metadata.PUBLISHER) });
     
    /**
     * @see DublinCore#RELATION
     */
-     Property RELATION = DublinCore.RELATION;
+    public static final Property RELATION = Property.composite(DublinCore.RELATION,
+            new Property[] { Property.internalText(Metadata.RELATION) });
 
    /**
     * @see DublinCore#RIGHTS
     */
-     Property RIGHTS = DublinCore.RIGHTS;
+    public static final Property RIGHTS = Property.composite(DublinCore.RIGHTS,
+            new Property[] { Property.internalText(Metadata.RIGHTS) });
     
    /**
     * @see DublinCore#SOURCE
     */
-     Property SOURCE = DublinCore.SOURCE;
+    public static final Property SOURCE = Property.composite(DublinCore.SOURCE,
+            new Property[] { Property.internalText(Metadata.SOURCE) });
     
    /**
     * @see DublinCore#TYPE
     */
-     Property TYPE = DublinCore.TYPE;
+    public static final Property TYPE = Property.composite(DublinCore.TYPE,
+            new Property[] { Property.internalText(Metadata.TYPE) });
+
     
     // Descriptive properties
     
     /**
      * @see DublinCore#TITLE
      */
-     Property TITLE = DublinCore.TITLE;
+    public static final Property TITLE = Property.composite(DublinCore.TITLE,
+            new Property[] { Property.internalText(Metadata.TITLE) });
      
     /**
      * @see DublinCore#DESCRIPTION
      */
-     Property DESCRIPTION = DublinCore.DESCRIPTION;
+    public static final Property DESCRIPTION = Property.composite(DublinCore.DESCRIPTION,
+            new Property[] { Property.internalText(Metadata.DESCRIPTION) });
      
     /**
      * {@link DublinCore#SUBJECT}; should include both subject and keywords
      *  if a document format has both.  See also {@link Office#KEYWORDS}
      *  and {@link OfficeOpenXMLCore#SUBJECT}.
      */
-     Property SUBJECT = DublinCore.SUBJECT;
+    public static final Property KEYWORDS = Property.composite(DublinCore.SUBJECT,
+            new Property[] {
+                Office.KEYWORDS,
+                Property.internalTextBag(MSOffice.KEYWORDS),
+                Property.internalTextBag(Metadata.SUBJECT)
+            });
 
     // Date related properties
     
@@ -223,28 +230,34 @@ public interface TikaCoreProperties {
       * @see DublinCore#DATE 
       * @see Office#CREATION_DATE 
       */
-      Property CREATED = Property.composite(DublinCore.CREATED,
+     public static final Property CREATED = Property.composite(DublinCore.CREATED,
              new Property[] { 
-                     Office.CREATION_DATE,
+                     Office.CREATION_DATE, 
+                     MSOffice.CREATION_DATE
              });
      
      /** 
       * @see DublinCore#MODIFIED
+      * @see Metadata#DATE
       * @see Office#SAVE_DATE
       */
-      Property MODIFIED = Property.composite(DublinCore.MODIFIED,
-             new Property[] {
+     public static final Property MODIFIED = Property.composite(DublinCore.MODIFIED,
+             new Property[] { 
+                     Metadata.DATE,
                      Office.SAVE_DATE,
+                     MSOffice.LAST_SAVED,
+                     Property.internalText(Metadata.MODIFIED),
                      Property.internalText("Last-Modified")
              });
      
      /** @see Office#PRINT_DATE */
-      Property PRINT_DATE = Office.PRINT_DATE;
+     public static final Property PRINT_DATE = Property.composite(Office.PRINT_DATE,
+             new Property[] { MSOffice.LAST_PRINTED });
      
      /**
       * @see XMP#METADATA_DATE
       */
-      Property METADATA_DATE = XMP.METADATA_DATE;
+     public static final Property METADATA_DATE = XMP.METADATA_DATE;
     
      
     // Geographic related properties
@@ -252,17 +265,17 @@ public interface TikaCoreProperties {
     /**
      * @see Geographic#LATITUDE
      */
-     Property LATITUDE = Geographic.LATITUDE;
+    public static final Property LATITUDE = Geographic.LATITUDE;
     
     /**
      * @see Geographic#LONGITUDE
      */
-     Property LONGITUDE = Geographic.LONGITUDE;
+    public static final Property LONGITUDE = Geographic.LONGITUDE;
     
     /**
      * @see Geographic#ALTITUDE
      */
-     Property ALTITUDE = Geographic.ALTITUDE;
+    public static final Property ALTITUDE = Geographic.ALTITUDE;
     
     
     // Comment and rating properties
@@ -270,23 +283,57 @@ public interface TikaCoreProperties {
     /**
      * @see XMP#RATING
      */
-     Property RATING = XMP.RATING;
+    public static final Property RATING = XMP.RATING;
     
     /** 
      * @see OfficeOpenXMLExtended#COMMENTS 
      */
-     Property COMMENTS = Property.composite(OfficeOpenXMLExtended.COMMENTS,
+    public static final Property COMMENTS = Property.composite(OfficeOpenXMLExtended.COMMENTS,
             new Property[] { 
-                Property.internalTextBag(ClimateForcast.COMMENT)
+                Property.internalTextBag(ClimateForcast.COMMENT),
+                Property.internalTextBag(MSOffice.COMMENTS)
             });
+
+    // TODO: Remove transition properties in Tika 2.0
+
+    /**
+     * @see DublinCore#SUBJECT
+     * @deprecated use TikaCoreProperties#KEYWORDS
+     */
+    @Deprecated
+    public static final Property TRANSITION_KEYWORDS_TO_DC_SUBJECT = Property.composite(DublinCore.SUBJECT,
+            new Property[] { Property.internalTextBag(MSOffice.KEYWORDS) });
+
+    /**
+     * @see OfficeOpenXMLExtended#COMMENTS
+     * @deprecated use TikaCoreProperties#DESCRIPTION
+     */
+    @Deprecated
+    public static final Property TRANSITION_SUBJECT_TO_DC_DESCRIPTION = Property.composite(DublinCore.DESCRIPTION,
+            new Property[] { Property.internalText(Metadata.SUBJECT) });
+
+    /**
+     * @see DublinCore#TITLE
+     * @deprecated use TikaCoreProperties#TITLE
+     */
+    @Deprecated
+    public static final Property TRANSITION_SUBJECT_TO_DC_TITLE = Property.composite(DublinCore.TITLE,
+            new Property[] { Property.internalText(Metadata.SUBJECT) });
+
+    /**
+     * @see OfficeOpenXMLCore#SUBJECT
+     * @deprecated use OfficeOpenXMLCore#SUBJECT
+     */
+    @Deprecated
+    public static final Property TRANSITION_SUBJECT_TO_OO_SUBJECT = Property.composite(OfficeOpenXMLCore.SUBJECT,
+            new Property[] { Property.internalText(Metadata.SUBJECT) });
 
     /**
      * Embedded resource type property
      */
-     Property EMBEDDED_RESOURCE_TYPE = Property.internalClosedChoise(EMBEDDED_RESOURCE_TYPE_KEY,
-                                                                     EmbeddedResourceType.ATTACHMENT.toString(),
-                                                                     EmbeddedResourceType.INLINE.toString());
-
+    Property EMBEDDED_RESOURCE_TYPE = Property.internalClosedChoise(EMBEDDED_RESOURCE_TYPE_KEY,
+            EmbeddedResourceType.ATTACHMENT.toString(),
+            EmbeddedResourceType.INLINE.toString());
 
 
     Property HAS_SIGNATURE = Property.internalBoolean("hasSignature");

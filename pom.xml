@@ -25,7 +25,7 @@
   <parent>
     <groupId>org.apache.tika</groupId>
     <artifactId>tika-parent</artifactId>
-    <version>2.0.0-SNAPSHOT</version>
+    <version>1.24.1</version>
     <relativePath>tika-parent/pom.xml</relativePath>
   </parent>
 
@@ -102,8 +102,8 @@
                         <include name="target/*-src.zip*" />
                         <include name="tika-app/target/tika-app-${project.version}.jar*" />
                         <include name="tika-server/target/tika-server-${project.version}.jar*" />
-                        <include name="tika-server/target/tika-server-${project.version}.bin.tgz*" />
-                        <include name="tika-server/target/tika-server-${project.version}.bin.zip*" />
+                        <include name="tika-server/target/tika-server-${project.version}-bin.tgz*" />
+                        <include name="tika-server/target/tika-server-${project.version}-bin.zip*" />
                         <include name="tika-eval/target/tika-eval-${project.version}.jar*" />
                       </fileset>
                     </copy>
@@ -113,10 +113,7 @@
                         <include name="*.?ar" />
                       </fileset>
                     </checksum>
-                    <checksum
-                            file="${basedir}/target/${project.version}/tika-${project.version}-src.zip"
-                            algorithm="SHA-512"
-                            property="checksum" />
+                    <checksum file="${basedir}/target/${project.version}/tika-${project.version}-src.zip" algorithm="SHA-512" property="checksum" />
                     <echo file="${basedir}/target/vote.txt">
 From: ${username}@apache.org
 To: dev@tika.apache.org

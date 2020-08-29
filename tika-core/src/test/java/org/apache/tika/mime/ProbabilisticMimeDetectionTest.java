@@ -29,7 +29,6 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 
 import org.apache.tika.metadata.Metadata;
-import org.apache.tika.metadata.TikaCoreProperties;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -155,7 +154,7 @@ public class ProbabilisticMimeDetectionTest {
                     expected, mime);
 
             // Add resource name and test again
-            metadata.set(TikaCoreProperties.RESOURCE_NAME_KEY, urlOrFileName);
+            metadata.set(Metadata.RESOURCE_NAME_KEY, urlOrFileName);
             mime = this.proDetector.detect(in, metadata).toString();
             assertEquals(urlOrFileName
                     + " is not properly detected after adding resource name.",
@@ -182,7 +181,7 @@ public class ProbabilisticMimeDetectionTest {
                 new ByteArrayInputStream(new byte[0]), new Metadata()));
 
         Metadata namehint = new Metadata();
-        namehint.set(TikaCoreProperties.RESOURCE_NAME_KEY, "test.txt");
+        namehint.set(Metadata.RESOURCE_NAME_KEY, "test.txt");
         assertEquals(MediaType.TEXT_PLAIN, proDetector.detect(
                 new ByteArrayInputStream(new byte[0]), namehint));
 
@@ -233,18 +232,18 @@ public class ProbabilisticMimeDetectionTest {
 
         // With a filename, picks the right one
         metadata = new Metadata();
-        metadata.set(TikaCoreProperties.RESOURCE_NAME_KEY, "test.hello.world");
+        metadata.set(Metadata.RESOURCE_NAME_KEY, "test.hello.world");
         assertEquals(helloType, proDetector.detect(
                 new ByteArrayInputStream(helloWorld), metadata));
 
         metadata = new Metadata();
-        metadata.set(TikaCoreProperties.RESOURCE_NAME_KEY, "test.x-hello-world");
+        metadata.set(Metadata.RESOURCE_NAME_KEY, "test.x-hello-world");
         assertEquals(helloXType, proDetector.detect(
                 new ByteArrayInputStream(helloWorld), metadata));
 
         // Without, goes for the one that sorts last
         metadata = new Metadata();
-        metadata.set(TikaCoreProperties.RESOURCE_NAME_KEY, "testingTESTINGtesting");
+        metadata.set(Metadata.RESOURCE_NAME_KEY, "testingTESTINGtesting");
         assertEquals(helloXType, proDetector.detect(
                 new ByteArrayInputStream(helloWorld), metadata));
     }

@@ -29,7 +29,6 @@ import org.apache.poi.util.LittleEndian;
 import org.apache.tika.exception.TikaException;
 import org.apache.tika.io.EndianUtils;
 import org.apache.tika.metadata.Metadata;
-import org.apache.tika.metadata.TikaCoreProperties;
 import org.apache.tika.mime.MediaType;
 import org.apache.tika.parser.AbstractParser;
 import org.apache.tika.parser.ParseContext;
@@ -128,7 +127,7 @@ public class ExecutableParser extends AbstractParser implements MachineMetadata 
        
        // Turn this into helpful metadata
        Date createdAtD = new Date(createdAt*1000l);
-       metadata.set(TikaCoreProperties.CREATED, createdAtD);
+       metadata.set(Metadata.CREATION_DATE, createdAtD);
        
        switch(machine) {
          case 0x14c:

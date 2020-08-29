@@ -26,6 +26,7 @@ import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
 
@@ -36,6 +37,7 @@ import org.apache.tika.extractor.EmbeddedDocumentUtil;
 import org.apache.tika.io.TikaInputStream;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.metadata.TikaCoreProperties;
+import org.apache.tika.metadata.TikaMetadataKeys;
 import org.apache.tika.mime.MediaType;
 import org.apache.tika.parser.AbstractParser;
 import org.apache.tika.parser.ParseContext;
@@ -174,9 +176,9 @@ public class OpenDocumentParser extends AbstractParser {
 
     private void handleZipStream(ZipInputStream zipStream, Metadata metadata, ParseContext context, EndDocumentShieldingContentHandler handler) throws IOException, TikaException, SAXException {
         ZipEntry entry = zipStream.getNextEntry();
-        if (entry == null) {
-            throw new IOException("No entries found in ZipInputStream");
-        }
+		if (entry == null) {
+			throw new IOException("No entries found in ZipInputStream");
+		}
         do {
             handleZipEntry(entry, zipStream, metadata, context, handler);
             entry = zipStream.getNextEntry();
@@ -241,7 +243,7 @@ public class OpenDocumentParser extends AbstractParser {
                             TikaCoreProperties.EmbeddedResourceType.THUMBNAIL);
                 }*/
                 if (embeddedName.contains("Pictures/")) {
-                    embeddedMetadata.set(TikaCoreProperties.EMBEDDED_RESOURCE_TYPE,
+                    embeddedMetadata.set(TikaMetadataKeys.EMBEDDED_RESOURCE_TYPE,
                             TikaCoreProperties.EmbeddedResourceType.INLINE.toString());
                 }
                 if (embeddedDocumentExtractor.shouldParseEmbedded(embeddedMetadata)) {

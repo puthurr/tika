@@ -16,11 +16,26 @@
  */
 package org.apache.tika.parser.microsoft.ooxml;
 
+import static org.apache.tika.sax.XHTMLContentHandler.XHTML;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URI;
+import java.util.*;
+
 import org.apache.commons.io.FilenameUtils;
+import org.apache.poi.extractor.POITextExtractor;
 import org.apache.poi.ooxml.POIXMLDocument;
 import org.apache.poi.ooxml.extractor.POIXMLTextExtractor;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
-import org.apache.poi.openxml4j.opc.*;
+import org.apache.poi.openxml4j.opc.OPCPackage;
+import org.apache.poi.openxml4j.opc.PackagePart;
+import org.apache.poi.openxml4j.opc.PackageRelationship;
+import org.apache.poi.openxml4j.opc.PackageRelationshipCollection;
+import org.apache.poi.openxml4j.opc.PackageRelationshipTypes;
+import org.apache.poi.openxml4j.opc.TargetMode;
 import org.apache.poi.openxml4j.opc.internal.FileHelper;
 import org.apache.poi.poifs.filesystem.DirectoryNode;
 import org.apache.poi.poifs.filesystem.Ole10Native;
@@ -48,15 +63,6 @@ import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.AttributesImpl;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URI;
-import java.util.*;
-
-import static org.apache.tika.sax.XHTMLContentHandler.XHTML;
-
 /**
  * Base class for all Tika OOXML extractors.
  * <p/>
@@ -77,7 +83,7 @@ public abstract class AbstractOOXMLExtractor implements OOXMLExtractor {
     private static final String TYPE_OLE_OBJECT =
             "application/vnd.openxmlformats-officedocument.oleObject";
 
-    protected static final String[] EMBEDDED_RELATIONSHIPS = new String[]{
+    protected final static String[] EMBEDDED_RELATIONSHIPS = new String[]{
             RELATION_AUDIO,
             PackageRelationshipTypes.IMAGE_PART,
             POIXMLDocument.PACK_OBJECT_REL_TYPE,
@@ -156,7 +162,7 @@ public abstract class AbstractOOXMLExtractor implements OOXMLExtractor {
                 InputStream tStream = tPart.getInputStream();
                 Metadata thumbnailMetadata = new Metadata();
                 String thumbName = tPart.getPartName().getName();
-                thumbnailMetadata.set(TikaCoreProperties.RESOURCE_NAME_KEY, thumbName);
+                thumbnailMetadata.set(Metadata.RESOURCE_NAME_KEY, thumbName);
 
                 AttributesImpl attributes = new AttributesImpl();
                 attributes.addAttribute(XHTML, "class", "class", "CDATA", "embedded");
@@ -164,7 +170,7 @@ public abstract class AbstractOOXMLExtractor implements OOXMLExtractor {
                 handler.startElement(XHTML, "div", "div", attributes);
                 handler.endElement(XHTML, "div", "div");
 
-                thumbnailMetadata.set(TikaCoreProperties.EMBEDDED_RELATIONSHIP_ID, thumbName);
+                thumbnailMetadata.set(Metadata.EMBEDDED_RELATIONSHIP_ID, thumbName);
                 thumbnailMetadata.set(Metadata.CONTENT_TYPE, tPart.getContentType());
                 thumbnailMetadata.set(TikaCoreProperties.TITLE, tPart.getPartName().getName());
 
@@ -174,8 +180,10 @@ public abstract class AbstractOOXMLExtractor implements OOXMLExtractor {
 
                 tStream.close();
             }
+        } catch (SecurityException e) {
+            throw e;
         } catch (Exception ex) {
-
+            //swallow
         }
     }
 
@@ -195,10 +203,9 @@ public abstract class AbstractOOXMLExtractor implements OOXMLExtractor {
                 for (PackageRelationship rel : source.getRelationships()) {
                     try {
                         handleEmbeddedPart(source, rel, handler, metadata, handledTarget);
+                    } catch (SAXException|SecurityException e) {
+                        throw e;
                     } catch (Exception e) {
-                        if (e instanceof SAXException) {
-                            throw e;
-                        }
                         EmbeddedDocumentUtil.recordEmbeddedStreamException(e, metadata);
                     }
                 }
@@ -286,7 +293,7 @@ public abstract class AbstractOOXMLExtractor implements OOXMLExtractor {
         TikaInputStream stream = null;
         try {
             Metadata metadata = new Metadata();
-            metadata.set(TikaCoreProperties.EMBEDDED_RELATIONSHIP_ID, rel);
+            metadata.set(Metadata.EMBEDDED_RELATIONSHIP_ID, rel);
 
             DirectoryNode root = fs.getRoot();
             POIFSDocumentType type = POIFSDocumentType.detectType(root);
@@ -320,7 +327,7 @@ public abstract class AbstractOOXMLExtractor implements OOXMLExtractor {
                 Ole10Native ole =
                         Ole10Native.createFromEmbeddedOleObject(fs);
                 if (ole.getLabel() != null) {
-                    metadata.set(TikaCoreProperties.RESOURCE_NAME_KEY, ole.getLabel());
+                    metadata.set(Metadata.RESOURCE_NAME_KEY, ole.getLabel());
                 }
                 if (ole.getCommand() != null) {
                     metadata.add(TikaCoreProperties.ORIGINAL_RESOURCE_NAME, ole.getCommand());
@@ -364,7 +371,7 @@ public abstract class AbstractOOXMLExtractor implements OOXMLExtractor {
         
         String partstem = name.replaceAll("[0-9]", "");
         int partnumber = Integer.parseInt(name.replaceAll("[^0-9]", ""));
-        String extension = FilenameUtils.getExtension(inputname); 
+        String extension = FilenameUtils.getExtension(inputname);
         
         return (partstem+String.format(Locale.ROOT,"%05d", partnumber) + "." + extension);
     }
@@ -375,8 +382,8 @@ public abstract class AbstractOOXMLExtractor implements OOXMLExtractor {
     protected void handleEmbeddedFile(PackagePart part, ContentHandler handler, String rel)
             throws SAXException, IOException {
         Metadata metadata = new Metadata();
-        metadata.set(TikaCoreProperties.EMBEDDED_RELATIONSHIP_ID, rel);       
-        metadata.set(TikaCoreProperties.RESOURCE_NAME_KEY,getImageResourceName(part.getPartName().getName()));
+        metadata.set(Metadata.EMBEDDED_RELATIONSHIP_ID, rel);       
+        metadata.set(Metadata.RESOURCE_NAME_KEY,getImageResourceName(part.getPartName().getName()));
 
         // Get the content type
         metadata.set(

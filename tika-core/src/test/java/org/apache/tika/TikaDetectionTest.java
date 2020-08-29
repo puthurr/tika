@@ -16,9 +16,9 @@
  */
 package org.apache.tika;
 
-import org.junit.Test;
-
 import static org.junit.Assert.assertEquals;
+
+import org.junit.Test;
 
 public class TikaDetectionTest {
 
@@ -763,8 +763,7 @@ public class TikaDetectionTest {
         assertEquals("text/html", tika.detect("x.htm"));
         assertEquals("text/plain", tika.detect("x.txt"));
         assertEquals("text/plain", tika.detect("x.text"));
-        // Differ from httpd - Use a dedicated mimetype for Config files
-        //assertEquals("text/plain", tika.detect("x.conf"));
+        assertEquals("text/plain", tika.detect("x.conf"));
         assertEquals("text/plain", tika.detect("x.def"));
         assertEquals("text/plain", tika.detect("x.list"));
         assertEquals("text/x-log", tika.detect("x.log"));

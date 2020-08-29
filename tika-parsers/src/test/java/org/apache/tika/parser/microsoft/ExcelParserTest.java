@@ -16,6 +16,15 @@
  */
 package org.apache.tika.parser.microsoft;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
+import java.io.InputStream;
+import java.text.DecimalFormatSymbols;
+import java.util.List;
+import java.util.Locale;
+
 import org.apache.poi.util.LocaleUtil;
 import org.apache.tika.TikaTest;
 import org.apache.tika.config.TikaConfig;
@@ -27,18 +36,15 @@ import org.apache.tika.metadata.Office;
 import org.apache.tika.metadata.OfficeOpenXMLExtended;
 import org.apache.tika.metadata.TikaCoreProperties;
 import org.apache.tika.mime.MediaType;
-import org.apache.tika.parser.*;
+import org.apache.tika.parser.AutoDetectParser;
+import org.apache.tika.parser.ParseContext;
+import org.apache.tika.parser.Parser;
+import org.apache.tika.parser.PasswordProvider;
+import org.apache.tika.parser.RecursiveParserWrapper;
 import org.apache.tika.parser.microsoft.ooxml.OOXMLParser;
 import org.apache.tika.sax.BodyContentHandler;
 import org.junit.Test;
 import org.xml.sax.ContentHandler;
-
-import java.io.InputStream;
-import java.text.DecimalFormatSymbols;
-import java.util.List;
-import java.util.Locale;
-
-import static org.junit.Assert.*;
 
 public class ExcelParserTest extends TikaTest {
     @Test
@@ -57,12 +63,15 @@ public class ExcelParserTest extends TikaTest {
                     metadata.get(Metadata.CONTENT_TYPE));
             assertEquals("Simple Excel document", metadata.get(TikaCoreProperties.TITLE));
             assertEquals("Keith Bennett", metadata.get(TikaCoreProperties.CREATOR));
+            assertEquals("Keith Bennett", metadata.get(Metadata.AUTHOR));
 
             // Mon Oct 01 17:13:56 BST 2007
             assertEquals("2007-10-01T16:13:56Z", metadata.get(TikaCoreProperties.CREATED));
+            assertEquals("2007-10-01T16:13:56Z", metadata.get(Metadata.CREATION_DATE));
 
             // Mon Oct 01 17:31:43 BST 2007
             assertEquals("2007-10-01T16:31:43Z", metadata.get(TikaCoreProperties.MODIFIED));
+            assertEquals("2007-10-01T16:31:43Z", metadata.get(Metadata.DATE));
 
             String content = handler.toString();
             assertContains("Sample Excel Worksheet", content);
@@ -295,7 +304,7 @@ public class ExcelParserTest extends TikaTest {
 
         // First try detection of Excel 5
         m = new Metadata();
-        m.add(TikaCoreProperties.RESOURCE_NAME_KEY, "excel_5.xls");
+        m.add(Metadata.RESOURCE_NAME_KEY, "excel_5.xls");
         try (InputStream input = ExcelParserTest.class.getResourceAsStream("/test-documents/testEXCEL_5.xls")) {
             type = detector.detect(input, m);
             assertEquals("application/vnd.ms-excel", type.toString());
@@ -303,7 +312,7 @@ public class ExcelParserTest extends TikaTest {
 
         // Now Excel 95
         m = new Metadata();
-        m.add(TikaCoreProperties.RESOURCE_NAME_KEY, "excel_95.xls");
+        m.add(Metadata.RESOURCE_NAME_KEY, "excel_95.xls");
         try (InputStream input = ExcelParserTest.class.getResourceAsStream("/test-documents/testEXCEL_95.xls")) {
             type = detector.detect(input, m);
             assertEquals("application/vnd.ms-excel", type.toString());
@@ -407,6 +416,7 @@ public class ExcelParserTest extends TikaTest {
                     metadata.get(Metadata.CONTENT_TYPE));
             assertEquals("Internal spreadsheet", metadata.get(TikaCoreProperties.TITLE));
             assertEquals("Aeham Abushwashi", metadata.get(TikaCoreProperties.CREATOR));
+            assertEquals("Aeham Abushwashi", metadata.get(Metadata.AUTHOR));
 
             String content = handler.toString();
             assertContains("John Smith1", content);

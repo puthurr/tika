@@ -86,5 +86,4 @@ public class Pkcs7Parser extends AbstractParser {
             throw new TikaException("Unable to parse pkcs7 signed data", e);
         }
     }
-
 }

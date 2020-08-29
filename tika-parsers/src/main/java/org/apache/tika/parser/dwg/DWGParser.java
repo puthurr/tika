@@ -55,9 +55,9 @@ public class DWGParser extends AbstractParser {
     /** The order of the fields in the header */
     private static final Property[] HEADER_PROPERTIES_ENTRIES = {
         TikaCoreProperties.TITLE, 
-        TikaCoreProperties.DESCRIPTION,
+        TikaCoreProperties.TRANSITION_SUBJECT_TO_DC_DESCRIPTION,
         TikaCoreProperties.CREATOR,
-        TikaCoreProperties.SUBJECT,
+        TikaCoreProperties.TRANSITION_KEYWORDS_TO_DC_SUBJECT,
         TikaCoreProperties.COMMENTS,
         TikaCoreProperties.MODIFIER,
         null, // Unknown?
@@ -69,11 +69,11 @@ public class DWGParser extends AbstractParser {
        null, 
        TikaCoreProperties.RELATION, // 0x01
        TikaCoreProperties.TITLE,    // 0x02
-       TikaCoreProperties.DESCRIPTION,  // 0x03
+       TikaCoreProperties.TRANSITION_SUBJECT_TO_DC_DESCRIPTION,  // 0x03
        TikaCoreProperties.CREATOR,   // 0x04
        null,
        TikaCoreProperties.COMMENTS,// 0x06 
-       TikaCoreProperties.SUBJECT,    // 0x07
+       TikaCoreProperties.TRANSITION_KEYWORDS_TO_DC_SUBJECT,    // 0x07
        TikaCoreProperties.MODIFIER, // 0x08
    };
 

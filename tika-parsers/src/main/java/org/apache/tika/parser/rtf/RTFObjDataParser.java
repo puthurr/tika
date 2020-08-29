@@ -18,8 +18,24 @@
 
 package org.apache.tika.parser.rtf;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
+import java.util.Locale;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import org.apache.commons.io.FilenameUtils;
-import org.apache.poi.poifs.filesystem.*;
+import org.apache.poi.poifs.filesystem.DirectoryNode;
+import org.apache.poi.poifs.filesystem.DocumentEntry;
+import org.apache.poi.poifs.filesystem.DocumentInputStream;
+import org.apache.poi.poifs.filesystem.Entry;
+import org.apache.poi.poifs.filesystem.FileMagic;
+import org.apache.poi.poifs.filesystem.POIFSFileSystem;
+import org.apache.poi.poifs.filesystem.Ole10Native;
+import org.apache.poi.poifs.filesystem.Ole10NativeException;
 import org.apache.poi.util.IOUtils;
 import org.apache.tika.exception.TikaException;
 import org.apache.tika.exception.TikaMemoryLimitException;
@@ -30,10 +46,6 @@ import org.apache.tika.metadata.Metadata;
 import org.apache.tika.metadata.RTFMetadata;
 import org.apache.tika.metadata.TikaCoreProperties;
 import org.apache.tika.parser.microsoft.OfficeParser.POIFSDocumentType;
-
-import java.io.*;
-import java.util.Locale;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Many thanks to Simon Mourier for:
@@ -143,7 +155,8 @@ class RTFObjDataParser {
                             new DocumentInputStream((DocumentEntry)ooxml))) {
                     IOUtils.copy(bis, out);
                     if (bis.hasHitBound()) {
-                        throw new TikaMemoryLimitException("Hit memory limit exception. Tried to copy > "+memoryLimitInKb*1024);
+                        throw new TikaMemoryLimitException(
+                                (memoryLimitInKb*1024+1), (memoryLimitInKb*1024));
                     }
                 }
                 ret = out.toByteArray();
@@ -178,10 +191,10 @@ class RTFObjDataParser {
                     BoundedInputStream bis = new BoundedInputStream(memoryLimitInKb*1024, is);
                     IOUtils.copy(is, out);
                     if (bis.hasHitBound()) {
-                        throw new TikaMemoryLimitException("Hit memory limit exception. Tried to copy > "+memoryLimitInKb*1024);
+                        throw new TikaMemoryLimitException(memoryLimitInKb*1024+1, memoryLimitInKb*1024);
                     }
                     ret = out.toByteArray();
-                    metadata.set(TikaCoreProperties.RESOURCE_NAME_KEY, "file_" + unknownFilenameCount.getAndIncrement() + "." + type.getExtension());
+                    metadata.set(Metadata.RESOURCE_NAME_KEY, "file_" + unknownFilenameCount.getAndIncrement() + "." + type.getExtension());
                     metadata.set(Metadata.CONTENT_TYPE, type.getType().toString());
                 }
             }
@@ -254,8 +267,8 @@ class RTFObjDataParser {
             pathToUse = ansiFilePath == null ? "" : ansiFilePath;
         }
         metadata.set(TikaCoreProperties.ORIGINAL_RESOURCE_NAME, fileNameToUse);
-        metadata.set(TikaCoreProperties.RESOURCE_NAME_KEY, FilenameUtils.getName(fileNameToUse));
-        metadata.set(TikaCoreProperties.EMBEDDED_RELATIONSHIP_ID, pathToUse);
+        metadata.set(Metadata.RESOURCE_NAME_KEY, FilenameUtils.getName(fileNameToUse));
+        metadata.set(Metadata.EMBEDDED_RELATIONSHIP_ID, pathToUse);
 
         return objBytes;
     }
@@ -313,12 +326,9 @@ class RTFObjDataParser {
         if (len < 0) {
             throw new IOException("Requested length for reading bytes < 0?!: " + len);
         } else if (memoryLimitInKb > -1 && len > memoryLimitInKb*1024) {
-            throw new TikaMemoryLimitException("File embedded in RTF caused this (" + len +
-                    ") bytes), but maximum allowed is ("+(memoryLimitInKb*1024)+")."+
-                    "If this is a valid RTF file, consider increasing the memory limit via TikaConfig.");
+            throw new TikaMemoryLimitException(len, memoryLimitInKb*1024);
         } else if (len > Integer.MAX_VALUE) {
-            throw new TikaMemoryLimitException("File embedded in RTF caused this (" + len +
-                    ") bytes), but there is a hard limit of Integer.MAX_VALUE+");
+            throw new TikaMemoryLimitException(len, Integer.MAX_VALUE);
         }
 
         return new byte[(int) len];

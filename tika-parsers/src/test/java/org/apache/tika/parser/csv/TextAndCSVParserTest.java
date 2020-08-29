@@ -83,7 +83,7 @@ public class TextAndCSVParserTest extends TikaTest {
     @Test
     public void testCSV_UTF8() throws Exception {
         Metadata metadata = new Metadata();
-        metadata.set(TikaCoreProperties.RESOURCE_NAME_KEY, "test.csv");
+//        metadata.set(Metadata.RESOURCE_NAME_KEY, "test.csv");
         XMLResult xmlResult = getXML(new ByteArrayInputStream(CSV_UTF8), PARSER, metadata);
         assertEquals("comma", xmlResult.metadata.get(TextAndCSVParser.DELIMITER_PROPERTY));
         assertMediaTypeEquals("csv", "ISO-8859-1","comma",
@@ -117,7 +117,7 @@ public class TextAndCSVParserTest extends TikaTest {
     @Test
     public void testCSV_UTF16LE() throws Exception {
         Metadata metadata = new Metadata();
-        metadata.set(TikaCoreProperties.RESOURCE_NAME_KEY, "test.csv");
+        metadata.set(Metadata.RESOURCE_NAME_KEY, "test.csv");
         XMLResult xmlResult = getXML(new ByteArrayInputStream(CSV_UTF_16LE), PARSER, metadata);
         assertEquals("comma", xmlResult.metadata.get(TextAndCSVParser.DELIMITER_PROPERTY));
         assertMediaTypeEquals("csv", "UTF-16LE","comma",
@@ -128,7 +128,7 @@ public class TextAndCSVParserTest extends TikaTest {
     @Test
     public void testCSV_UTF16LE_BOM() throws Exception {
         Metadata metadata = new Metadata();
-        metadata.set(TikaCoreProperties.RESOURCE_NAME_KEY, "test.csv");
+        metadata.set(Metadata.RESOURCE_NAME_KEY, "test.csv");
         XMLResult xmlResult = getXML(new ByteArrayInputStream(
                 concat(ByteOrderMark.UTF_16LE.getBytes(), CSV_UTF_16LE)), PARSER, metadata);
         assertEquals("comma", xmlResult.metadata.get(TextAndCSVParser.DELIMITER_PROPERTY));
@@ -140,7 +140,7 @@ public class TextAndCSVParserTest extends TikaTest {
     @Test
     public void testTSV_UTF8() throws Exception {
         Metadata metadata = new Metadata();
-        metadata.set(TikaCoreProperties.RESOURCE_NAME_KEY, "test.csv");
+        metadata.set(Metadata.RESOURCE_NAME_KEY, "test.csv");
         XMLResult xmlResult = getXML(new ByteArrayInputStream(TSV_UTF8), PARSER, metadata);
         assertEquals("tab", xmlResult.metadata.get(TextAndCSVParser.DELIMITER_PROPERTY));
         assertMediaTypeEquals("tsv", "ISO-8859-1","tab",
@@ -151,7 +151,7 @@ public class TextAndCSVParserTest extends TikaTest {
     @Test
     public void testTSV_UTF16LE() throws Exception {
         Metadata metadata = new Metadata();
-        metadata.set(TikaCoreProperties.RESOURCE_NAME_KEY, "test.csv");
+        metadata.set(Metadata.RESOURCE_NAME_KEY, "test.csv");
         XMLResult xmlResult = getXML(new ByteArrayInputStream(TSV_UTF_16LE), PARSER, metadata);
         assertEquals("tab", xmlResult.metadata.get(TextAndCSVParser.DELIMITER_PROPERTY));
         assertMediaTypeEquals("tsv", "UTF-16LE","tab",
@@ -172,7 +172,7 @@ public class TextAndCSVParserTest extends TikaTest {
                 "brown,\"la\"zy\"\n" +
                 "brown,\"dog\n").getBytes(StandardCharsets.UTF_8);
         Metadata metadata = new Metadata();
-        metadata.set(TikaCoreProperties.RESOURCE_NAME_KEY, "test.csv");
+        metadata.set(Metadata.RESOURCE_NAME_KEY, "test.csv");
         XMLResult xmlResult = getXML(new ByteArrayInputStream(csv), PARSER, metadata);
         assertNull(xmlResult.metadata.get(TextAndCSVParser.DELIMITER_PROPERTY));
         assertEquals("text/plain; charset=ISO-8859-1", xmlResult.metadata.get(Metadata.CONTENT_TYPE));
@@ -185,11 +185,11 @@ public class TextAndCSVParserTest extends TikaTest {
         byte[] bytes = ("testcsv\n" +
                 "testcsv testcsv;;; testcsv").getBytes(StandardCharsets.UTF_8);
         Metadata metadata = new Metadata();
-        metadata.set(TikaCoreProperties.RESOURCE_NAME_KEY, "test.csv");
+        metadata.set(Metadata.RESOURCE_NAME_KEY, "test.csv");
         XMLResult xmlResult = getXML(new ByteArrayInputStream(bytes), PARSER, metadata);
         assertContains("text/plain", xmlResult.metadata.get(Metadata.CONTENT_TYPE));
 
-        metadata.set(TikaCoreProperties.RESOURCE_NAME_KEY, "test.txt");
+        metadata.set(Metadata.RESOURCE_NAME_KEY, "test.txt");
         xmlResult = getXML(new ByteArrayInputStream(bytes), PARSER, metadata);
         assertContains("text/plain", xmlResult.metadata.get(Metadata.CONTENT_TYPE));
     }

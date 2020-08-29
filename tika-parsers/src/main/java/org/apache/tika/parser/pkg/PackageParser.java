@@ -17,8 +17,20 @@
 package org.apache.tika.parser.pkg;
 
 
+import java.io.BufferedInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
+
 import org.apache.commons.compress.PasswordRequiredException;
-import org.apache.commons.compress.archivers.*;
+import org.apache.commons.compress.archivers.ArchiveEntry;
+import org.apache.commons.compress.archivers.ArchiveException;
+import org.apache.commons.compress.archivers.ArchiveInputStream;
+import org.apache.commons.compress.archivers.ArchiveStreamFactory;
+import org.apache.commons.compress.archivers.StreamingNotSupportedException;
 import org.apache.commons.compress.archivers.ar.ArArchiveInputStream;
 import org.apache.commons.compress.archivers.cpio.CpioArchiveInputStream;
 import org.apache.commons.compress.archivers.dump.DumpArchiveInputStream;
@@ -46,14 +58,6 @@ import org.apache.tika.sax.XHTMLContentHandler;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.AttributesImpl;
-
-import java.io.BufferedInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.Set;
 
 /**
  * Parser for various packaging formats. Package entries will be written to
@@ -390,14 +394,14 @@ public class PackageParser extends AbstractParser {
         }
         if (name != null && name.length() > 0) {
             name = name.replace("\\", "/");
-            entrydata.set(TikaCoreProperties.RESOURCE_NAME_KEY, name);
+            entrydata.set(Metadata.RESOURCE_NAME_KEY, name);
             AttributesImpl attributes = new AttributesImpl();
             attributes.addAttribute("", "class", "class", "CDATA", "embedded");
             attributes.addAttribute("", "id", "id", "CDATA", name);
             xhtml.startElement("div", attributes);
             xhtml.endElement("div");
 
-            entrydata.set(TikaCoreProperties.EMBEDDED_RELATIONSHIP_ID, name);
+            entrydata.set(Metadata.EMBEDDED_RELATIONSHIP_ID, name);
         }
         return entrydata;
     }

@@ -16,6 +16,23 @@
  */
 package org.apache.tika.parser.crypto;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.math.BigInteger;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+import java.util.TimeZone;
+
 import org.apache.tika.exception.TikaException;
 import org.apache.tika.extractor.EmbeddedDocumentExtractor;
 import org.apache.tika.extractor.EmbeddedDocumentUtil;
@@ -42,15 +59,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.math.BigInteger;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
-import java.text.SimpleDateFormat;
-import java.util.*;
 
 /**
  * Tika parser for Time Stamped Data Envelope (application/timestamped-data)
@@ -120,6 +128,8 @@ public class TSDParser extends AbstractParser {
                 tsdMetasList.add(tsdMetas);
             }
 
+        } catch (SecurityException e) {
+            throw e;
         } catch (Exception ex) {
             LOG.error("Error in TSDParser.buildMetas {}", ex.getMessage());
             tsdMetasList.clear();
@@ -159,6 +169,8 @@ public class TSDParser extends AbstractParser {
                     edx.parseEmbedded(is, handler, metadata, false);
                 }
 
+            } catch (SecurityException e) {
+                throw e;
             } catch (Exception ex) {
                 LOG.error("Error in TSDParser.parseTSDContent {}", ex.getMessage());
             } finally {
@@ -171,7 +183,7 @@ public class TSDParser extends AbstractParser {
         if (cmsTimeStampedDataParser != null) {
             try {
                 cmsTimeStampedDataParser.close();
-            } catch (Exception ex) {
+            } catch (IOException ex) {
                 LOG.error("Error in TSDParser.closeCMSParser {}", ex.getMessage());
             }
         }

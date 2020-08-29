@@ -16,6 +16,15 @@
  */
 package org.apache.tika.parser.pkg;
 
+import java.io.InputStream;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
+import java.util.regex.Pattern;
+
 import org.apache.tika.mime.MediaType;
 import org.apache.tika.parser.ParseContext;
 import org.apache.tika.sax.OfflineContentHandler;
@@ -23,10 +32,6 @@ import org.apache.tika.utils.XMLReaderUtils;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
-
-import java.io.InputStream;
-import java.util.*;
-import java.util.regex.Pattern;
 
 abstract class ZipContainerDetectorBase {
 

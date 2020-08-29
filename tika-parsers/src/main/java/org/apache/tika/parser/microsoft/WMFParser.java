@@ -19,7 +19,6 @@ package org.apache.tika.parser.microsoft;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.Array;
 import java.nio.charset.Charset;
 import java.util.Collections;
 import java.util.Set;

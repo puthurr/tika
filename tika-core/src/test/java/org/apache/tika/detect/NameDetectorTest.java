@@ -22,7 +22,6 @@ import java.util.Map;
 import java.util.regex.Pattern;
 
 import org.apache.tika.metadata.Metadata;
-import org.apache.tika.metadata.TikaCoreProperties;
 import org.apache.tika.mime.MediaType;
 
 import static org.junit.Assert.assertEquals;
@@ -100,7 +99,7 @@ public class NameDetectorTest {
 
     private void assertDetect(MediaType type, String name){
         Metadata metadata = new Metadata();
-        metadata.set(TikaCoreProperties.RESOURCE_NAME_KEY, name);
+        metadata.set(Metadata.RESOURCE_NAME_KEY, name);
         try {
             assertEquals(type, detector.detect(null, metadata));
         } catch (IOException e) {

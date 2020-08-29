@@ -18,8 +18,8 @@
 package org.apache.tika.dl.imagerec;
 
 import org.apache.tika.config.Field;
-import org.apache.tika.config.Param;
 import org.apache.tika.config.InitializableProblemHandler;
+import org.apache.tika.config.Param;
 import org.apache.tika.exception.TikaConfigException;
 import org.apache.tika.exception.TikaException;
 import org.apache.tika.metadata.Metadata;
@@ -42,6 +42,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;

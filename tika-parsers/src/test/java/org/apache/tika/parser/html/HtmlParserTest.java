@@ -29,6 +29,7 @@ import javax.xml.transform.sax.SAXTransformerFactory;
 import javax.xml.transform.sax.TransformerHandler;
 import javax.xml.transform.stream.StreamResult;
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -53,6 +54,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.regex.Pattern;
 
+import org.apache.commons.codec.binary.Base64;
 import org.apache.tika.Tika;
 import org.apache.tika.TikaTest;
 import org.apache.tika.config.ServiceLoader;
@@ -60,6 +62,7 @@ import org.apache.tika.config.TikaConfig;
 import org.apache.tika.detect.AutoDetectReader;
 import org.apache.tika.detect.EncodingDetector;
 import org.apache.tika.exception.TikaException;
+import org.apache.tika.io.IOUtils;
 import org.apache.tika.io.TikaInputStream;
 import org.apache.tika.metadata.Geographic;
 import org.apache.tika.metadata.Metadata;
@@ -67,6 +70,7 @@ import org.apache.tika.metadata.TikaCoreProperties;
 import org.apache.tika.parser.AutoDetectParser;
 import org.apache.tika.parser.ParseContext;
 import org.apache.tika.parser.Parser;
+import org.apache.tika.parser.RecursiveParserWrapper;
 import org.apache.tika.sax.AbstractRecursiveParserWrapperHandler;
 import org.apache.tika.sax.BasicContentHandlerFactory;
 import org.apache.tika.sax.BodyContentHandler;
@@ -922,34 +926,6 @@ public class HtmlParserTest extends TikaTest {
     }
 
     /**
-     * Test case for TIKA-2683
-     *
-     * @see <a href="https://issues.apache.org/jira/projects/TIKA/issues/TIKA-2683">TIKA-2683</a>
-     */
-    @Test
-    public void testBoilerplateMissingWhitespace() throws Exception {
-        String path = "/test-documents/testBoilerplateMissingSpace.html";
-
-        Metadata metadata = new Metadata();
-        BodyContentHandler handler = new BodyContentHandler();
-
-        BoilerpipeContentHandler bpHandler = new BoilerpipeContentHandler(handler);
-        bpHandler.setIncludeMarkup(true);
-
-        new HtmlParser().parse(
-                HtmlParserTest.class.getResourceAsStream(path),
-                bpHandler, metadata, new ParseContext());
-
-        String content = handler.toString();
-
-        // Should contain space between these two words as mentioned in HTML
-        assertContains("family Psychrolutidae", content);
-
-        // Shouldn't add new-line chars around brackets; This is not how the HTML look
-        assertContains("(Psychrolutes marcidus)", content);
-    }
-
-    /**
      * Test case for TIKA-983:  HTML parser should add Open Graph meta tag data to Metadata returned by parser
      *
      * @see <a href="https://issues.apache.org/jira/browse/TIKA-983">TIKA-983</a>
@@ -1327,7 +1303,7 @@ public class HtmlParserTest extends TikaTest {
         Metadata imgMetadata = metadataList.get(1);
         assertEquals("image/jpeg", imgMetadata.get(Metadata.CONTENT_TYPE));
         assertContains("moscow-birds",
-                Arrays.asList(imgMetadata.getValues(TikaCoreProperties.SUBJECT)));
+                Arrays.asList(imgMetadata.getValues(Metadata.SUBJECT)));
     }
 
     @Test
@@ -1343,7 +1319,7 @@ public class HtmlParserTest extends TikaTest {
         Metadata imgMetadata = metadataList.get(1);
         assertEquals("image/jpeg", imgMetadata.get(Metadata.CONTENT_TYPE));
         assertContains("moscow-birds",
-                Arrays.asList(imgMetadata.getValues(TikaCoreProperties.SUBJECT)));
+                Arrays.asList(imgMetadata.getValues(Metadata.SUBJECT)));
     }
 
     @Test

@@ -16,20 +16,20 @@
  */
 package org.apache.tika.parser.crypto;
 
-import org.apache.tika.TikaTest;
-import org.apache.tika.metadata.Metadata;
-import org.apache.tika.parser.ParseContext;
-import org.apache.tika.sax.BodyContentHandler;
-import org.apache.tika.utils.ParserUtils;
-import org.junit.Test;
-import org.xml.sax.ContentHandler;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 import java.io.InputStream;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import org.apache.tika.TikaTest;
+import org.apache.tika.metadata.Metadata;
+import org.apache.tika.parser.ParseContext;
+import org.apache.tika.parser.RecursiveParserWrapper;
+import org.apache.tika.sax.BodyContentHandler;
+import org.junit.Test;
+import org.xml.sax.ContentHandler;
 
 public class TSDParserTest extends TikaTest {
 
@@ -173,8 +173,8 @@ public class TSDParserTest extends TikaTest {
         List<Metadata> list = getRecursiveMetadata("testTSD_broken_pdf.tsd");
         assertEquals(2, list.size());
         assertEquals("application/pdf", list.get(1).get(Metadata.CONTENT_TYPE));
-        assertNotNull(list.get(1).get(ParserUtils.EMBEDDED_EXCEPTION));
-        assertContains("org.apache.pdfbox.pdmodel.PDDocument.load", list.get(1).get(ParserUtils.EMBEDDED_EXCEPTION));
+        assertNotNull(list.get(1).get(RecursiveParserWrapper.EMBEDDED_EXCEPTION));
+        assertContains("org.apache.pdfbox.pdmodel.PDDocument.load", list.get(1).get(RecursiveParserWrapper.EMBEDDED_EXCEPTION));
     }
 
     @Test

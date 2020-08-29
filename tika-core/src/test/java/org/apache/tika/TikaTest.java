@@ -16,13 +16,35 @@
  */
 package org.apache.tika;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
+import java.io.ByteArrayOutputStream;
+import java.io.EOFException;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 import org.apache.tika.extractor.EmbeddedResourceHandler;
 import org.apache.tika.io.IOUtils;
 import org.apache.tika.io.TikaInputStream;
 import org.apache.tika.metadata.Metadata;
-import org.apache.tika.metadata.TikaCoreProperties;
 import org.apache.tika.mime.MediaType;
 import org.apache.tika.parser.AutoDetectParser;
+import org.apache.tika.parser.CompositeParser;
 import org.apache.tika.parser.ParseContext;
 import org.apache.tika.parser.Parser;
 import org.apache.tika.parser.RecursiveParserWrapper;
@@ -31,14 +53,6 @@ import org.apache.tika.sax.BodyContentHandler;
 import org.apache.tika.sax.RecursiveParserWrapperHandler;
 import org.apache.tika.sax.ToXMLContentHandler;
 import org.xml.sax.ContentHandler;
-
-import java.io.*;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.nio.file.Path;
-import java.util.*;
-
-import static org.junit.Assert.*;
 
 /**
  * Parent class of Tika tests
@@ -178,7 +192,7 @@ public abstract class TikaTest {
 
     protected XMLResult getXML(String filePath, Parser parser) throws Exception {
         Metadata metadata = new Metadata();
-        metadata.set(TikaCoreProperties.RESOURCE_NAME_KEY, filePath);
+        metadata.set(Metadata.RESOURCE_NAME_KEY, filePath);
         return getXML(filePath, parser, metadata);
     }
 
@@ -460,6 +474,36 @@ public abstract class TikaTest {
             for (String v : metadata.getValues(n)) {
                 System.out.println(n + " : "+v);
             }
+        }
+    }
+
+    public static Parser findParser(Parser parser, Class clazz) {
+        if (parser instanceof CompositeParser) {
+            for (Parser child : ((CompositeParser)parser).getAllComponentParsers()) {
+                Parser found = findParser(child, clazz);
+                if (found != null) {
+                    return found;
+                }
+            }
+        } else if (clazz.isInstance(parser)) {
+            return parser;
+        }
+        return null;
+    }
+
+    public List<Path> getAllTestFiles() {
+        //for now, just get main files
+        //TODO: fix this to be recursive
+        try {
+            File[] pathArray = Paths.get(this.getClass().getResource("/test-documents")
+                    .toURI()).toFile().listFiles();
+            List<Path> paths = new ArrayList<>();
+            for (File f : pathArray) {
+                paths.add(f.toPath());
+            }
+            return paths;
+        } catch (URISyntaxException e) {
+            throw new RuntimeException(e);
         }
     }
 }

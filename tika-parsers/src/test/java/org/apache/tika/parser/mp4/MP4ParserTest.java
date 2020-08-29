@@ -19,6 +19,7 @@ package org.apache.tika.parser.mp4;
 import static org.junit.Assert.assertEquals;
 
 import java.io.InputStream;
+import java.nio.file.Paths;
 
 import org.apache.tika.TikaTest;
 import org.apache.tika.io.TikaInputStream;
@@ -49,8 +50,11 @@ public class MP4ParserTest extends TikaTest {
         assertEquals("audio/mp4", metadata.get(Metadata.CONTENT_TYPE));
         assertEquals("Test Title", metadata.get(TikaCoreProperties.TITLE));
         assertEquals("Test Artist", metadata.get(TikaCoreProperties.CREATOR));
+        assertEquals("Test Artist", metadata.get(Metadata.AUTHOR));
         assertEquals("2012-01-28T18:39:18Z", metadata.get(TikaCoreProperties.CREATED));
+        assertEquals("2012-01-28T18:39:18Z", metadata.get(Metadata.CREATION_DATE));
         assertEquals("2012-01-28T18:40:25Z", metadata.get(TikaCoreProperties.MODIFIED));
+        assertEquals("2012-01-28T18:40:25Z", metadata.get(Metadata.DATE));
 
         // Check the textual contents
         assertContains("Test Title", content);

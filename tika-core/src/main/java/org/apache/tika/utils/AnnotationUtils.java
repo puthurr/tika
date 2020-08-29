@@ -21,8 +21,6 @@ import org.apache.tika.config.Param;
 import org.apache.tika.config.ParamField;
 import org.apache.tika.config.TikaConfig;
 import org.apache.tika.exception.TikaConfigException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AccessibleObject;
@@ -42,7 +40,6 @@ import java.util.Set;
  * @since Apache Tika 1.14
  */
 public class AnnotationUtils {
-    private static final Logger LOG = LoggerFactory.getLogger(AnnotationUtils.class);
 
     /**
      * Cache for annotations for Bean classes which have {@link Field}
@@ -133,7 +130,8 @@ public class AnnotationUtils {
                         bean.getClass().getName());
                 throw new TikaConfigException(msg);
             } else {
-                LOG.debug("Param not supplied, field is not mandatory");
+                //FIXME: SLF4j is not showing up for import, fix it and send this to LOG.debug
+                //LOG.debug("Param not supplied, field is not mandatory");
             }
         }
     }

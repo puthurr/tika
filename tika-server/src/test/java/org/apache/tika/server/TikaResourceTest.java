@@ -18,6 +18,8 @@
 package org.apache.tika.server;
 
 import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
+import org.apache.commons.io.IOUtils;
 import org.apache.cxf.attachment.AttachmentUtil;
 import org.apache.cxf.jaxrs.JAXRSServerFactoryBean;
 import org.apache.cxf.jaxrs.client.WebClient;
@@ -26,16 +28,24 @@ import org.apache.cxf.jaxrs.lifecycle.SingletonResourceProvider;
 import org.apache.tika.parser.ocr.TesseractOCRConfig;
 import org.apache.tika.parser.ocr.TesseractOCRParser;
 import org.apache.tika.server.resource.TikaResource;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import javax.ws.rs.ProcessingException;
+import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
-import static org.junit.Assert.*;
+import static org.apache.cxf.helpers.HttpHeaderHelper.CONTENT_ENCODING;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 public class TikaResourceTest extends CXFTestBase {
     public static final String TEST_DOC = "test.doc";
@@ -78,6 +88,50 @@ public class TikaResourceTest extends CXFTestBase {
                 .put(ClassLoader.getSystemResourceAsStream(TEST_DOC));
         String responseMsg = getStringFromInputStream((InputStream) response
                 .getEntity());
+        assertTrue(responseMsg.contains("test"));
+    }
+
+    @Test
+    public void testWordGzipIn() throws Exception {
+        Response response = WebClient.create(endPoint + TIKA_PATH)
+                .type("application/msword")
+                .accept("text/plain")
+                .encoding("gzip")
+                .put(gzip(ClassLoader.getSystemResourceAsStream(TEST_DOC)));
+        String responseMsg = getStringFromInputStream((InputStream) response
+                .getEntity());
+        assertTrue(responseMsg.contains("test"));
+    }
+
+    @Test
+    public void testLongGzipOut() throws Exception {
+        //if the output is long enough, jax-rs will compress it, otherwise it won't
+        //this output is long enough, and should be compressed
+        Response response = WebClient.create(endPoint + TIKA_PATH)
+                .accept("text/plain")
+                .acceptEncoding("gzip")
+                .put(ClassLoader.getSystemResourceAsStream(TEST_RECURSIVE_DOC));
+        assertTrue(response.getHeaders().containsKey(CONTENT_ENCODING));
+        assertEquals("gzip", response.getHeaderString(CONTENT_ENCODING));
+        String responseMsg = getStringFromInputStream(
+                new GzipCompressorInputStream((InputStream) response
+                        .getEntity()));
+        assertTrue(responseMsg.contains("Course of human"));
+    }
+
+    @Test
+    public void testShortGzipOut() throws Exception {
+        //if the output is long enough, jax-rs will compress it, otherwise it won't
+        //this output is short enough, and should not be compressed
+        Response response = WebClient.create(endPoint + TIKA_PATH)
+                .accept("text/plain")
+                .acceptEncoding("gzip")
+                .put(ClassLoader.getSystemResourceAsStream(TEST_DOC));
+        assertFalse(response.getHeaders().containsKey(CONTENT_ENCODING));
+
+        String responseMsg = getStringFromInputStream(
+                (InputStream) response
+                        .getEntity());
         assertTrue(responseMsg.contains("test"));
     }
 

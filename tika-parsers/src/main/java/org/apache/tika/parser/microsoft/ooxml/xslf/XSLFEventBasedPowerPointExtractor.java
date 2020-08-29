@@ -25,7 +25,6 @@ import org.apache.poi.ooxml.POIXMLProperties;
 import org.apache.poi.ooxml.extractor.POIXMLTextExtractor;
 import org.apache.poi.openxml4j.exceptions.OpenXML4JException;
 import org.apache.poi.openxml4j.opc.OPCPackage;
-import org.apache.poi.openxml4j.opc.PackageAccess;
 import org.apache.tika.parser.microsoft.ooxml.OOXMLWordAndPowerPointTextHandler;
 import org.apache.tika.parser.microsoft.ooxml.ParagraphProperties;
 import org.apache.tika.parser.microsoft.ooxml.RunProperties;
@@ -39,7 +38,7 @@ public class XSLFEventBasedPowerPointExtractor extends POIXMLTextExtractor {
     private POIXMLProperties properties;
 
     public XSLFEventBasedPowerPointExtractor(String path) throws XmlException, OpenXML4JException, IOException {
-        this(OPCPackage.open(path, PackageAccess.READ));
+        this(OPCPackage.open(path));
     }
 
     public XSLFEventBasedPowerPointExtractor(OPCPackage container) throws XmlException, OpenXML4JException, IOException {

@@ -23,7 +23,11 @@ import org.apache.james.mime4j.dom.address.Address;
 import org.apache.james.mime4j.dom.address.AddressList;
 import org.apache.james.mime4j.dom.address.Mailbox;
 import org.apache.james.mime4j.dom.address.MailboxList;
-import org.apache.james.mime4j.dom.field.*;
+import org.apache.james.mime4j.dom.field.AddressListField;
+import org.apache.james.mime4j.dom.field.DateTimeField;
+import org.apache.james.mime4j.dom.field.MailboxListField;
+import org.apache.james.mime4j.dom.field.ParsedField;
+import org.apache.james.mime4j.dom.field.UnstructuredField;
 import org.apache.james.mime4j.field.LenientFieldParser;
 import org.apache.james.mime4j.message.MaximalBodyDescriptor;
 import org.apache.james.mime4j.parser.ContentHandler;
@@ -58,8 +62,14 @@ import java.text.DateFormat;
 import java.text.DateFormatSymbols;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Stack;
+import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -190,8 +200,8 @@ class MailContentHandler implements ContentHandler {
                 }
 
                 String contentDispositionFileName = maximalBody.getContentDispositionFilename();
-                if (contentDispositionFileName != null) {
-                    submd.set(TikaCoreProperties.RESOURCE_NAME_KEY, contentDispositionFileName);
+                if ( contentDispositionFileName != null ) {
+                    submd.set( Metadata.RESOURCE_NAME_KEY, contentDispositionFileName );
                 }
 
                 submd.set(Metadata.CONTENT_DISPOSITION, contentDisposition.toString());
@@ -377,9 +387,7 @@ class MailContentHandler implements ContentHandler {
                     metadata.add(TikaCoreProperties.CREATOR, from);
                 }
             } else if (fieldname.equalsIgnoreCase("Subject")) {
-                metadata.set(TikaCoreProperties.TITLE,
-                        ((UnstructuredField) parsedField).getValue());
-                metadata.set(TikaCoreProperties.SUBJECT,
+                metadata.set(TikaCoreProperties.TRANSITION_SUBJECT_TO_DC_TITLE,
                         ((UnstructuredField) parsedField).getValue());
             } else if (fieldname.equalsIgnoreCase("To")) {
                 processAddressList(parsedField, "To:", Metadata.MESSAGE_TO);

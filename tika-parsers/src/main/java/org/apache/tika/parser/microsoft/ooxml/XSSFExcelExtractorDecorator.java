@@ -17,11 +17,27 @@
 package org.apache.tika.parser.microsoft.ooxml;
 
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+
 import org.apache.poi.hssf.extractor.ExcelExtractor;
 import org.apache.poi.ooxml.extractor.POIXMLTextExtractor;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.openxml4j.exceptions.OpenXML4JException;
-import org.apache.poi.openxml4j.opc.*;
+import org.apache.poi.openxml4j.opc.OPCPackage;
+import org.apache.poi.openxml4j.opc.PackagePart;
+import org.apache.poi.openxml4j.opc.PackagePartName;
+import org.apache.poi.openxml4j.opc.PackageRelationship;
+import org.apache.poi.openxml4j.opc.PackageRelationshipTypes;
+import org.apache.poi.openxml4j.opc.PackagingURIHelper;
+import org.apache.poi.openxml4j.opc.TargetMode;
 import org.apache.poi.ss.usermodel.DataFormatter;
 import org.apache.poi.ss.usermodel.HeaderFooter;
 import org.apache.poi.ss.util.CellReference;
@@ -32,11 +48,16 @@ import org.apache.poi.xssf.eventusermodel.XSSFSheetXMLHandler.SheetContentsHandl
 import org.apache.poi.xssf.extractor.XSSFEventBasedExcelExtractor;
 import org.apache.poi.xssf.model.CommentsTable;
 import org.apache.poi.xssf.model.StylesTable;
-import org.apache.poi.xssf.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFComment;
+import org.apache.poi.xssf.usermodel.XSSFDrawing;
+import org.apache.poi.xssf.usermodel.XSSFRelation;
+import org.apache.poi.xssf.usermodel.XSSFShape;
+import org.apache.poi.xssf.usermodel.XSSFSimpleShape;
 import org.apache.poi.xssf.usermodel.helpers.HeaderFooterHelper;
 import org.apache.tika.exception.TikaException;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.metadata.TikaCoreProperties;
+import org.apache.tika.metadata.TikaMetadataKeys;
 import org.apache.tika.parser.ParseContext;
 import org.apache.tika.parser.microsoft.OfficeParserConfig;
 import org.apache.tika.parser.microsoft.TikaExcelDataFormatter;
@@ -53,10 +74,6 @@ import org.xml.sax.ContentHandler;
 import org.xml.sax.Locator;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.*;
 
 public class XSSFExcelExtractorDecorator extends AbstractOOXMLExtractor {
     /**
@@ -104,7 +121,7 @@ public class XSSFExcelExtractorDecorator extends AbstractOOXMLExtractor {
 
         this.metadata = metadata;
         this.parseContext = context;
-        metadata.set(TikaCoreProperties.PROTECTED, "false");
+        metadata.set(TikaMetadataKeys.PROTECTED, "false");
 
         super.getXHTML(handler, metadata, context);
     }
@@ -340,7 +357,7 @@ public class XSSFExcelExtractorDecorator extends AbstractOOXMLExtractor {
             sheetInputStream.close();
 
             if (handler.hasProtection) {
-                metadata.set(TikaCoreProperties.PROTECTED, "true");
+                metadata.set(TikaMetadataKeys.PROTECTED, "true");
             }
         } catch (TikaException e) {
             throw new RuntimeException("SAX parser appears to be broken - " + e.getMessage());

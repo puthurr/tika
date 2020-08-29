@@ -16,6 +16,34 @@
  */
 package org.apache.tika.dl.imagerec;
 
+import org.apache.commons.io.FileUtils;
+import org.apache.tika.config.Field;
+import org.apache.tika.config.InitializableProblemHandler;
+import org.apache.tika.config.Param;
+import org.apache.tika.exception.TikaConfigException;
+import org.apache.tika.exception.TikaException;
+import org.apache.tika.io.IOUtils;
+import org.apache.tika.metadata.Metadata;
+import org.apache.tika.mime.MediaType;
+import org.apache.tika.parser.ParseContext;
+import org.apache.tika.parser.recognition.ObjectRecogniser;
+import org.apache.tika.parser.recognition.RecognisedObject;
+import org.datavec.image.loader.NativeImageLoader;
+import org.deeplearning4j.nn.graph.ComputationGraph;
+import org.deeplearning4j.nn.modelimport.keras.KerasModel;
+import org.deeplearning4j.nn.modelimport.keras.exceptions.InvalidKerasConfigurationException;
+import org.deeplearning4j.nn.modelimport.keras.exceptions.UnsupportedKerasConfigurationException;
+import org.deeplearning4j.nn.modelimport.keras.utils.KerasModelBuilder;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
+import org.nd4j.linalg.api.ndarray.INDArray;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.xml.sax.ContentHandler;
+import org.xml.sax.SAXException;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -31,34 +59,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import org.apache.commons.io.FileUtils;
-import org.apache.tika.config.Field;
-import org.apache.tika.config.InitializableProblemHandler;
-import org.apache.tika.config.Param;
-import org.apache.tika.exception.TikaConfigException;
-import org.apache.tika.exception.TikaException;
-import org.apache.tika.io.IOUtils;
-import org.apache.tika.metadata.Metadata;
-import org.apache.tika.mime.MediaType;
-import org.apache.tika.parser.ParseContext;
-import org.apache.tika.parser.recognition.ObjectRecogniser;
-import org.apache.tika.parser.recognition.RecognisedObject;
-import org.datavec.image.loader.NativeImageLoader;
-import org.deeplearning4j.nn.graph.ComputationGraph;
-import org.deeplearning4j.nn.modelimport.keras.exceptions.InvalidKerasConfigurationException;
-import org.deeplearning4j.nn.modelimport.keras.exceptions.UnsupportedKerasConfigurationException;
-import org.deeplearning4j.nn.modelimport.keras.KerasModel;
-import org.deeplearning4j.nn.modelimport.keras.utils.KerasModelBuilder;
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
-import org.nd4j.linalg.api.ndarray.INDArray;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.xml.sax.ContentHandler;
-import org.xml.sax.SAXException;
 
 /**
  * {@link DL4JInceptionV3Net} is an implementation of {@link ObjectRecogniser}.
@@ -218,7 +218,7 @@ public class DL4JInceptionV3Net implements ObjectRecogniser {
         return cacheFile;
     }
 
-    private String mayBeDownloadFile(String path) throws TikaConfigException{
+    private String mayBeDownloadFile(String path) throws TikaConfigException {
         String resolvedFilePath;
         if (path.startsWith("http://") || path.startsWith("https://")) {
             LOG.debug("Config instructed to download the file, doing so.");

@@ -17,15 +17,46 @@
 
 package org.apache.tika.server.resource;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
+
 import au.com.bytecode.opencsv.CSVWriter;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.mutable.MutableInt;
-import org.apache.poi.poifs.filesystem.*;
+import org.apache.poi.poifs.filesystem.DirectoryEntry;
+import org.apache.poi.poifs.filesystem.DocumentEntry;
+import org.apache.poi.poifs.filesystem.DocumentInputStream;
+import org.apache.poi.poifs.filesystem.Entry;
+import org.apache.poi.poifs.filesystem.Ole10Native;
+import org.apache.poi.poifs.filesystem.Ole10NativeException;
+import org.apache.poi.poifs.filesystem.POIFSFileSystem;
 import org.apache.poi.util.IOUtils;
+import org.apache.tika.exception.TikaMemoryLimitException;
 import org.apache.tika.extractor.EmbeddedDocumentExtractor;
+import org.apache.tika.io.BoundedInputStream;
+import org.apache.tika.io.IOExceptionWithCause;
 import org.apache.tika.io.TikaInputStream;
 import org.apache.tika.metadata.Metadata;
-import org.apache.tika.metadata.TikaCoreProperties;
+import org.apache.tika.metadata.TikaMetadataKeys;
 import org.apache.tika.mime.MimeTypeException;
 import org.apache.tika.parser.DigestingParser;
 import org.apache.tika.parser.ParseContext;
@@ -38,19 +69,6 @@ import org.slf4j.LoggerFactory;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
-
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
-import java.io.*;
-import java.util.*;
-
-import static java.nio.charset.StandardCharsets.UTF_8;
 
 @Path("/unpack")
 public class UnpackerResource {
@@ -114,7 +132,9 @@ public class UnpackerResource {
         TikaResource.fillParseContext(pc, httpHeaders.getRequestHeaders(), null);
         TikaResource.fillMetadata(parser, metadata, pc, httpHeaders.getRequestHeaders());
         TikaResource.logRequest(LOG, info, metadata);
-
+        //even though we aren't currently parsing embedded documents,
+        //we need to add this to allow for "inline" use of other parsers.
+        pc.set(Parser.class, parser);
         ContentHandler ch;
         ByteArrayOutputStream text = new ByteArrayOutputStream();
 
@@ -159,12 +179,18 @@ public class UnpackerResource {
             return true;
         }
 
-        public void parseEmbedded(InputStream inputStream, ContentHandler contentHandler, Metadata metadata, boolean b) throws SAXException, IOException {
+        public void parseEmbedded(InputStream inputStream, ContentHandler contentHandler, Metadata metadata, boolean b)
+                throws SAXException, IOException {
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
-            IOUtils.copy(inputStream, bos);
+            BoundedInputStream bis = new BoundedInputStream(MAX_ATTACHMENT_BYTES, inputStream);
+            IOUtils.copy(bis, bos);
+            if (bis.hasHitBound()) {
+                throw new IOExceptionWithCause(
+                        new TikaMemoryLimitException(MAX_ATTACHMENT_BYTES+1, MAX_ATTACHMENT_BYTES));
+            }
             byte[] data = bos.toByteArray();
 
-            String name = metadata.get(TikaCoreProperties.RESOURCE_NAME_KEY);
+            String name = metadata.get(TikaMetadataKeys.RESOURCE_NAME_KEY);
             String contentType = metadata.get(org.apache.tika.metadata.HttpHeaders.CONTENT_TYPE);
 
             if (name == null) {

@@ -317,10 +317,9 @@ public class OfficeParser extends AbstractOfficeParser {
         try {
             reader = new VBAMacroReader(fs);
             macros = reader.readMacros();
+        } catch (SecurityException e) {
+            throw e;
         } catch (Exception e) {
-            if (e instanceof SecurityException) {
-                throw e;
-            }
             Metadata m = new Metadata();
             m.set(TikaCoreProperties.EMBEDDED_RESOURCE_TYPE, TikaCoreProperties.EmbeddedResourceType.MACRO.toString());
             m.set(Metadata.CONTENT_TYPE, "text/x-vbasic");
@@ -334,7 +333,7 @@ public class OfficeParser extends AbstractOfficeParser {
         }
         for (Map.Entry<String, String> e : macros.entrySet()) {
             Metadata m = new Metadata();
-            m.set(TikaCoreProperties.EMBEDDED_RESOURCE_TYPE, TikaCoreProperties.EmbeddedResourceType.MACRO.toString());
+            m.set(Metadata.EMBEDDED_RESOURCE_TYPE, TikaCoreProperties.EmbeddedResourceType.MACRO.toString());
             m.set(Metadata.CONTENT_TYPE, "text/x-vbasic");
             if (embeddedDocumentExtractor.shouldParseEmbedded(m)) {
                 embeddedDocumentExtractor.parseEmbedded(

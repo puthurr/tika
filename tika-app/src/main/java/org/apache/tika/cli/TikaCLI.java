@@ -16,6 +16,49 @@
  */
 package org.apache.tika.cli;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.TransformerConfigurationException;
+import javax.xml.transform.sax.SAXTransformerFactory;
+import javax.xml.transform.sax.TransformerHandler;
+import javax.xml.transform.stream.StreamResult;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.PrintStream;
+import java.io.PrintWriter;
+import java.io.Serializable;
+import java.io.UnsupportedEncodingException;
+import java.io.Writer;
+import java.lang.reflect.Field;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.net.URI;
+import java.net.URL;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.UUID;
+
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.input.CloseShieldInputStream;
@@ -42,36 +85,34 @@ import org.apache.tika.metadata.Metadata;
 import org.apache.tika.metadata.TikaCoreProperties;
 import org.apache.tika.metadata.serialization.JsonMetadata;
 import org.apache.tika.metadata.serialization.JsonMetadataList;
-import org.apache.tika.mime.*;
-import org.apache.tika.parser.*;
+import org.apache.tika.mime.MediaType;
+import org.apache.tika.mime.MediaTypeRegistry;
+import org.apache.tika.mime.MimeType;
+import org.apache.tika.mime.MimeTypeException;
+import org.apache.tika.mime.MimeTypes;
+import org.apache.tika.parser.AutoDetectParser;
+import org.apache.tika.parser.CompositeParser;
+import org.apache.tika.parser.DigestingParser;
+import org.apache.tika.parser.NetworkParser;
+import org.apache.tika.parser.ParseContext;
+import org.apache.tika.parser.Parser;
+import org.apache.tika.parser.ParserDecorator;
+import org.apache.tika.parser.PasswordProvider;
+import org.apache.tika.parser.RecursiveParserWrapper;
 import org.apache.tika.parser.html.BoilerpipeContentHandler;
 import org.apache.tika.parser.pdf.PDFParserConfig;
 import org.apache.tika.parser.utils.CommonsDigester;
-import org.apache.tika.sax.*;
+import org.apache.tika.sax.BasicContentHandlerFactory;
+import org.apache.tika.sax.BodyContentHandler;
+import org.apache.tika.sax.ContentHandlerFactory;
+import org.apache.tika.sax.ExpandedTitleContentHandler;
+import org.apache.tika.sax.RecursiveParserWrapperHandler;
 import org.apache.tika.xmp.XMPMetadata;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
-
-import javax.xml.transform.OutputKeys;
-import javax.xml.transform.TransformerConfigurationException;
-import javax.xml.transform.sax.SAXTransformerFactory;
-import javax.xml.transform.sax.TransformerHandler;
-import javax.xml.transform.stream.StreamResult;
-import java.io.*;
-import java.lang.reflect.Field;
-import java.net.URI;
-import java.net.URL;
-import java.nio.charset.Charset;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.*;
-import java.util.Map.Entry;
-
-import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  * Simple command line interface for Apache Tika.
@@ -312,6 +353,8 @@ public class TikaCLI {
 
     private boolean pipeMode = true;
 
+    private boolean serverMode = false;
+
     private boolean fork = false;
 
     private boolean prettyPrint;
@@ -419,9 +462,8 @@ public class TikaCLI {
             prettyPrint = true;
         } else if (arg.equals("-p") || arg.equals("--port")
                 || arg.equals("-s") || arg.equals("--server")) {
-            throw new IllegalArgumentException(
-                    "As of Tika 2.0, the server option is no longer supported in tika-app.\n"+
-                    "See https://wiki.apache.org/tika/TikaJAXRS for usage.");
+            serverMode = true;
+            pipeMode = false;
         } else if (arg.startsWith("-c")) {
             networkURI = new URI(arg.substring("-c".length()));
         } else if (arg.startsWith("--client=")) {
@@ -430,7 +472,9 @@ public class TikaCLI {
             pipeMode = false;
             configure();
             
-            if (arg.equals("-")) {
+            if (serverMode) {
+                new TikaServer(Integer.parseInt(arg)).start();
+            } else if (arg.equals("-")) {
                 try (InputStream stream = TikaInputStream.get(
                         new CloseShieldInputStream(System.in))) {
                     type.process(stream, System.out, new Metadata());
@@ -499,7 +543,7 @@ public class TikaCLI {
     }
     private void usage() {
         PrintStream out = System.out;
-        out.println("usage: java -jar tika-app.jar [option...] [file...]");
+        out.println("usage: java -jar tika-app.jar [option...] [file|port...]");
         out.println();
         out.println("Options:");
         out.println("    -?  or --help          Print this usage message");
@@ -507,6 +551,7 @@ public class TikaCLI {
         out.println("    -V  or --version       Print the Apache Tika version number");
         out.println();
         out.println("    -g  or --gui           Start the Apache Tika GUI");
+        out.println("    -s  or --server        Start the Apache Tika server");
         out.println("    -f  or --fork          Use Fork Mode for out-of-process extraction");
         out.println();
         out.println("    --config=<tika-config.xml>");
@@ -572,6 +617,12 @@ public class TikaCLI {
         out.println("    Apache Tika GUI. You can drag and drop files from");
         out.println("    a normal file explorer to the GUI window to extract");
         out.println("    text content and metadata from the files.");
+        out.println();
+        out.println("- Server mode");
+        out.println();
+        out.println("    Use the \"--server\" (or \"-s\") option to start the");
+        out.println("    Apache Tika server. The server will listen to the");
+        out.println("    ports you specify as one or more arguments.");
         out.println();
         out.println("- Batch mode");
         out.println();
@@ -992,13 +1043,16 @@ public class TikaCLI {
         }
 
         public void parseEmbedded(InputStream inputStream, ContentHandler contentHandler, Metadata metadata, boolean outputHtml) throws SAXException, IOException {
+            String name = metadata.get(Metadata.RESOURCE_NAME_KEY);
 
+            if (name == null) {
+                name = "file" + count++;
+            }
             if (! inputStream.markSupported()) {
                 inputStream = TikaInputStream.get(inputStream);
             }
             MediaType contentType = detector.detect(inputStream, metadata);
 
-            String name = metadata.get(TikaCoreProperties.RESOURCE_NAME_KEY);
             File outputFile = null;
             if (name == null) {
                 name = "file" + count++;
@@ -1048,7 +1102,7 @@ public class TikaCLI {
                 name += ext;
             }
 
-            String relID = metadata.get(TikaCoreProperties.EMBEDDED_RELATIONSHIP_ID);
+            String relID = metadata.get(Metadata.EMBEDDED_RELATIONSHIP_ID);
             if (relID != null && !name.startsWith(relID)) {
                 name = relID + "_" + name;
             }
@@ -1110,6 +1164,66 @@ public class TikaCLI {
                 }
             }
         }
+    }
+
+    private class TikaServer extends Thread {
+
+        private final ServerSocket server;
+        private final int port;
+        public TikaServer(int port) throws IOException {
+            super("Tika server at port " + port);
+            server = new ServerSocket(port);
+            this.port = port;
+        }
+
+        @Override
+        public void run() {
+            System.out.println("Successfully started tika-app's server on port: "+port);
+            System.err.println("WARNING: The server option in tika-app is deprecated and will be removed ");
+            System.err.println("by Tika 2.0 if not shortly after Tika 1.14.");
+            System.err.println("Please migrate to the JAX-RS tika-server package.");
+            System.err.println("See https://wiki.apache.org/tika/TikaJAXRS for usage.");
+
+            try {
+                try {
+                    while (true) {
+                        processSocketInBackground(server.accept());
+                    }
+                } finally {
+                    server.close();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        private void processSocketInBackground(final Socket socket) {
+            Thread thread = new Thread() {
+                @Override
+                public void run() {
+                    try {
+                        InputStream input = null;
+                        try {
+                            InputStream rawInput = socket.getInputStream();
+                            OutputStream output = socket.getOutputStream();
+                            input = TikaInputStream.get(rawInput);
+                            type.process(input, output, new Metadata());
+                            output.flush();
+                        } finally {
+                            if (input != null) {
+                                input.close();
+                            }
+                            socket.close();
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            };
+            thread.setDaemon(true);
+            thread.start();
+        }
+
     }
 
     private class NoDocumentMetHandler extends DefaultHandler {

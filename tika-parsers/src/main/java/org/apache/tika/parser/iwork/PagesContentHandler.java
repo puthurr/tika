@@ -16,9 +16,7 @@
  */
 package org.apache.tika.parser.iwork;
 
-import org.apache.tika.Tika;
 import org.apache.tika.metadata.Metadata;
-import org.apache.tika.metadata.Office;
 import org.apache.tika.metadata.Property;
 import org.apache.tika.metadata.TikaCoreProperties;
 import org.apache.tika.sax.XHTMLContentHandler;
@@ -73,7 +71,7 @@ class PagesContentHandler extends DefaultHandler {
 
     @Override
     public void endDocument() throws SAXException {
-        metadata.set(Office.PAGE_COUNT, String.valueOf(pageCount));
+        metadata.set(Metadata.PAGE_COUNT, String.valueOf(pageCount));
         if (pageCount > 0) {
             doFooter();
             xhtml.endElement("div");
@@ -288,7 +286,7 @@ class PagesContentHandler extends DefaultHandler {
         } else if ("sl:SLCreationDateProperty".equals(metaDataQName)) {
             metaDataKey = TikaCoreProperties.CREATED;
         } else if ("sl:SLLastModifiedDateProperty".equals(metaDataQName)) {
-            metaDataKey = TikaCoreProperties.MODIFIED;
+            metaDataKey = Metadata.LAST_MODIFIED;
         } else if ("sl:language".equals(metaDataQName)) {
             metaDataKey = TikaCoreProperties.LANGUAGE;
         }

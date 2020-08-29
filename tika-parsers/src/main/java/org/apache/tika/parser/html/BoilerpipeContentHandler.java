@@ -21,9 +21,7 @@ import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.List;
 import java.util.Locale;
-import java.util.Set;
 
-import com.google.common.collect.Sets;
 import de.l3s.boilerpipe.BoilerpipeExtractor;
 import de.l3s.boilerpipe.BoilerpipeProcessingException;
 import de.l3s.boilerpipe.document.TextBlock;
@@ -60,7 +58,6 @@ public class BoilerpipeContentHandler extends BoilerpipeHTMLContentHandler {
     private int headerCharOffset;
     private List<RecordedElement> elements;
     private TextDocument td;
-    private Set<Character> whitelistCharSet = Sets.newHashSet(' ', '\n', '\r');
     /**
      * Creates a new boilerpipe-based content extractor, using the
      * {@link DefaultExtractor} extraction rules and "delegate" as the content handler.
@@ -123,7 +120,7 @@ public class BoilerpipeContentHandler extends BoilerpipeHTMLContentHandler {
         headerCharOffset = 0;
 
         if (includeMarkup) {
-            elements = new ArrayList<>();
+            elements = new ArrayList<RecordedElement>();
         }
     }
 
@@ -233,24 +230,18 @@ public class BoilerpipeContentHandler extends BoilerpipeHTMLContentHandler {
                     case CONTINUE:
                         // Now emit characters that are valid. Note that boilerpipe pre-increments the character index, so
                         // we have to follow suit.
-                        for (int i = 0; i < element.getCharacters().size(); i++) {
-                            char[] chars = element.getCharacters().get(i);
+                        for (char[] chars : element.getCharacters()) {
                             curCharsIndex++;
-                            boolean isValidCharacterRun = validCharacterRuns.get(curCharsIndex);
 
-                            // https://issues.apache.org/jira/projects/TIKA/issues/TIKA-2683
-                            // Allow exempted characters to be written
-                            if (isValidCharacterRun ||
-                                    (chars.length == 1 && whitelistCharSet.contains(chars[0]))) {
+                            if (validCharacterRuns.get(curCharsIndex)) {
                                 delegate.characters(chars, 0, chars.length);
-                            }
 
-                            // https://issues.apache.org/jira/browse/TIKA-961
-                            if (isValidCharacterRun && i == element.getCharacters().size() - 1
-                                    && !Character.isWhitespace(chars[chars.length - 1])) {
-                                // Only add whitespace for certain elements
-                                if (XHTMLContentHandler.ENDLINE.contains(element.getLocalName())) {
-                                    delegate.ignorableWhitespace(NL, 0, NL.length);
+                                // https://issues.apache.org/jira/browse/TIKA-961
+                                if (!Character.isWhitespace(chars[chars.length - 1])) {
+                                    // Only add whitespace for certain elements
+                                    if (XHTMLContentHandler.ENDLINE.contains(element.getLocalName())) {
+                                        delegate.ignorableWhitespace(NL, 0, NL.length);
+                                    }
                                 }
                             }
                         }

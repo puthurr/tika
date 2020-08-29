@@ -16,6 +16,12 @@
  */
 package org.apache.tika.parser.epub;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+
+import java.io.InputStream;
+import java.util.List;
+
 import org.apache.tika.TikaTest;
 import org.apache.tika.config.TikaConfig;
 import org.apache.tika.metadata.Metadata;
@@ -24,12 +30,6 @@ import org.apache.tika.parser.AutoDetectParser;
 import org.apache.tika.parser.Parser;
 import org.apache.tika.sax.RecursiveParserWrapperHandler;
 import org.junit.Test;
-
-import java.io.InputStream;
-import java.util.List;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 
 public class EpubParserTest extends TikaTest {
 

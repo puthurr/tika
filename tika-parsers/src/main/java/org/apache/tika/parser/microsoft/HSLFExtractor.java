@@ -29,6 +29,7 @@ import org.apache.poi.poifs.filesystem.POIFSFileSystem;
 import org.apache.poi.sl.usermodel.Comment;
 import org.apache.poi.sl.usermodel.ShapeContainer;
 import org.apache.poi.sl.usermodel.SimpleShape;
+import org.apache.poi.sl.usermodel.TextParagraph;
 import org.apache.tika.exception.EncryptedDocumentException;
 import org.apache.tika.exception.TikaException;
 import org.apache.tika.extractor.EmbeddedDocumentUtil;
@@ -473,7 +474,7 @@ public class HSLFExtractor extends AbstractPOIFSExtractor {
         embeddedMetadata.set(TikaCoreProperties.EMBEDDED_RESOURCE_TYPE,
                 TikaCoreProperties.EmbeddedResourceType.INLINE.toString());
         String ext = getTikaConfig().getMimeRepository().forName(mediaType).getExtension();
-        embeddedMetadata.set(TikaCoreProperties.RESOURCE_NAME_KEY,String.format(Locale.ROOT,"image%05d", pic.getIndex())+ext);
+        embeddedMetadata.set(Metadata.RESOURCE_NAME_KEY,String.format(Locale.ROOT,"image%05d", pic.getIndex())+ext);
         
         try (TikaInputStream picIs = TikaInputStream.get(data)){
             handleEmbeddedResource(picIs, embeddedMetadata, null, null, null, mediaType, xhtml, false);

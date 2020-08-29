@@ -16,17 +16,21 @@
  */
 package org.apache.tika.parser.image;
 
+import static org.junit.Assert.assertEquals;
+
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.List;
+
 import org.apache.tika.TikaTest;
+import org.apache.tika.io.TikaInputStream;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.metadata.XMPMM;
 import org.apache.tika.parser.ParseContext;
 import org.apache.tika.parser.Parser;
 import org.junit.Test;
 import org.xml.sax.helpers.DefaultHandler;
-
-import java.io.InputStream;
-
-import static org.junit.Assert.assertEquals;
 
 public class PSDParserTest extends TikaTest {
 

@@ -16,6 +16,9 @@
  */
 package org.apache.tika.parser.microsoft;
 
+import static org.junit.Assert.assertEquals;
+
+import org.apache.tika.TikaTest.TrackingHandler;
 import org.apache.tika.detect.DefaultDetector;
 import org.apache.tika.detect.Detector;
 import org.apache.tika.extractor.ContainerExtractor;
@@ -28,8 +31,6 @@ import org.apache.tika.parser.ParseContext;
 import org.apache.tika.sax.BodyContentHandler;
 import org.junit.Test;
 import org.xml.sax.ContentHandler;
-
-import static org.junit.Assert.assertEquals;
 
 /**
  * Tests for the TNEF (winmail.dat) parser
@@ -58,7 +59,7 @@ public class TNEFParserTest extends AbstractPOIContainerExtractionTest {
         tnef.parse(stream, handler, metadata, new ParseContext());
 
         assertEquals("This is a test message", metadata.get(TikaCoreProperties.TITLE));
-        assertEquals("This is a test message", metadata.get(TikaCoreProperties.SUBJECT));
+        assertEquals("This is a test message", metadata.get(Metadata.SUBJECT));
     }
 
     /**

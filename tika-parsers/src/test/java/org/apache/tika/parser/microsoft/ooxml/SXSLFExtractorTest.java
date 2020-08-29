@@ -32,6 +32,7 @@ import org.apache.tika.config.TikaConfig;
 import org.apache.tika.exception.EncryptedDocumentException;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.metadata.Office;
+import org.apache.tika.metadata.OfficeOpenXMLCore;
 import org.apache.tika.metadata.TikaCoreProperties;
 import org.apache.tika.parser.AutoDetectParser;
 import org.apache.tika.parser.ParseContext;
@@ -177,6 +178,7 @@ public class SXSLFExtractorTest extends TikaTest {
                         metadata.get(Metadata.CONTENT_TYPE));
                 assertEquals("Attachment Test", metadata.get(TikaCoreProperties.TITLE));
                 assertEquals("Rajiv", metadata.get(TikaCoreProperties.CREATOR));
+                assertEquals("Rajiv", metadata.get(Metadata.AUTHOR));
 
                 String content = handler.toString();
                 // Theme files don't have the text in them
@@ -243,6 +245,7 @@ public class SXSLFExtractorTest extends TikaTest {
                             metadata.get(Metadata.CONTENT_TYPE));
                     assertEquals("Attachment Test", metadata.get(TikaCoreProperties.TITLE));
                     assertEquals("Rajiv", metadata.get(TikaCoreProperties.CREATOR));
+                    assertEquals("Rajiv", metadata.get(Metadata.AUTHOR));
 
                 }
 
@@ -271,7 +274,7 @@ public class SXSLFExtractorTest extends TikaTest {
             String filename = "testPPT." + extension;
 
             Metadata metadata = new Metadata();
-            metadata.set(TikaCoreProperties.RESOURCE_NAME_KEY, filename);
+            metadata.set(Metadata.RESOURCE_NAME_KEY, filename);
             ContentHandler handler = new BodyContentHandler();
 
             try (InputStream input = getResourceAsStream("/test-documents/" + filename)) {
@@ -329,9 +332,14 @@ public class SXSLFExtractorTest extends TikaTest {
 
         assertContains("Keyword1 Keyword2", xml);
         assertEquals("Keyword1 Keyword2",
-                metadata.get(Office.KEYWORDS));
+                metadata.get(Metadata.KEYWORDS));
 
         assertContains("Subject is here", xml);
+        // TODO: Remove subject in Tika 2.0
+        assertEquals("Subject is here",
+                metadata.get(Metadata.SUBJECT));
+        assertEquals("Subject is here",
+                metadata.get(OfficeOpenXMLCore.SUBJECT));
 
         assertContains("Suddenly some Japanese text:", xml);
         // Special version of (GHQ)
@@ -429,8 +437,11 @@ public class SXSLFExtractorTest extends TikaTest {
                 metadata.get(Metadata.CONTENT_TYPE));
         assertEquals("JOUVIN ETIENNE", metadata.get(TikaCoreProperties.CREATOR));
         assertEquals("EJ04325S", metadata.get(TikaCoreProperties.MODIFIER));
+        assertEquals("EJ04325S", metadata.get(Metadata.LAST_AUTHOR));
         assertEquals("2011-08-22T13:30:53Z", metadata.get(TikaCoreProperties.CREATED));
+        assertEquals("2011-08-22T13:30:53Z", metadata.get(Metadata.CREATION_DATE));
         assertEquals("2011-08-22T13:32:49Z", metadata.get(TikaCoreProperties.MODIFIED));
+        assertEquals("2011-08-22T13:32:49Z", metadata.get(Metadata.DATE));
         assertEquals("1", metadata.get(Office.SLIDE_COUNT));
         assertEquals("3", metadata.get(Office.WORD_COUNT));
         assertEquals("Test extraction properties pptx", metadata.get(TikaCoreProperties.TITLE));

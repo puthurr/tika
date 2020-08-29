@@ -16,6 +16,16 @@
  */
 package org.apache.tika.eval;
 
+import java.io.IOException;
+import java.nio.file.Path;
+import java.sql.Types;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ArrayBlockingQueue;
+
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
@@ -38,12 +48,6 @@ import org.apache.tika.eval.util.ContentTags;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.metadata.TikaCoreProperties;
 import org.apache.tika.sax.AbstractRecursiveParserWrapperHandler;
-
-import java.io.IOException;
-import java.nio.file.Path;
-import java.sql.Types;
-import java.util.*;
-import java.util.concurrent.ArrayBlockingQueue;
 
 public class ExtractComparer extends AbstractProfiler {
 
@@ -88,7 +92,7 @@ public class ExtractComparer extends AbstractProfiler {
     }
 
     private static final String DIGEST_KEY_PREFIX = TikaCoreProperties.TIKA_META_PREFIX+
-            "digest"+TikaCoreProperties.NAMESPACE_PREFIX_DELIMITER;
+            "digest"+Metadata.NAMESPACE_PREFIX_DELIMITER;
 
     public static void USAGE() {
         HelpFormatter helpFormatter = new HelpFormatter();

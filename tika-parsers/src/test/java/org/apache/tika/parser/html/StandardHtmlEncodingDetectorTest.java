@@ -18,13 +18,17 @@
 package org.apache.tika.parser.html;
 
 
-import org.apache.tika.parser.html.charsetdetector.StandardHtmlEncodingDetector;
 import org.apache.tika.metadata.Metadata;
+import org.apache.tika.parser.html.charsetdetector.StandardHtmlEncodingDetector;
 import org.apache.tika.parser.html.charsetdetector.charsets.ReplacementCharset;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.io.*;
+import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.SequenceInputStream;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 
@@ -136,7 +140,7 @@ public class StandardHtmlEncodingDetectorTest {
     @Test
     public void tooLong() throws IOException {
         // Create a string with 1Mb of '\0' followed by a meta
-        String padded = new String(new byte[1000000], StandardCharsets.ISO_8859_1) + "<meta charset='windows-1252'>";
+        String padded = new String(new byte[1000000], StandardCharsets.US_ASCII) + "<meta charset='windows-1252'>";
         // Only the first bytes should be prescanned, so the algorithm should stop before the meta tag
         assertCharset(padded, null);
     }
@@ -172,7 +176,7 @@ public class StandardHtmlEncodingDetectorTest {
     public void replacement() throws IOException {
         // Several dangerous charsets should are aliases of 'replacement' in the spec
         String inString = "<meta charset='iso-2022-cn'>";
-        assertCharset(new ByteArrayInputStream(inString.getBytes(StandardCharsets.ISO_8859_1)), new ReplacementCharset());
+        assertCharset(new ByteArrayInputStream(inString.getBytes(StandardCharsets.US_ASCII)), new ReplacementCharset());
     }
 
     @Test

@@ -40,7 +40,9 @@ public class TestRereadableInputStream {
     public void test() throws IOException {
 
         InputStream is = createTestInputStream();
-        try (RereadableInputStream ris = new RereadableInputStream(is, MEMORY_THRESHOLD, true, true)) {
+        RereadableInputStream ris = new RereadableInputStream(is,
+                MEMORY_THRESHOLD, true, true);
+        try {
             for (int pass = 0; pass < NUM_PASSES; pass++) {
                 for (int byteNum = 0; byteNum < TEST_SIZE; byteNum++) {
                     int byteRead = ris.read();
@@ -50,6 +52,10 @@ public class TestRereadableInputStream {
                 }
                 ris.rewind();
             }
+        } finally {
+            // The RereadableInputStream should close the original input
+            // stream (if it hasn't already).
+            ris.close();
         }
     }
 

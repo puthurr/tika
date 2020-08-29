@@ -16,6 +16,18 @@
  */
 package org.apache.tika.detect;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
+import java.io.File;
+import java.io.FileFilter;
+import java.io.FilenameFilter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.List;
+import java.util.Random;
+
 import org.apache.poi.poifs.filesystem.POIFSFileSystem;
 import org.apache.tika.MultiThreadedTikaTest;
 import org.apache.tika.Tika;
@@ -23,7 +35,6 @@ import org.apache.tika.config.TikaConfig;
 import org.apache.tika.exception.TikaException;
 import org.apache.tika.io.TikaInputStream;
 import org.apache.tika.metadata.Metadata;
-import org.apache.tika.metadata.TikaCoreProperties;
 import org.apache.tika.mime.MediaType;
 import org.apache.tika.mime.MediaTypeRegistry;
 import org.apache.tika.mime.MimeTypes;
@@ -33,12 +44,6 @@ import org.apache.tika.parser.pkg.StreamingZipContainerDetector;
 import org.apache.tika.utils.XMLReaderUtils;
 import org.junit.After;
 import org.junit.Test;
-
-import java.io.*;
-import java.util.List;
-import java.util.Random;
-
-import static org.junit.Assert.*;
 
 /**
  * Junit test class for {@link org.apache.tika.parser.microsoft.POIFSContainerDetector}
@@ -74,7 +79,7 @@ public class TestContainerAwareDetector extends MultiThreadedTikaTest {
                 TestContainerAwareDetector.class.getResource("/test-documents/" + dataFile))) {
             Metadata m = new Metadata();
             if (name != null)
-                m.add(TikaCoreProperties.RESOURCE_NAME_KEY, name);
+                m.add(Metadata.RESOURCE_NAME_KEY, name);
 
             // Mime Magic version is likely to be less precise
             if (typeFromMagic != null) {
@@ -480,7 +485,7 @@ public class TestContainerAwareDetector extends MultiThreadedTikaTest {
         
         // With truncated data + filename, we can use the filename to specialise
         m = new Metadata();
-        m.add(TikaCoreProperties.RESOURCE_NAME_KEY, "testEXCEL.xlsx");
+        m.add(Metadata.RESOURCE_NAME_KEY, "testEXCEL.xlsx");
         try (TikaInputStream xlsx = getTruncatedFile("testEXCEL.xlsx", 300)) {
             assertEquals(
                     MediaType.application("vnd.openxmlformats-officedocument.spreadsheetml.sheet"),
@@ -497,7 +502,7 @@ public class TestContainerAwareDetector extends MultiThreadedTikaTest {
         
         // Finally a truncated OLE2 file, with a filename available
         m = new Metadata();
-        m.add(TikaCoreProperties.RESOURCE_NAME_KEY, "testEXCEL.xls");
+        m.add(Metadata.RESOURCE_NAME_KEY, "testEXCEL.xls");
         try (TikaInputStream xls = getTruncatedFile("testEXCEL.xls", 400)) {
             assertEquals(
                     MediaType.application("vnd.ms-excel"),

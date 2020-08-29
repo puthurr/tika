@@ -79,7 +79,7 @@ public class XML2003ParserTest extends MultiThreadedTikaTest {
 
         //make sure embedded docs were properly processed
         assertContains("moscow-birds",
-                Arrays.asList(list.get(5).getValues(TikaCoreProperties.SUBJECT)));
+                Arrays.asList(list.get(5).getValues(TikaCoreProperties.KEYWORDS)));
 
         assertEquals("testJPEG_EXIF.jpg", list.get(5).get(TikaCoreProperties.ORIGINAL_RESOURCE_NAME));
 

@@ -35,9 +35,9 @@ import java.util.zip.ZipEntry;
 
 import org.apache.tika.exception.TikaException;
 import org.apache.tika.io.IOUtils;
-import org.apache.tika.utils.ProcessUtils;
 import org.apache.tika.sax.AbstractRecursiveParserWrapperHandler;
 import org.apache.tika.sax.RecursiveParserWrapperHandler;
+import org.apache.tika.utils.ProcessUtils;
 import org.xml.sax.ContentHandler;
 
 class ForkClient {

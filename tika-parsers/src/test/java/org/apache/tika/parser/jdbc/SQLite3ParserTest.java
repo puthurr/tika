@@ -66,7 +66,7 @@ public class SQLite3ParserTest extends TikaTest {
         int tests = 0;
         for (InputStream stream : streams) {
             Metadata metadata = new Metadata();
-            metadata.set(TikaCoreProperties.RESOURCE_NAME_KEY, TEST_FILE_NAME);
+            metadata.set(Metadata.RESOURCE_NAME_KEY, TEST_FILE_NAME);
             //1) getXML closes the stream
             //2) getXML runs recursively on the contents, so the embedded docs should show up
             XMLResult result = getXML(stream, AUTO_DETECT_PARSER, metadata);
@@ -83,7 +83,7 @@ public class SQLite3ParserTest extends TikaTest {
             //timestamp test
             assertContains("2015-01-03 15:17:03", x);
             //first embedded doc's image tag
-            assertContains("src=\"image00001.png\"", x);
+            assertContains("alt=\"image1.png\"", x);
             //second embedded doc's image tag
             assertContains("title=\"A description...\"", x);
             //second table name
@@ -104,7 +104,7 @@ public class SQLite3ParserTest extends TikaTest {
     @Test
     public void testSpacesInBodyContentHandler() throws Exception {
         Metadata metadata = new Metadata();
-        metadata.set(TikaCoreProperties.RESOURCE_NAME_KEY, TEST_FILE_NAME);
+        metadata.set(Metadata.RESOURCE_NAME_KEY, TEST_FILE_NAME);
         ContentHandler handler = new BodyContentHandler(-1);
         ParseContext ctx = new ParseContext();
         try (InputStream stream = getResourceAsStream(TEST_FILE1)) {
@@ -123,7 +123,7 @@ public class SQLite3ParserTest extends TikaTest {
         ParseContext parseContext = new ParseContext();
         parseContext.set(Parser.class, new EmptyParser());
         try (InputStream is = getResourceAsStream(TEST_FILE1)) {
-            metadata.set(TikaCoreProperties.RESOURCE_NAME_KEY, TEST_FILE_NAME);
+            metadata.set(Metadata.RESOURCE_NAME_KEY, TEST_FILE_NAME);
             AUTO_DETECT_PARSER.parse(is, handler, metadata, parseContext);
         }
         String xml = handler.toString();
@@ -132,7 +132,7 @@ public class SQLite3ParserTest extends TikaTest {
         assertContains("<td><span type=\"blob\" column_name=\"BYTES_COL\" row_number=\"0\"><div class=\"package-entry\"><h1>BYTES_COL_0.doc</h1>", xml);
         //but no other content
         assertNotContained("dog", xml);
-        assertNotContained("alt=\"image00001.png\"", xml);
+        assertNotContained("alt=\"image1.png\"", xml);
         //second embedded doc's image tag
         assertNotContained("alt=\"A description...\"", xml);
     }
@@ -149,7 +149,7 @@ public class SQLite3ParserTest extends TikaTest {
         );
 
         try (InputStream is = getResourceAsStream(TEST_FILE1)) {
-            metadata.set(TikaCoreProperties.RESOURCE_NAME_KEY, TEST_FILE_NAME);
+            metadata.set(Metadata.RESOURCE_NAME_KEY, TEST_FILE_NAME);
             wrapper.parse(is, handler, metadata, new ParseContext());
         }
         List<Metadata> metadataList = handler.getMetadataList();
@@ -183,7 +183,7 @@ public class SQLite3ParserTest extends TikaTest {
         ByteCopyingHandler byteCopier = new ByteCopyingHandler();
         Metadata metadata = new Metadata();
         try (TikaInputStream is = TikaInputStream.get(getResourceAsStream(TEST_FILE1))) {
-            metadata.set(TikaCoreProperties.RESOURCE_NAME_KEY, TEST_FILE_NAME);
+            metadata.set(Metadata.RESOURCE_NAME_KEY, TEST_FILE_NAME);
             ex.extract(is, ex, byteCopier);
         }
         assertEquals(4, byteCopier.bytes.size());
@@ -225,7 +225,7 @@ public class SQLite3ParserTest extends TikaTest {
         ParserContainerExtractor ex = new ParserContainerExtractor();
         InputStreamResettingHandler byteCopier = new InputStreamResettingHandler();
         Metadata metadata = new Metadata();
-        metadata.set(TikaCoreProperties.RESOURCE_NAME_KEY, TEST_FILE_NAME);
+        metadata.set(Metadata.RESOURCE_NAME_KEY, TEST_FILE_NAME);
         try (InputStream is = getResourceAsStream(TEST_FILE1)) {
             try (TikaInputStream tis = TikaInputStream.get(is)) {
                 ex.extract(tis, ex, byteCopier);

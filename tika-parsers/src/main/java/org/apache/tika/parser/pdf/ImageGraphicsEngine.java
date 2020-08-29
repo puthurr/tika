@@ -66,25 +66,25 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * Copied nearly verbatim from PDFBox
  */
-class ImageGraphicsEngine extends PDFGraphicsStreamEngine {
+public class ImageGraphicsEngine extends PDFGraphicsStreamEngine {
 
     //We're currently copying images to byte[].  We should
     //limit the length to avoid OOM on crafted files.
     private static final long MAX_IMAGE_LENGTH_BYTES = 100*1024*1024;
 
-    private static final List<String> JPEG = Arrays.asList(
+    public static final List<String> JPEG = Arrays.asList(
             COSName.DCT_DECODE.getName(),
             COSName.DCT_DECODE_ABBREVIATION.getName());
 
 
-    private static final List<String> JP2 =
+    public static final List<String> JP2 =
             Arrays.asList(COSName.JPX_DECODE.getName());
 
-    private static final List<String> JB2 = Arrays.asList(
+    public static final List<String> JB2 = Arrays.asList(
             COSName.JBIG2_DECODE.getName());
 
     //TODO: parameterize this ?
-    private boolean useDirectJPEG = false;
+    public boolean useDirectJPEG = false;
 
     final List<IOException> exceptions = new ArrayList<>();
     private final EmbeddedDocumentExtractor embeddedDocumentExtractor;
@@ -289,7 +289,7 @@ class ImageGraphicsEngine extends PDFGraphicsStreamEngine {
         {
         }
 
-        metadata.set(TikaCoreProperties.RESOURCE_NAME_KEY, fileName);
+        metadata.set(Metadata.RESOURCE_NAME_KEY, fileName);
         metadata.set(TikaCoreProperties.EMBEDDED_RESOURCE_TYPE,
                 TikaCoreProperties.EmbeddedResourceType.INLINE.toString());
 
@@ -468,7 +468,8 @@ class ImageGraphicsEngine extends PDFGraphicsStreamEngine {
         BoundedInputStream bis = new BoundedInputStream(MAX_IMAGE_LENGTH_BYTES, is);
         IOUtils.copy(bis, os);
         if (bis.hasHitBound()) {
-            throw new TikaMemoryLimitException("Image size is larger than allowed (" + MAX_IMAGE_LENGTH_BYTES + ")");
+            throw new TikaMemoryLimitException(
+                    "Image size is larger than allowed (" + MAX_IMAGE_LENGTH_BYTES + ")");
         }
 
     }

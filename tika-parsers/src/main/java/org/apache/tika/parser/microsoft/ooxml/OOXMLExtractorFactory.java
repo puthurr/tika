@@ -16,6 +16,13 @@
  */
 package org.apache.tika.parser.microsoft.ooxml;
 
+import java.io.EOFException;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Locale;
+
+import org.apache.commons.io.input.CloseShieldInputStream;
 import org.apache.poi.ooxml.POIXMLDocument;
 import org.apache.poi.ooxml.extractor.ExtractorFactory;
 import org.apache.poi.ooxml.extractor.POIXMLTextExtractor;
@@ -56,12 +63,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
-
-import java.io.EOFException;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Locale;
 
 /**
  * Figures out the correct {@link OOXMLExtractor} for the supplied document and

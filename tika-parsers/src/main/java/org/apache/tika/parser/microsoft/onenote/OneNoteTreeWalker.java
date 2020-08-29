@@ -37,7 +37,13 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.Month;
 import java.time.ZoneOffset;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -296,7 +302,8 @@ class OneNoteTreeWalker {
         OneNotePtr content = new OneNotePtr(oneNoteDocument, dif);
         content.reposition(fileDataStoreObjectReference.ref.fileData);
         if (fileDataStoreObjectReference.ref.fileData.cb > dif.size()) {
-            throw new TikaMemoryLimitException("File data store cb " + fileDataStoreObjectReference.ref.fileData.cb +
+            throw new TikaMemoryLimitException("File data store cb " +
+                    fileDataStoreObjectReference.ref.fileData.cb +
               " exceeds document size: " + dif.size());
         }
         handleEmbedded((int)fileDataStoreObjectReference.ref.fileData.cb);

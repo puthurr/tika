@@ -93,12 +93,10 @@ public class OutlookPSTParser extends AbstractParser {
             if (isValid) {
                 parseFolder(xhtml, pstFile.getRootFolder(), embeddedExtractor);
             }
+        } catch (TikaException e) {
+            throw e;
         } catch (Exception e) {
-            if(e instanceof TikaException) {
-                throw (TikaException) e;
-            }else {
-                throw new TikaException(e.getMessage(), e);
-            }
+            throw new TikaException(e.getMessage(), e);
         } finally {
             if (pstFile != null && pstFile.getFileHandle() != null) {
                 try {
@@ -150,8 +148,8 @@ public class OutlookPSTParser extends AbstractParser {
 
     private void parserMailItem(XHTMLContentHandler handler, PSTMessage pstMail, Metadata mailMetadata,
                                 EmbeddedDocumentExtractor embeddedExtractor) throws SAXException, IOException {
-        mailMetadata.set(TikaCoreProperties.RESOURCE_NAME_KEY, pstMail.getInternetMessageId());
-        mailMetadata.set(TikaCoreProperties.EMBEDDED_RELATIONSHIP_ID, pstMail.getInternetMessageId());
+        mailMetadata.set(Metadata.RESOURCE_NAME_KEY, pstMail.getInternetMessageId());
+        mailMetadata.set(Metadata.EMBEDDED_RELATIONSHIP_ID, pstMail.getInternetMessageId());
         mailMetadata.set(TikaCoreProperties.IDENTIFIER, pstMail.getInternetMessageId());
         mailMetadata.set(TikaCoreProperties.TITLE, pstMail.getSubject());
         mailMetadata.set(Metadata.MESSAGE_FROM, pstMail.getSenderName());
@@ -242,8 +240,8 @@ public class OutlookPSTParser extends AbstractParser {
                 xhtml.element("p", filename);
 
                 Metadata attachMeta = new Metadata();
-                attachMeta.set(TikaCoreProperties.RESOURCE_NAME_KEY, filename);
-                attachMeta.set(TikaCoreProperties.EMBEDDED_RELATIONSHIP_ID, filename);
+                attachMeta.set(Metadata.RESOURCE_NAME_KEY, filename);
+                attachMeta.set(Metadata.EMBEDDED_RELATIONSHIP_ID, filename);
                 AttributesImpl attributes = new AttributesImpl();
                 attributes.addAttribute("", "class", "class", "CDATA", "embedded");
                 attributes.addAttribute("", "id", "id", "CDATA", filename);
@@ -267,7 +265,7 @@ public class OutlookPSTParser extends AbstractParser {
                 xhtml.endElement("div");
 
             } catch (Exception e) {
-                throw new TikaException("Unable to unpack document stream", e);
+                EmbeddedDocumentUtil.recordEmbeddedStreamException(e, mailMetadata);
             }
         }
     }

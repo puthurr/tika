@@ -341,7 +341,7 @@ final class TextExtractor {
     private static Charset getCharset(String name) {
         try {
             return CharsetUtils.forName(name);
-        } catch (Exception e) {
+        } catch (IllegalArgumentException e) {
             return ASCII;
         }
     }
@@ -1136,9 +1136,10 @@ final class TextExtractor {
                 } else if (equals("title")) {
                     nextMetaData = TikaCoreProperties.TITLE;
                 } else if (equals("subject")) {
-                    nextMetaData = OfficeOpenXMLCore.SUBJECT;
+                    // TODO: Move to OO subject in Tika 2.0
+                    nextMetaData = TikaCoreProperties.TRANSITION_SUBJECT_TO_OO_SUBJECT;
                 } else if (equals("keywords")) {
-                    nextMetaData = Office.KEYWORDS;
+                    nextMetaData = TikaCoreProperties.TRANSITION_KEYWORDS_TO_DC_SUBJECT;
                 } else if (equals("category")) {
                     nextMetaData = OfficeOpenXMLCore.CATEGORY;
                 } else if (equals("comment")) {

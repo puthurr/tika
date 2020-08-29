@@ -16,6 +16,8 @@
  */
 package org.apache.tika.parser.microsoft.onenote;
 
+import org.apache.tika.exception.TikaException;
+
 import java.io.Serializable;
 
 class OneNoteHeader implements Serializable {

@@ -249,12 +249,13 @@ public class RecursiveParserWrapper extends ParserDecorator {
             metadata.set(RecursiveParserWrapperHandler.PARSE_TIME_MILLIS, Long.toString(elapsedMillis));
             parserState.recursiveParserWrapperHandler.endDocument(localHandler, metadata);
             parserState.recursiveParserWrapperHandler.endDocument();
+
         }
     }
 
     /**
-     * 
-     * The first element in the returned list represents the 
+     *
+     * The first element in the returned list represents the
      * data from the outer container file.  There is no guarantee
      * about the ordering of the list after that.
      *
@@ -272,7 +273,7 @@ public class RecursiveParserWrapper extends ParserDecorator {
             throw new IllegalStateException("This is deprecated; please use a RecursiveParserWrapperHandler instead");
         }
     }
-    
+
     /**
      * Set the maximum number of embedded resources to store.
      * If the max is hit during parsing, the {@link #EMBEDDED_RESOURCE_LIMIT_REACHED}
@@ -313,7 +314,7 @@ public class RecursiveParserWrapper extends ParserDecorator {
      * @return
      */
     private boolean isWriteLimitReached(Throwable t) {
-        if (t.getMessage() != null && 
+        if (t.getMessage() != null &&
                 t.getMessage().indexOf("Your document contained more than") == 0) {
             return true;
         } else {
@@ -323,10 +324,10 @@ public class RecursiveParserWrapper extends ParserDecorator {
 
     private String getResourceName(Metadata metadata, ParserState state) {
         String objectName = "";
-        if (metadata.get(TikaCoreProperties.RESOURCE_NAME_KEY) != null) {
-            objectName = metadata.get(TikaCoreProperties.RESOURCE_NAME_KEY);
-        } else if (metadata.get(TikaCoreProperties.EMBEDDED_RELATIONSHIP_ID) != null) {
-            objectName = metadata.get(TikaCoreProperties.EMBEDDED_RELATIONSHIP_ID);
+        if (metadata.get(Metadata.RESOURCE_NAME_KEY) != null) {
+            objectName = metadata.get(Metadata.RESOURCE_NAME_KEY);
+        } else if (metadata.get(Metadata.EMBEDDED_RELATIONSHIP_ID) != null) {
+            objectName = metadata.get(Metadata.EMBEDDED_RELATIONSHIP_ID);
         } else {
             objectName = "embedded-" + (++state.unknownCount);
         }

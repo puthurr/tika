@@ -16,11 +16,16 @@
  */
 package org.apache.tika.io;
 
-import org.apache.tika.metadata.Metadata;
-import org.apache.tika.metadata.TikaCoreProperties;
-import org.apache.tika.parser.Parser;
+import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
-import java.io.*;
+import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
+import java.io.Closeable;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -32,7 +37,7 @@ import java.nio.file.Paths;
 import java.sql.Blob;
 import java.sql.SQLException;
 
-import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
+import org.apache.tika.metadata.Metadata;
 
 /**
  * Input stream with extended capabilities. The purpose of this class is
@@ -53,10 +58,18 @@ import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
  * associated with a TikaInputStream should first use the
  * {@link #get(InputStream)} factory method to cast or wrap a given
  * {@link InputStream} into a TikaInputStream instance.
+ * <p>
+ * TikaInputStream includes a few safety features to protect against parsers
+ * that may fail to check for an EOF or may incorrectly rely on the unreliable
+ * value returned from {@link FileInputStream#skip}.  These parser failures
+ * can lead to infinite loops.  We strongly encourage the use of
+ * TikaInputStream.
  *
  * @since Apache Tika 0.8
  */
 public class TikaInputStream extends TaggedInputStream {
+
+    private static final int MAX_CONSECUTIVE_EOFS = 1000;
 
     /**
      * Checks whether the given stream is a TikaInputStream instance.
@@ -217,7 +230,7 @@ public class TikaInputStream extends TaggedInputStream {
      */
     public static TikaInputStream get(Path path, Metadata metadata)
             throws IOException {
-        metadata.set(TikaCoreProperties.RESOURCE_NAME_KEY, path.getFileName().toString());
+        metadata.set(Metadata.RESOURCE_NAME_KEY, path.getFileName().toString());
         metadata.set(Metadata.CONTENT_LENGTH, Long.toString(Files.size(path)));
         return new TikaInputStream(path);
     }
@@ -257,34 +270,9 @@ public class TikaInputStream extends TaggedInputStream {
     @Deprecated
     public static TikaInputStream get(File file, Metadata metadata)
             throws FileNotFoundException {
-        metadata.set(TikaCoreProperties.RESOURCE_NAME_KEY, file.getName());
+        metadata.set(Metadata.RESOURCE_NAME_KEY, file.getName());
         metadata.set(Metadata.CONTENT_LENGTH, Long.toString(file.length()));
         return new TikaInputStream(file);
-    }
-    
-    /**
-     * Creates a TikaInputStream from a Factory which can create
-     *  fresh {@link InputStream}s for the same resource multiple times.
-     * <p>This is typically desired when working with {@link Parser}s that
-     *  need to re-read the stream multiple times, where other forms
-     *  of buffering (eg File) are slower than just getting a fresh
-     *  new stream each time.
-     */
-    public static TikaInputStream get(InputStreamFactory factory) throws IOException {
-        return get(factory, new TemporaryResources());
-    }
-    /**
-     * Creates a TikaInputStream from a Factory which can create
-     *  fresh {@link InputStream}s for the same resource multiple times.
-     * <p>This is typically desired when working with {@link Parser}s that
-     *  need to re-read the stream multiple times, where other forms
-     *  of buffering (eg File) are slower than just getting a fresh
-     *  new stream each time.
-     */
-    public static TikaInputStream get(InputStreamFactory factory, TemporaryResources tmp) throws IOException {
-        TikaInputStream stream = get(factory.getInputStream(), tmp);
-        stream.steamFactory = factory;
-        return stream;
     }
 
     /**
@@ -430,7 +418,7 @@ public class TikaInputStream extends TaggedInputStream {
         String path = url.getPath();
         int slash = path.lastIndexOf('/');
         if (slash + 1 < path.length()) { // works even with -1!
-            metadata.set(TikaCoreProperties.RESOURCE_NAME_KEY, path.substring(slash + 1));
+            metadata.set(Metadata.RESOURCE_NAME_KEY, path.substring(slash + 1));
         }
 
         String type = connection.getContentType();
@@ -452,12 +440,6 @@ public class TikaInputStream extends TaggedInputStream {
                 new BufferedInputStream(connection.getInputStream()),
                 new TemporaryResources(), length);
     }
-    
-    /**
-     * The Factory that can create fresh {@link InputStream}s for
-     *  the resource this reads for, eg when needing to re-read.
-     */
-    private InputStreamFactory steamFactory;
 
     /**
      * The path to the file that contains the contents of this stream.
@@ -497,6 +479,7 @@ public class TikaInputStream extends TaggedInputStream {
 
     private int consecutiveEOFs = 0;
 
+    private byte[] skipBuffer;
     /**
      * Creates a TikaInputStream instance. This private constructor is used
      * by the static factory methods based on the available information.
@@ -578,10 +561,10 @@ public class TikaInputStream extends TaggedInputStream {
     }
     
     /**
-     * Returns the open container object if any, such as a
-     *  POIFS FileSystem in the event of an OLE2 document 
-     *  being detected and processed by the OLE2 detector.
-     * @return Open Container for this stream, or <code>null</code> if none 
+     * Returns the open container object, such as a
+     *  POIFS FileSystem in the event of an OLE2
+     *  document being detected and processed by
+     *  the OLE2 detector. 
      */
     public Object getOpenContainer() {
         return openContainer;
@@ -598,18 +581,6 @@ public class TikaInputStream extends TaggedInputStream {
         if (container instanceof Closeable) {
             tmp.addResource((Closeable) container);
         }
-    }
-    
-    public boolean hasInputStreamFactory() {
-        return steamFactory != null;
-    }
-    
-    /**
-     * If the Stream was created from an {@link InputStreamFactory},
-     *  return that, otherwise <code>null</code>.
-     */
-    public InputStreamFactory getInputStreamFactory() {
-        return steamFactory;
     }
 
     public boolean hasFile() {
@@ -724,9 +695,27 @@ public class TikaInputStream extends TaggedInputStream {
         return position;
     }
 
+    /**
+     * This relies on {@link IOUtils#skip(InputStream, long)} to ensure
+     * that the alleged bytes skipped were actually skipped.
+     *
+     * @param ln the number of bytes to skip
+     * @return the number of bytes skipped
+     * @throws IOException if the number of bytes requested to be skipped does not match the number of bytes skipped
+     *      or if there's an IOException during the read.
+     */
     @Override
     public long skip(long ln) throws IOException {
-        long n = super.skip(ln);
+        //On TIKA-3092, we found that using the static byte array buffer
+        //caused problems with multithreading with the FlateInputStream
+        //from a POIFS document stream
+        if (skipBuffer == null) {
+            skipBuffer = new byte[4096];
+        }
+        long n = IOUtils.skip(super.in, ln, skipBuffer);
+        if (n != ln) {
+            throw new IOException("tried to skip "+ln + " but actually skipped: "+n);
+        }
         position += n;
         return n;
     }
@@ -770,7 +759,7 @@ public class TikaInputStream extends TaggedInputStream {
             position += n;
         } else {
             consecutiveEOFs++;
-            if (consecutiveEOFs > 1000) {
+            if (consecutiveEOFs > MAX_CONSECUTIVE_EOFS) {
                 throw new IOException("Read too many -1 (EOFs); there could be an infinite loop." +
                         "If you think your file is not corrupt, please open an issue on Tika's JIRA");
             }

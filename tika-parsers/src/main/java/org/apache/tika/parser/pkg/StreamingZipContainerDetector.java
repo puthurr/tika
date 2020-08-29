@@ -16,6 +16,16 @@
  */
 package org.apache.tika.parser.pkg;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream;
 import org.apache.commons.io.IOUtils;
@@ -37,16 +47,6 @@ import org.apache.tika.utils.XMLReaderUtils;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
-
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.InputStream;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-
-import static java.nio.charset.StandardCharsets.UTF_8;
 
 public class StreamingZipContainerDetector extends ZipContainerDetectorBase implements Detector {
 
@@ -170,7 +170,6 @@ public class StreamingZipContainerDetector extends ZipContainerDetectorBase impl
         } catch (SecurityException e) {
             throw e;
         } catch (Exception e) {
-            e.printStackTrace();
             //swallow
         }
         //entrynames is the union of directory names and file names
@@ -219,7 +218,7 @@ public class StreamingZipContainerDetector extends ZipContainerDetectorBase impl
         } catch (SecurityException e) {
             throw e;
         } catch (Exception e) {
-
+            //swallow
         }
         return relsHandler.rels;
     }
@@ -252,7 +251,7 @@ public class StreamingZipContainerDetector extends ZipContainerDetectorBase impl
         } catch (SecurityException e) {
             throw e;
         } catch (Exception e) {
-
+            //swallow
         }
         return contentTypeHandler.mediaType;
     }

@@ -41,8 +41,7 @@ import org.apache.tika.sax.TeeContentHandler;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 
-public class ForkParser extends AbstractParser implements Closeable
-{
+public class ForkParser extends AbstractParser implements Closeable {
 
     /** Serial version UID */
     private static final long serialVersionUID = -4962742892274663950L;
@@ -214,7 +213,7 @@ public class ForkParser extends AbstractParser implements Closeable
      * This sends the objects to the server for parsing, and the server via
      * the proxies acts on the handler as if it were updating it directly.
      * <p>
-     * If using a {@link org.apache.tika.parser.RecursiveParserWrapper}, there are two options:
+     * If using a RecursiveParserWrapper, there are two options:
      * </p>
      * <p>
      *     <ol>

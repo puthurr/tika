@@ -23,7 +23,6 @@ import org.apache.tika.metadata.Metadata;
 import org.apache.tika.mime.MediaType;
 import org.apache.tika.mime.MediaTypeRegistry;
 import org.apache.tika.sax.TaggedContentHandler;
-import org.apache.tika.utils.ParserUtils;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 
@@ -272,12 +271,16 @@ public class CompositeParser extends AbstractParser {
             TikaInputStream taggedStream = TikaInputStream.get(stream, tmp);
             TaggedContentHandler taggedHandler = 
                 handler != null ? new TaggedContentHandler(handler) : null;
-            ParserUtils.recordParserDetails(parser, metadata);
+            if (parser instanceof ParserDecorator){
+                metadata.add("X-Parsed-By", ((ParserDecorator) parser).getWrappedParser().getClass().getName());
+            } else {
+                metadata.add("X-Parsed-By", parser.getClass().getName());
+            }
             try {
                 parser.parse(taggedStream, taggedHandler, metadata, context);
-            } catch (RuntimeException e) {
-                throw new TikaException(
-                        "Unexpected RuntimeException from " + parser, e);
+            } catch (SecurityException e) {
+                //rethrow security exceptions
+                throw e;
             } catch (IOException e) {
                 taggedStream.throwIfCauseOf(e);
                 throw new TikaException(
@@ -286,6 +289,9 @@ public class CompositeParser extends AbstractParser {
                 if (taggedHandler != null) taggedHandler.throwIfCauseOf(e);
                 throw new TikaException(
                         "TIKA-237: Illegal SAXException from " + parser, e);
+            } catch (RuntimeException e) {
+                throw new TikaException(
+                        "Unexpected RuntimeException from " + parser, e);
             }
         } finally {
             tmp.dispose();

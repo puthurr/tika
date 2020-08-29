@@ -16,11 +16,11 @@
  */
 package org.apache.tika.parser.microsoft;
 
+import java.util.Locale;
+
 import org.apache.poi.ss.usermodel.DataFormatter;
 import org.apache.poi.ss.usermodel.DateUtil;
 import org.apache.poi.util.LocaleUtil;
-
-import java.util.Locale;
 
 /**
  * Overrides Excel's General format to include more

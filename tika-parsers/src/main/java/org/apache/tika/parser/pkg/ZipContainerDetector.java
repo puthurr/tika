@@ -16,6 +16,19 @@
  */
 package org.apache.tika.parser.pkg;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Locale;
+import java.util.Set;
+import java.util.regex.Pattern;
+
 import org.apache.commons.compress.archivers.ArchiveException;
 import org.apache.commons.compress.archivers.ArchiveStreamFactory;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
@@ -32,6 +45,7 @@ import org.apache.poi.openxml4j.util.ZipEntrySource;
 import org.apache.poi.openxml4j.util.ZipFileZipEntrySource;
 import org.apache.tika.config.Field;
 import org.apache.tika.detect.Detector;
+import org.apache.tika.io.BoundedInputStream;
 import org.apache.tika.io.LookaheadInputStream;
 import org.apache.tika.io.TikaInputStream;
 import org.apache.tika.metadata.Metadata;
@@ -40,14 +54,6 @@ import org.apache.tika.parser.iwork.IWorkPackageParser;
 import org.apache.tika.parser.iwork.IWorkPackageParser.IWORKDocumentType;
 import org.apache.tika.parser.iwork.iwana.IWork13PackageParser;
 import org.apache.tika.parser.iwork.iwana.IWork18PackageParser;
-
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.*;
-import java.util.regex.Pattern;
-
-import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  * A detector that works on Zip documents and other archive and compression

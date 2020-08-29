@@ -287,7 +287,7 @@ public class WordMLParser extends AbstractXML2003Parser {
                 try (TikaInputStream is = TikaInputStream.get(rawBytes)) {
                     Metadata metadata = new Metadata();
                     if (pictName != null) {
-                        metadata.set(TikaCoreProperties.RESOURCE_NAME_KEY, pictName);
+                        metadata.set(Metadata.RESOURCE_NAME_KEY, pictName);
                     }
                     if (pictSource != null) {
                         metadata.set(TikaCoreProperties.ORIGINAL_RESOURCE_NAME, pictSource);

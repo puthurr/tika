@@ -49,7 +49,7 @@ public class RecursiveParserWrapperFSConsumerTest extends TikaTest {
     public void testEmbeddedWithNPE() throws Exception {
         final String path = "/test-documents/embedded_with_npe.xml";
         final Metadata metadata = new Metadata();
-        metadata.add(TikaCoreProperties.RESOURCE_NAME_KEY, "embedded_with_npe.xml");
+        metadata.add(Metadata.RESOURCE_NAME_KEY, "embedded_with_npe.xml");
 
         ArrayBlockingQueue<FileResource> queue = new ArrayBlockingQueue<FileResource>(2);
         queue.add(new FileResource() {
@@ -97,7 +97,7 @@ public class RecursiveParserWrapperFSConsumerTest extends TikaTest {
     public void testEmbeddedThenNPE() throws Exception {
         final String path = "/test-documents/embedded_then_npe.xml";
         final Metadata metadata = new Metadata();
-        metadata.add(TikaCoreProperties.RESOURCE_NAME_KEY, "embedded_then_npe.xml");
+        metadata.add(Metadata.RESOURCE_NAME_KEY, "embedded_then_npe.xml");
 
         ArrayBlockingQueue<FileResource> queue = new ArrayBlockingQueue<FileResource>(2);
         queue.add(new FileResource() {

@@ -71,7 +71,7 @@ public class TextAndCSVParser extends AbstractEncodingDetectorParser {
     private static final String CHARSET = "charset";
     private static final String DELIMITER = "delimiter";
     public static final Property DELIMITER_PROPERTY = Property.externalText(
-            CSV_PREFIX + TikaCoreProperties.NAMESPACE_PREFIX_DELIMITER+DELIMITER);
+            CSV_PREFIX + Metadata.NAMESPACE_PREFIX_DELIMITER+DELIMITER);
 
     private static final String TD = "td";
     private static final String TR = "tr";

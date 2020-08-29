@@ -337,7 +337,12 @@ class OneNotePtr {
             // + 4 bytes for the FileNode header
             CheckedFileNodePushBack pushBack = new CheckedFileNodePushBack(data);
             try {
+                long initialOffset = offset;
                 FileNode fileNode = deserializeFileNode(data.children.get(data.children.size() - 1), curPath);
+                if (initialOffset == offset) {
+                    //nothing read; avoid an infinite loop
+                    break;
+                }
                 if (fileNode.id == FndStructureConstants.ChunkTerminatorFND || fileNode.id == 0) {
                     terminated = true;
                     break;
@@ -623,7 +628,8 @@ class OneNotePtr {
             }
 
             if (cch > dif.size()) {
-                throw new TikaMemoryLimitException("CCH=" + cch + " was found that was great than file size " + dif.size());
+                throw new TikaMemoryLimitException("CCH=" + cch + " was found that was greater" +
+                        " than file size " + dif.size());
             }
             ByteBuffer dataSpaceBuffer = ByteBuffer.allocate((int) cch * 2);
             dif.read(dataSpaceBuffer);
@@ -678,7 +684,6 @@ class OneNotePtr {
         end = backup.end;
 
         if (reserved != 1) {
-            System.exit(1);
             throw new TikaException("RESERVED_NONZERO");
         }
 
@@ -1170,7 +1175,8 @@ class OneNotePtr {
 
     public void dumpHex() throws TikaMemoryLimitException, IOException {
         if (end - offset > dif.size()) {
-            throw new TikaMemoryLimitException("Exceeded memory limit when trying to dumpHex - " + (end - offset) + " > " + dif.size());
+            throw new TikaMemoryLimitException("Exceeded memory limit when trying to dumpHex - " +
+                    "" + (end - offset) + " > " + dif.size());
         }
         ByteBuffer byteBuffer = ByteBuffer.allocate((int) (end - offset));
         LOG.debug(Hex.encodeHexString(byteBuffer.array()));

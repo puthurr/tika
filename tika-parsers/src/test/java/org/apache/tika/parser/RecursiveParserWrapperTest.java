@@ -243,7 +243,7 @@ public class RecursiveParserWrapperTest extends TikaTest {
         targets.add("/image00001.emf");
 
         Metadata metadata = new Metadata();
-        metadata.set(TikaCoreProperties.RESOURCE_NAME_KEY, "test_recursive_embedded.docx");
+        metadata.set(Metadata.RESOURCE_NAME_KEY, "test_recursive_embedded.docx");
         List<Metadata> list = getMetadata(metadata,
                 new BasicContentHandlerFactory(BasicContentHandlerFactory.HANDLER_TYPE.XML, -1));
         Metadata container = list.get(0);
@@ -263,7 +263,7 @@ public class RecursiveParserWrapperTest extends TikaTest {
     @Test
     public void testEmbeddedNPE() throws Exception {
         Metadata metadata = new Metadata();
-        metadata.set(TikaCoreProperties.RESOURCE_NAME_KEY, "test_recursive_embedded_npe.docx");
+        metadata.set(Metadata.RESOURCE_NAME_KEY, "test_recursive_embedded_npe.docx");
         List<Metadata> list = getMetadata(metadata,
                 new BasicContentHandlerFactory(BasicContentHandlerFactory.HANDLER_TYPE.TEXT, -1));
         //default behavior (user doesn't specify whether or not to catch embedded exceptions
@@ -273,7 +273,7 @@ public class RecursiveParserWrapperTest extends TikaTest {
         assertContains("java.lang.NullPointerException", mockNPEMetadata.get(ParserUtils.EMBEDDED_EXCEPTION));
 
         metadata = new Metadata();
-        metadata.set(TikaCoreProperties.RESOURCE_NAME_KEY, "test_recursive_embedded_npe.docx");
+        metadata.set(Metadata.RESOURCE_NAME_KEY, "test_recursive_embedded_npe.docx");
         list = getMetadata(metadata,
                 new BasicContentHandlerFactory(BasicContentHandlerFactory.HANDLER_TYPE.TEXT, -1),
                 false, null);
@@ -290,7 +290,7 @@ public class RecursiveParserWrapperTest extends TikaTest {
         //that the first element of the returned list is the container document
         //and the second is the embedded content
         Metadata metadata = new Metadata();
-        metadata.set(TikaCoreProperties.RESOURCE_NAME_KEY, "embedded_then_npe.xml");
+        metadata.set(Metadata.RESOURCE_NAME_KEY, "embedded_then_npe.xml");
 
         ParseContext context = new ParseContext();
         RecursiveParserWrapper wrapper = new RecursiveParserWrapper(AUTO_DETECT_PARSER, true);
@@ -319,18 +319,18 @@ public class RecursiveParserWrapperTest extends TikaTest {
         Metadata outerMetadata = metadataList.get(0);
         Metadata embeddedMetadata = metadataList.get(1);
         assertContains("main_content", outerMetadata.get(AbstractRecursiveParserWrapperHandler.TIKA_CONTENT));
-        assertEquals("embedded_then_npe.xml", outerMetadata.get(TikaCoreProperties.RESOURCE_NAME_KEY));
+        assertEquals("embedded_then_npe.xml", outerMetadata.get(Metadata.RESOURCE_NAME_KEY));
         assertEquals("Nikolai Lobachevsky", outerMetadata.get("author"));
 
         assertContains("some_embedded_content", embeddedMetadata.get(AbstractRecursiveParserWrapperHandler.TIKA_CONTENT));
-        assertEquals("embed1.xml", embeddedMetadata.get(TikaCoreProperties.RESOURCE_NAME_KEY));
+        assertEquals("embed1.xml", embeddedMetadata.get(Metadata.RESOURCE_NAME_KEY));
         assertEquals("embeddedAuthor", embeddedMetadata.get("author"));
     }
 
     @Test
     public void testDigesters() throws Exception {
         Metadata metadata = new Metadata();
-        metadata.set(TikaCoreProperties.RESOURCE_NAME_KEY, "test_recursive_embedded.docx");
+        metadata.set(Metadata.RESOURCE_NAME_KEY, "test_recursive_embedded.docx");
         List<Metadata> list = getMetadata(metadata,
                 new BasicContentHandlerFactory(BasicContentHandlerFactory.HANDLER_TYPE.TEXT, -1),
                 true, new CommonsDigester(100000, "md5"));
@@ -374,7 +374,7 @@ public class RecursiveParserWrapperTest extends TikaTest {
             wrapped = new DigestingParser(wrapped, digester);
         }
         RecursiveParserWrapper wrapper = new RecursiveParserWrapper(wrapped, catchEmbeddedExceptions);
-        String path = metadata.get(TikaCoreProperties.RESOURCE_NAME_KEY);
+        String path = metadata.get(Metadata.RESOURCE_NAME_KEY);
         if (path == null) {
             path = "/test-documents/test_recursive_embedded.docx";
         } else {

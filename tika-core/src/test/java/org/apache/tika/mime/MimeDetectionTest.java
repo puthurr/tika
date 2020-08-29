@@ -16,20 +16,22 @@
  */
 package org.apache.tika.mime;
 
-import org.apache.tika.config.TikaConfig;
-import org.apache.tika.metadata.Metadata;
-import org.apache.tika.metadata.TikaCoreProperties;
-import org.junit.Before;
-import org.junit.Test;
+import static java.nio.charset.StandardCharsets.UTF_16BE;
+import static java.nio.charset.StandardCharsets.UTF_16LE;
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 
-import static java.nio.charset.StandardCharsets.*;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import org.apache.tika.config.TikaConfig;
+import org.apache.tika.metadata.Metadata;
+import org.apache.tika.metadata.TikaCoreProperties;
+import org.junit.Before;
+import org.junit.Test;
 
 public class MimeDetectionTest {
 
@@ -151,7 +153,7 @@ public class MimeDetectionTest {
 
     private void testUrlWithoutContent(String expected, String url) throws IOException {
         Metadata metadata = new Metadata();
-        metadata.set(TikaCoreProperties.RESOURCE_NAME_KEY, url);
+        metadata.set(Metadata.RESOURCE_NAME_KEY, url);
         String mime = this.mimeTypes.detect(null, metadata).toString();
         assertEquals(url + " is not properly detected using only resource name", expected, mime);
     }
@@ -177,7 +179,7 @@ public class MimeDetectionTest {
             assertEquals(urlOrFileName + " is not properly detected: detected.", expected, mime);
 
             //Add resource name and test again
-            metadata.set(TikaCoreProperties.RESOURCE_NAME_KEY, urlOrFileName);
+            metadata.set(Metadata.RESOURCE_NAME_KEY, urlOrFileName);
             mime = this.mimeTypes.detect(in, metadata).toString();
             assertEquals(urlOrFileName + " is not properly detected after adding resource name.", expected, mime);
         } finally {
@@ -201,7 +203,7 @@ public class MimeDetectionTest {
                 new ByteArrayInputStream(new byte[0]), new Metadata()));
 
         Metadata namehint = new Metadata();
-        namehint.set(TikaCoreProperties.RESOURCE_NAME_KEY, "test.txt");
+        namehint.set(Metadata.RESOURCE_NAME_KEY, "test.txt");
         assertEquals(MediaType.TEXT_PLAIN, mimeTypes.detect(
                 new ByteArrayInputStream(new byte[0]), namehint));
 
@@ -252,16 +254,16 @@ public class MimeDetectionTest {
         
         // With a filename, picks the right one
         metadata = new Metadata();
-        metadata.set(TikaCoreProperties.RESOURCE_NAME_KEY, "test.hello.world");
+        metadata.set(Metadata.RESOURCE_NAME_KEY, "test.hello.world");
         assertEquals(helloType, mimeTypes.detect(new ByteArrayInputStream(helloWorld), metadata));
         
         metadata = new Metadata();
-        metadata.set(TikaCoreProperties.RESOURCE_NAME_KEY, "test.x-hello-world");
+        metadata.set(Metadata.RESOURCE_NAME_KEY, "test.x-hello-world");
         assertEquals(helloXType, mimeTypes.detect(new ByteArrayInputStream(helloWorld), metadata));
         
         // Without, goes for the one that sorts last
         metadata = new Metadata();
-        metadata.set(TikaCoreProperties.RESOURCE_NAME_KEY, "testingTESTINGtesting");
+        metadata.set(Metadata.RESOURCE_NAME_KEY, "testingTESTINGtesting");
         assertEquals(helloXType, mimeTypes.detect(new ByteArrayInputStream(helloWorld), metadata));
     }
 }

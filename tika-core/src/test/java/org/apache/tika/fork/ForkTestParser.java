@@ -59,7 +59,7 @@ class ForkTestParser extends AbstractParser {
     static class ForkTestParserAccessingPackage extends ForkTestParser {
         @Override
         public void parse(InputStream stream, ContentHandler handler, Metadata metadata,
-                ParseContext context) throws IOException, SAXException, TikaException {
+                          ParseContext context) throws IOException, SAXException, TikaException {
             Assert.assertNotNull(ClassInUnusedPackage.class.getPackage());
             super.parse(stream, handler, metadata, context);
         }

@@ -16,6 +16,18 @@
  */
 package org.apache.tika.parser.pdf;
 
+import javax.xml.stream.XMLStreamException;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import org.apache.commons.io.input.CloseShieldInputStream;
 import org.apache.pdfbox.cos.COSArray;
 import org.apache.pdfbox.cos.COSBase;
@@ -36,7 +48,14 @@ import org.apache.tika.exception.TikaConfigException;
 import org.apache.tika.exception.TikaException;
 import org.apache.tika.extractor.EmbeddedDocumentExtractor;
 import org.apache.tika.io.TikaInputStream;
-import org.apache.tika.metadata.*;
+import org.apache.tika.metadata.AccessPermissions;
+import org.apache.tika.metadata.Metadata;
+import org.apache.tika.metadata.Office;
+import org.apache.tika.metadata.OfficeOpenXMLCore;
+import org.apache.tika.metadata.PDF;
+import org.apache.tika.metadata.PagedText;
+import org.apache.tika.metadata.Property;
+import org.apache.tika.metadata.TikaCoreProperties;
 import org.apache.tika.mime.MediaType;
 import org.apache.tika.parser.AbstractParser;
 import org.apache.tika.parser.ParseContext;
@@ -46,12 +65,7 @@ import org.apache.tika.sax.XHTMLContentHandler;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 
-import javax.xml.stream.XMLStreamException;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Path;
-import java.util.*;
+import static org.apache.tika.parser.pdf.PDMetadataExtractor.addMetadata;
 
 /**
  * PDF parser.
@@ -83,6 +97,8 @@ public class PDFParser extends AbstractParser implements Initializable {
 
     private static volatile boolean HAS_WARNED = false;
     private static final Object[] LOCK = new Object[0];
+    //the old "created" metadata.  This will go away in Tika 2.0
+    private static final Property DEPRECATED_CREATED = Property.externalDate("created");
 
     /**
      * Metadata key for giving the document password to the parser.
@@ -258,34 +274,39 @@ public class PDFParser extends AbstractParser implements Initializable {
 
         PDDocumentInformation info = document.getDocumentInformation();
         metadata.set(PagedText.N_PAGES, document.getNumberOfPages());
-        PDMetadataExtractor.addMetadata(metadata, PDF.DOC_INFO_TITLE, info.getTitle());
-        PDMetadataExtractor.addMetadata(metadata, PDF.DOC_INFO_CREATOR, info.getAuthor());
+        addMetadata(metadata, PDF.DOC_INFO_TITLE, info.getTitle());
+        addMetadata(metadata, PDF.DOC_INFO_CREATOR, info.getAuthor());
         //if this wasn't already set by xmp, use doc info
         if (metadata.get(TikaCoreProperties.CREATOR) == null) {
-            PDMetadataExtractor.addMetadata(metadata, TikaCoreProperties.CREATOR, info.getAuthor());
+            addMetadata(metadata, TikaCoreProperties.CREATOR, info.getAuthor());
         }
         if (metadata.get(TikaCoreProperties.TITLE) == null) {
-            PDMetadataExtractor.addMetadata(metadata, TikaCoreProperties.TITLE, info.getTitle());
+            addMetadata(metadata, TikaCoreProperties.TITLE, info.getTitle());
         }
-        PDMetadataExtractor.addMetadata(metadata, PDF.DOC_INFO_CREATOR_TOOL, info.getCreator());
-        PDMetadataExtractor.addMetadata(metadata, TikaCoreProperties.CREATOR_TOOL, info.getCreator());
-        PDMetadataExtractor.addMetadata(metadata, Office.KEYWORDS, info.getKeywords());
-        PDMetadataExtractor.addMetadata(metadata, PDF.DOC_INFO_KEY_WORDS, info.getKeywords());
-        PDMetadataExtractor.addMetadata(metadata, PDF.DOC_INFO_PRODUCER, info.getProducer());
+        addMetadata(metadata, PDF.DOC_INFO_TITLE, info.getTitle());
+        addMetadata(metadata, PDF.DOC_INFO_CREATOR, info.getAuthor());
+        addMetadata(metadata, TikaCoreProperties.CREATOR_TOOL, info.getCreator());
+        addMetadata(metadata, PDF.DOC_INFO_CREATOR_TOOL, info.getCreator());
+        addMetadata(metadata, TikaCoreProperties.KEYWORDS, info.getKeywords());
+        addMetadata(metadata, PDF.DOC_INFO_KEY_WORDS, info.getKeywords());
+        addMetadata(metadata, "producer", info.getProducer());
+        addMetadata(metadata, PDF.DOC_INFO_PRODUCER, info.getProducer());
 
-        PDMetadataExtractor.addMetadata(metadata, PDF.DOC_INFO_SUBJECT, info.getSubject());
+        addMetadata(metadata, PDF.DOC_INFO_SUBJECT, info.getSubject());
 
-        PDMetadataExtractor.addMetadata(metadata, TikaCoreProperties.SUBJECT, info.getKeywords());
-        PDMetadataExtractor.addMetadata(metadata, TikaCoreProperties.SUBJECT, info.getSubject());
-        PDMetadataExtractor.addMetadata(metadata, OfficeOpenXMLCore.SUBJECT, info.getSubject());
-
-        PDMetadataExtractor.addMetadata(metadata, PDF.DOC_INFO_TRAPPED, info.getTrapped());
+        // TODO: Move to description in Tika 2.0
+        addMetadata(metadata, TikaCoreProperties.TRANSITION_SUBJECT_TO_OO_SUBJECT, info.getSubject());
+        addMetadata(metadata, "trapped", info.getTrapped());
+        addMetadata(metadata, PDF.DOC_INFO_TRAPPED, info.getTrapped());
+        // TODO Remove these in Tika 2.0
         Calendar created = info.getCreationDate();
-        PDMetadataExtractor.addMetadata(metadata, PDF.DOC_INFO_CREATED, created);
-        PDMetadataExtractor.addMetadata(metadata, TikaCoreProperties.CREATED, created);
+        addMetadata(metadata, DEPRECATED_CREATED, created);
+        addMetadata(metadata, PDF.DOC_INFO_CREATED, created);
+        addMetadata(metadata, TikaCoreProperties.CREATED, created);
         Calendar modified = info.getModificationDate();
-        PDMetadataExtractor.addMetadata(metadata, TikaCoreProperties.MODIFIED, modified);
-        PDMetadataExtractor.addMetadata(metadata, PDF.DOC_INFO_MODIFICATION_DATE, modified);
+        addMetadata(metadata, Metadata.LAST_MODIFIED, modified);
+        addMetadata(metadata, TikaCoreProperties.MODIFIED, modified);
+        addMetadata(metadata, PDF.DOC_INFO_MODIFICATION_DATE, modified);
 
         // All remaining metadata is custom
         // Copy this over as-is
@@ -294,8 +315,8 @@ public class PDFParser extends AbstractParser implements Initializable {
         for (COSName key : info.getCOSObject().keySet()) {
             String name = key.getName();
             if (!handledMetadata.contains(name)) {
-                PDMetadataExtractor.addMetadata(metadata, name, info.getCOSObject().getDictionaryObject(key));
-                PDMetadataExtractor.addMetadata(metadata, PDF.PDF_DOC_INFO_CUSTOM_PREFIX + name,
+                addMetadata(metadata, name, info.getCOSObject().getDictionaryObject(key));
+                addMetadata(metadata, PDF.PDF_DOC_INFO_CUSTOM_PREFIX + name,
                         info.getCOSObject().getDictionaryObject(key));
             }
         }
@@ -482,6 +503,16 @@ public class PDFParser extends AbstractParser implements Initializable {
         defaultConfig.setOcrImageFormatName(formatName);
     }
 
+    @Deprecated
+    /**
+     * @deprecated as of Tika 1.23, this is no longer used in rendering page images for OCR;
+     * use {@link #setOcrDPI(int)}
+     */
+    @Field
+    void setOcrImageScale(float imageScale) {
+        defaultConfig.setOcrImageScale(imageScale);
+    }
+
 	@Field
 	void setExtractBookmarksText(boolean extractBookmarksText) {
 		defaultConfig.setExtractBookmarksText(extractBookmarksText);
@@ -491,6 +522,17 @@ public class PDFParser extends AbstractParser implements Initializable {
     void setExtractInlineImages(boolean extractInlineImages) {
         defaultConfig.setExtractInlineImages(extractInlineImages);
     }
+
+    @Field
+    void setAverageCharTolerance(float averageCharTolerance) {
+        defaultConfig.setAverageCharTolerance(averageCharTolerance);
+    }
+
+    @Field
+    void setSpacingTolerance(float spacingTolerance) {
+        defaultConfig.setSpacingTolerance(spacingTolerance);
+    }
+
 
     @Field
     void setCatchIntermediateExceptions(boolean catchIntermediateExceptions) {
@@ -557,11 +599,6 @@ public class PDFParser extends AbstractParser implements Initializable {
 
     public void setInitializableProblemHandler(InitializableProblemHandler initializableProblemHandler) {
         this.initializableProblemHandler = initializableProblemHandler;
-    }
-
-    @Field
-    public void setDropThreshold(float dropThreshold) {
-        defaultConfig.setDropThreshold(dropThreshold);
     }
 
     @Field
