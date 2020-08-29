@@ -154,11 +154,19 @@
       <scope>test</scope>
     </dependency>
       <dependency>
-          <groupId>org.apache.tika</groupId>
+          <groupId>${project.groupId}</groupId>
           <artifactId>tika-core</artifactId>
           <version>1.24.1</version>
           <scope>compile</scope>
       </dependency>
+
+    <!-- https://mvnrepository.com/artifact/com.azure/azure-storage-blob -->
+    <dependency>
+      <groupId>com.azure</groupId>
+      <artifactId>azure-storage-blob</artifactId>
+      <version>12.8.0</version>
+    </dependency>
+
   </dependencies>
 
   <build>

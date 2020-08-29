@@ -45,18 +45,7 @@ import org.apache.tika.config.TikaConfig;
 import org.apache.tika.parser.DigestingParser;
 import org.apache.tika.parser.utils.BouncyCastleDigester;
 import org.apache.tika.parser.utils.CommonsDigester;
-import org.apache.tika.server.resource.DetectorResource;
-import org.apache.tika.server.resource.LanguageResource;
-import org.apache.tika.server.resource.MetadataResource;
-import org.apache.tika.server.resource.RecursiveMetadataResource;
-import org.apache.tika.server.resource.TikaDetectors;
-import org.apache.tika.server.resource.TikaMimeTypes;
-import org.apache.tika.server.resource.TikaParsers;
-import org.apache.tika.server.resource.TikaResource;
-import org.apache.tika.server.resource.TikaVersion;
-import org.apache.tika.server.resource.TikaWelcome;
-import org.apache.tika.server.resource.TranslateResource;
-import org.apache.tika.server.resource.UnpackerResource;
+import org.apache.tika.server.resource.*;
 import org.apache.tika.server.writer.CSVMessageBodyWriter;
 import org.apache.tika.server.writer.JSONMessageBodyWriter;
 import org.apache.tika.server.writer.MetadataListMessageBodyWriter;
@@ -305,6 +294,9 @@ public class TikaServerCli {
             rCoreProviders.add(new SingletonResourceProvider(new TikaDetectors()));
             rCoreProviders.add(new SingletonResourceProvider(new TikaParsers()));
             rCoreProviders.add(new SingletonResourceProvider(new TikaVersion()));
+            // AZURE BLOB STORAGE SUPPORT
+            rCoreProviders.add(new SingletonResourceProvider(new AzureUnpackerResource()));
+
             List<ResourceProvider> rAllProviders = new ArrayList<>(rCoreProviders);
             rAllProviders.add(new SingletonResourceProvider(new TikaWelcome(rCoreProviders)));
             sf.setResourceProviders(rAllProviders);
