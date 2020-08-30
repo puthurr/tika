@@ -80,7 +80,9 @@ To workaround this and support writing embedded resources directly in an Azure B
 Azure Blob Storage Connection
 -----------------------------
 Azure Blob connection string is taken from the environment variable **AZURE_STORAGE_CONNECTION_STRING**. 
-[https://docs.microsoft.com/en-us/azure/storage/blobs/storage-quickstart-blobs-java](Azure Blob Storage - Java) 
+https://docs.microsoft.com/en-us/azure/storage/blobs/storage-quickstart-blobs-java
+
+https://docs.microsoft.com/en-us/azure/storage/blobs/storage-quickstart-blobs-java#configure-your-storage-connection-string
 
 Azure Blob Target Container
 -----------------------------
@@ -92,9 +94,10 @@ To specify which container directory to write all embedded resources to, send th
 
 Azure Blob Metadata
 -------------------
-Our implementation supports adding blob metadata to each embedded resource. To your azure-unpack request, any header with the prefix  **X-TIKA-AZURE-META-** will end up in the user-defined blob properties. 
+Our implementation supports adding blob metadata to each embedded resource. To your azure-unpack request, any header with the prefix  **X-TIKA-AZURE-META-** will end up in the user-defined blob properties.
+
 Refer to the official documentation for limitations 
-[https://docs.microsoft.com/en-us/azure/storage/blobs/storage-blob-properties-metadata?tabs=dotnet](Azure Blob Metadata)
+https://docs.microsoft.com/en-us/azure/storage/blobs/storage-blob-properties-metadata?tabs=dotnet
 
 Azure Unpacker Usage
 --------------------
