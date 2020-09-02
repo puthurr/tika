@@ -45,7 +45,6 @@ import org.apache.tika.config.Field;
  */
 public class PDFParserConfig implements Serializable {
 
-
     public enum OCR_STRATEGY {
         AUTO,
         NO_OCR,
@@ -103,7 +102,7 @@ public class PDFParserConfig implements Serializable {
     private boolean extractBookmarksText = true;
 
     // True if inline PDXImage objects should be extracted
-    // Change default to true
+    // puthurr : Change default to true
     private boolean extractInlineImages = true;
 
     //True if inline images (as identified by their object id within
@@ -158,6 +157,17 @@ public class PDFParserConfig implements Serializable {
     private boolean setKCMS = false;
 
     private boolean detectAngles = false;
+
+    // puthurr : some single page PDF are actual scanned image but different scanners
+    // may create graphics or separate the image from the text themselves.
+    // This flag will convert the single page PDF into a single image. regardless of embedded images.
+    private boolean singlePagePDFAsImage = false;
+
+    // puthurr : striped-scanned images
+    // Old PDF writer could output a scan page by striping the image into multiple streams.
+    private boolean stripedImagesHandling = false;
+
+    private int stripedImagesThreshold = 3;
 
     public PDFParserConfig() {
         init(this.getClass().getResourceAsStream("PDFParser.properties"));
@@ -594,6 +604,38 @@ public class PDFParserConfig implements Serializable {
         return ocrStrategy;
     }
 
+
+    /**
+     *
+     * PUTHURR SECTION
+     *
+     */
+    // PDF with a single page could be extracted as one rendered-page image
+    public boolean getSinglePagePDFAsImage() {
+        return singlePagePDFAsImage;
+    }
+
+    public void setSinglePagePDFAsImage(boolean singlePagePDFAsImage) {
+        this.singlePagePDFAsImage = singlePagePDFAsImage;
+    }
+    // striped images handling in a page
+    public boolean getStripedImagesHandling() {
+        return stripedImagesHandling;
+    }
+
+    public void setStripedImagesHandling(boolean stripedImagesHandling) {
+        this.stripedImagesHandling = stripedImagesHandling;
+    }
+
+    public int getStripedImagesThreshold() {
+        return stripedImagesThreshold;
+    }
+
+    public void setStripedImagesThreshold(int stripedImagesThreshold) {
+        this.stripedImagesThreshold = stripedImagesThreshold;
+    }
+
+
     private boolean getBooleanProp(String p, boolean defaultMissing) {
         if (p == null) {
             return defaultMissing;
@@ -852,6 +894,12 @@ public class PDFParserConfig implements Serializable {
         if (!getOcrImageFormatName().equals(config.getOcrImageFormatName())) return false;
         if (getExtractActions() != config.getExtractActions()) return false;
         if (!getAccessChecker().equals(config.getAccessChecker())) return false;
+
+        // PUTHURR
+        if (getSinglePagePDFAsImage() != (config.getSinglePagePDFAsImage())) return false;
+        if (getStripedImagesHandling() != (config.getStripedImagesHandling())) return false;
+        if (getStripedImagesThreshold() != (config.getStripedImagesThreshold())) return false;
+
         return getMaxMainMemoryBytes() == config.getMaxMainMemoryBytes();
     }
 
@@ -877,6 +925,10 @@ public class PDFParserConfig implements Serializable {
         result = 31 * result + (getCatchIntermediateIOExceptions() ? 1 : 0);
         result = 31 * result + (getExtractActions() ? 1 : 0);
         result = 31 * result + Long.valueOf(getMaxMainMemoryBytes()).hashCode();
+        // PUTHURR
+        result = 31 * result + (getSinglePagePDFAsImage()? 1 : 0);
+        result = 31 * result + (getStripedImagesHandling()? 1 : 0);
+        result = 31 * result + getStripedImagesThreshold();
         return result;
     }
 
@@ -903,6 +955,10 @@ public class PDFParserConfig implements Serializable {
                 ", extractActions=" + extractActions +
                 ", catchIntermediateIOExceptions=" + catchIntermediateIOExceptions +
                 ", maxMainMemoryBytes=" + maxMainMemoryBytes +
+                // puthurr
+                ", singlePagePDFAsImage=" + singlePagePDFAsImage +
+                ", stripedImagesHandling=" + stripedImagesHandling +
+                ", stripedImagesThreshold=" + stripedImagesThreshold +
                 '}';
     }
 }

@@ -172,6 +172,9 @@ class AbstractPDF2XHTML extends PDFTextStripper {
     int unmappedUnicodeCharsPerPage = 0;
     int totalCharsPerPage = 0;
 
+    // Total number of pages
+    int totalPagesCount = -1;
+
     private final Set<String> fontNames = new HashSet<>();
 
     AbstractPDF2XHTML(PDDocument pdDocument, ContentHandler handler, ParseContext context, Metadata metadata,
@@ -938,6 +941,7 @@ class AbstractPDF2XHTML extends PDFTextStripper {
         return null;
     }
 
+
     /**
      * we need to override this because we are overriding {@link #processPages(PDPageTree)}
      * @return
@@ -946,6 +950,8 @@ class AbstractPDF2XHTML extends PDFTextStripper {
     public int getCurrentPageNo() {
         return pageIndex+1;
     }
+
+    public int getTotalPagesCount() { return totalPagesCount; }
 
     /**
      * See TIKA-2845 for why we need to override this.
@@ -964,6 +970,9 @@ class AbstractPDF2XHTML extends PDFTextStripper {
         //                && (startBookmarkPageNumber == -1 || currentPageNo >= startBookmarkPageNumber)
         //                && (endBookmarkPageNumber == -1 || currentPageNo <= endBookmarkPageNumber))
         //        {
+
+        // PUTHURR : Store the total number of pages.
+        totalPagesCount = pages.getCount();
         super.setStartPage(-1);
         for (PDPage page : pages) {
             if (getCurrentPageNo() >= getStartPage()
