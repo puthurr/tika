@@ -86,9 +86,15 @@ public class AzureUnpackerResource {
     private static String connectStr = System.getenv("AZURE_STORAGE_CONNECTION_STRING");
 
     /* Create a new BlobServiceClient with a connection string */
-    private static BlobServiceClient blobServiceClient = new BlobServiceClientBuilder()
-            .connectionString(connectStr)
-            .buildClient();
+    private static BlobServiceClient blobServiceClient;
+
+    static {
+        if (connectStr != null) {
+            blobServiceClient = new BlobServiceClientBuilder()
+                    .connectionString(connectStr)
+                    .buildClient();
+        }
+    }
 
     @Path("/{id:(/.*)?}")
     @PUT
@@ -118,6 +124,11 @@ public class AzureUnpackerResource {
             @Context UriInfo info,
             boolean saveAll
     ) throws Exception {
+
+        if ( blobServiceClient == null )
+        {
+            throw new WebApplicationException(Response.Status.SERVICE_UNAVAILABLE);
+        }
 
         List<Metadata> metadataList = new LinkedList<>();
 
