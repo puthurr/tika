@@ -77,22 +77,30 @@ Tika's unpack implementation loads all resources im memory to serve a zip/tar ar
 
 To workaround this and support writing embedded resources directly in an Azure Blob storage, we added an azure-unpack endpoint i.e. **http://localhost:9998/azure-unpack**   
 
-####Azure Blob Storage Connection 
+Azure Blob Storage Connection
+-----------------------------
 Azure Blob connection string is taken from the environment variable **AZURE_STORAGE_CONNECTION_STRING**. 
-[https://docs.microsoft.com/en-us/azure/storage/blobs/storage-quickstart-blobs-java](Azure Blob Storage - Java) 
+https://docs.microsoft.com/en-us/azure/storage/blobs/storage-quickstart-blobs-java
 
-####Azure Blob Target Container 
+https://docs.microsoft.com/en-us/azure/storage/blobs/storage-quickstart-blobs-java#configure-your-storage-connection-string
+
+Azure Blob Target Container
+-----------------------------
 To specify which container is used to write all embedded resources to, send the header **X-TIKA-AZURE-CONTAINER** along with your azure-unpack query. 
 
-####Azure Blob Target Container Directory
+Azure Blob Target Container Directory
+-------------------------------------
 To specify which container directory to write all embedded resources to, send the header **X-TIKA-AZURE-CONTAINER-DIRECTORY** along with your azure-unpack query. 
 
-####Azure Blob Metadata
-Our implementation supports adding blob metadata to each embedded resource. To your azure-unpack request, any header with the prefix  **X-TIKA-AZURE-META-** will end up in the user-defined blob properties. 
-Refer to the official documentation for limitations 
-[https://docs.microsoft.com/en-us/azure/storage/blobs/storage-blob-properties-metadata?tabs=dotnet](Azure Blob Metadata)
+Azure Blob Metadata
+-------------------
+Our implementation supports adding blob metadata to each embedded resource. To your azure-unpack request, any header with the prefix  **X-TIKA-AZURE-META-** will end up in the user-defined blob properties.
 
-####Usage
+Refer to the official documentation for limitations 
+https://docs.microsoft.com/en-us/azure/storage/blobs/storage-blob-properties-metadata?tabs=dotnet
+
+Azure Unpacker Usage
+--------------------
 
 - Example 1
 
