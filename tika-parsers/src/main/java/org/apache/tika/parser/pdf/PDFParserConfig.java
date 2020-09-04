@@ -158,16 +158,23 @@ public class PDFParserConfig implements Serializable {
 
     private boolean detectAngles = false;
 
+    /* region puthurr */
+
     // puthurr : some single page PDF are actual scanned image but different scanners
     // may create graphics or separate the image from the text themselves.
     // This flag will convert the single page PDF into a single image. regardless of embedded images.
     private boolean singlePagePDFAsImage = false;
-
-    // puthurr : striped-scanned images
+    // striped-scanned images
     // Old PDF writer could output a scan page by striping the image into multiple streams.
+    // We want to avoid outputting too many useless images in that case.
     private boolean stripedImagesHandling = false;
-
+    // Default : an Array of 3 Streams in a page will force the conversion to an image.
     private int stripedImagesThreshold = 3;
+    // Graphics check or not
+    private boolean graphicsToImage = false;
+    // If we check for Graphics objects : default threshold = we see one image and one curve.
+    private int graphicsToImageThreshold = 100001;
+    /* end region puthurr */
 
     public PDFParserConfig() {
         init(this.getClass().getResourceAsStream("PDFParser.properties"));
@@ -605,36 +612,72 @@ public class PDFParserConfig implements Serializable {
     }
 
 
+    /* region PUTHURR */
+
     /**
-     *
-     * PUTHURR SECTION
-     *
+     * @return PDF with a single page could be extracted as one rendered-page image
      */
-    // PDF with a single page could be extracted as one rendered-page image
     public boolean getSinglePagePDFAsImage() {
         return singlePagePDFAsImage;
     }
 
+    /**
+     * @param singlePagePDFAsImage
+     */
     public void setSinglePagePDFAsImage(boolean singlePagePDFAsImage) {
         this.singlePagePDFAsImage = singlePagePDFAsImage;
     }
-    // striped images handling in a page
+
+    /**
+     * @return striped images handling in a page
+     */
     public boolean getStripedImagesHandling() {
         return stripedImagesHandling;
     }
-
+    /**
+     * @param stripedImagesHandling
+     */
     public void setStripedImagesHandling(boolean stripedImagesHandling) {
         this.stripedImagesHandling = stripedImagesHandling;
     }
-
+    /**
+     * @return Number of Streams triggering the page to be converted to an image
+     */
     public int getStripedImagesThreshold() {
         return stripedImagesThreshold;
     }
-
+    /**
+     * @param stripedImagesThreshold
+     */
     public void setStripedImagesThreshold(int stripedImagesThreshold) {
         this.stripedImagesThreshold = stripedImagesThreshold;
     }
+    /**
+     * @return Check for Graphics elements in a page to convert it to an image or not
+     */
+    public boolean getGraphicsToImage() {
+        return graphicsToImage;
+    }
+    /**
+     * @param graphicsToImage
+     */
+    public void setGraphicsToImage(boolean graphicsToImage) {
+        this.graphicsToImage = graphicsToImage;
+    }
+    /**
+     * @return how many images and graphics we saw in that page
+     */
+    public int getGraphicsToImageThreshold() {
+        return graphicsToImageThreshold;
+    }
+    /**
+     * @param graphicsToImageThreshold
+     */
+    public void setGraphicsToImageThreshold(int graphicsToImageThreshold) {
+        this.graphicsToImageThreshold = graphicsToImageThreshold;
+    }
 
+    /* end section PUTHURR */
 
     private boolean getBooleanProp(String p, boolean defaultMissing) {
         if (p == null) {
@@ -899,6 +942,8 @@ public class PDFParserConfig implements Serializable {
         if (getSinglePagePDFAsImage() != (config.getSinglePagePDFAsImage())) return false;
         if (getStripedImagesHandling() != (config.getStripedImagesHandling())) return false;
         if (getStripedImagesThreshold() != (config.getStripedImagesThreshold())) return false;
+        if (getGraphicsToImage() != (config.getGraphicsToImage())) return false;
+        if (getGraphicsToImageThreshold()!= (config.getGraphicsToImageThreshold())) return false;
 
         return getMaxMainMemoryBytes() == config.getMaxMainMemoryBytes();
     }
@@ -929,6 +974,8 @@ public class PDFParserConfig implements Serializable {
         result = 31 * result + (getSinglePagePDFAsImage()? 1 : 0);
         result = 31 * result + (getStripedImagesHandling()? 1 : 0);
         result = 31 * result + getStripedImagesThreshold();
+        result = 31 * result + (getGraphicsToImage()? 1 : 0);
+        result = 31 * result + getGraphicsToImageThreshold();
         return result;
     }
 
@@ -959,6 +1006,8 @@ public class PDFParserConfig implements Serializable {
                 ", singlePagePDFAsImage=" + singlePagePDFAsImage +
                 ", stripedImagesHandling=" + stripedImagesHandling +
                 ", stripedImagesThreshold=" + stripedImagesThreshold +
+                ", graphicsToImage=" + graphicsToImage +
+                ", graphicsToImageThreshold=" + graphicsToImageThreshold +
                 '}';
     }
 }

@@ -95,6 +95,9 @@ public class ImageGraphicsEngine extends PDFGraphicsStreamEngine {
     private final XHTMLContentHandler xhtml;
     private final ParseContext parseContext;
 
+    private boolean checkForGraphics = false ;
+    private int graphicsPresence = 0 ;
+
     //TODO: this is an embarrassment of an initializer...fix
     protected ImageGraphicsEngine(PDPage page, EmbeddedDocumentExtractor embeddedDocumentExtractor,
                                   PDFParserConfig pdfParserConfig, Map<COSStream, Integer> processedInlineImages,
@@ -110,7 +113,30 @@ public class ImageGraphicsEngine extends PDFGraphicsStreamEngine {
         this.parseContext = parseContext;
     }
 
-    void run() throws IOException {
+    /**
+     * @return integer representing the presence of certain Graphical objects
+     * @throws IOException
+     */
+    public int checkForGraphicsRun() throws IOException {
+        setCheckForGraphics(true);
+        run();
+        return graphicsPresence;
+    }
+
+    /**
+     * Extract all Images from a PDF Page
+     * @throws IOException
+     */
+    public void imagesExtractionRun() throws IOException {
+        graphicsPresence=0;
+        setCheckForGraphics(false);
+        run();
+    }
+
+    /**
+     * @throws IOException
+     */
+    private void run() throws IOException {
         PDPage page = getPage();
 
         //TODO: is there a better way to do this rather than reprocessing the page
@@ -146,6 +172,12 @@ public class ImageGraphicsEngine extends PDFGraphicsStreamEngine {
 
     @Override
     public void drawImage(PDImage pdImage) throws IOException {
+        if (isCheckForGraphics())
+        {
+            graphicsPresence+=1;
+            return ;
+        }
+
         int imageNumber = 0;
         if (pdImage instanceof PDImageXObject) {
             if (pdImage.isStencil()) {
@@ -180,7 +212,7 @@ public class ImageGraphicsEngine extends PDFGraphicsStreamEngine {
     @Override
     public void appendRectangle(Point2D p0, Point2D p1, Point2D p2, Point2D p3)
             throws IOException {
-
+        graphicsPresence+=10000;
     }
 
     @Override
@@ -201,7 +233,8 @@ public class ImageGraphicsEngine extends PDFGraphicsStreamEngine {
     @Override
     public void curveTo(float x1, float y1, float x2, float y2, float x3, float y3)
             throws IOException {
-
+        // A Curve could be considered as a graphical element used to annotate an image.
+        graphicsPresence+=100000;
     }
 
     @Override
@@ -479,5 +512,13 @@ public class ImageGraphicsEngine extends PDFGraphicsStreamEngine {
             return ximg.getMask() != null || ximg.getSoftMask() != null;
         }
         return false;
+    }
+
+    public boolean isCheckForGraphics() {
+        return checkForGraphics;
+    }
+
+    public void setCheckForGraphics(boolean checkForGraphics) {
+        this.checkForGraphics = checkForGraphics;
     }
 }

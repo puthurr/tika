@@ -141,31 +141,7 @@ class PDF2XHTML extends AbstractPDF2XHTML {
             writeParagraphEnd();
             try
             {
-                boolean convertPageToImage = false;
-
-                // @user puthurr - striped-scanned image
-                if ( page.hasContents() && config.getStripedImagesHandling() )
-                {
-                    // Count how many Streams we have.
-                    int counter = 0;
-                    for (Iterator<PDStream> it = page.getContentStreams(); it.hasNext(); ) {
-                        PDStream i = it.next();
-                        counter++;
-                    }
-                    // striped-scanned images usually have an Array of Streams instead of a single COSStream
-                    if ( counter > config.getStripedImagesThreshold())
-                    {
-                        convertPageToImage = true;
-                    }
-                }
-
-                if ( (config.getSinglePagePDFAsImage() && getTotalPagesCount() == 1) || convertPageToImage )
-                {
-                    processPageAsImage(page);
-                }
-                else {
-                    extractImages(page);
-                }
+                extractImages(page);
             } catch (IOException e) {
                 handleCatchableIOE(e);
             }
@@ -198,6 +174,13 @@ class PDF2XHTML extends AbstractPDF2XHTML {
         return null;
     }
 
+    /**
+     * PUTHURR : Method to convert a page into an image. Using PDFBOX renderImageWithDPI
+     * Resulting image is added as an embedded object.
+     * @param page
+     * @throws SAXException
+     * @throws IOException
+     */
     protected void processPageAsImage(PDPage page) throws SAXException, IOException {
         PDFRenderer renderer = new PDFRenderer(pdDocument);
         int dpi = config.getOcrDPI();
@@ -255,14 +238,65 @@ class PDF2XHTML extends AbstractPDF2XHTML {
     }
 
 
+    /**
+     * Extract Embedded/Inline Images if configured to do so.
+     *
+     * @param page
+     * @throws SAXException
+     * @throws IOException
+     */
     private void extractImages(PDPage page) throws SAXException, IOException {
         if (config.getExtractInlineImages() == false) {
             return;
         }
 
+        boolean convertPageToImage = false;
+
+        // puthurr - striped-scanned images ( single image is split into multiple streams in the PDF)
+        if ( page.hasContents() && config.getStripedImagesHandling() )
+        {
+            // Count how many Streams we have.
+            int counter = 0;
+            for (Iterator<PDStream> it = page.getContentStreams(); it.hasNext(); ) {
+                PDStream i = it.next();
+                counter++;
+            }
+            // striped-scanned images usually have an Array of Streams instead of a single COSStream
+            if ( counter > config.getStripedImagesThreshold())
+            {
+                convertPageToImage = true;
+            }
+        }
+
+        // puthurr - Our project is focused on Image, A single page PDF is forced into an image covering all our base
+        // in terms of graphics, weird PDF construction etc.
+        if ( (config.getSinglePagePDFAsImage() && getTotalPagesCount() == 1) || convertPageToImage )
+        {
+            processPageAsImage(page);
+            return;
+        }
+
+        // Create a Graphics Engine
         ImageGraphicsEngine engine = new ImageGraphicsEngine(page, embeddedDocumentExtractor,
                 config, processedInlineImages, inlineImageCounter, xhtml, metadata, context);
-        engine.run();
+
+        // puthurr - when PDF page contains Graphics like curve, stroke etc. annotating any background image
+        // they should be considered part of the extracted image.
+        if (config.getGraphicsToImage())
+        {
+            int result = engine.checkForGraphicsRun();
+
+            if ( result > config.getGraphicsToImageThreshold())
+            {
+                // puthurr - not taking any risk of losing graphical annotation, we treat the entire page as a single image
+                processPageAsImage(page);
+                return;
+            }
+        }
+
+        // no presence of graphics on top of images, we can carry on as usual.
+        engine.imagesExtractionRun();
+
         List<IOException> engineExceptions = engine.getExceptions();
         if (engineExceptions.size() > 0) {
             IOException first = engineExceptions.remove(0);
@@ -272,146 +306,6 @@ class PDF2XHTML extends AbstractPDF2XHTML {
             throw first;
         }
     }
-
-//    private void extractImages(PDResources resources, Set<COSBase> seenThisPage) throws SAXException, IOException {
-//        if (resources == null || config.getExtractInlineImages() == false) {
-//            return;
-//        }
-//        for (COSName name : resources.getXObjectNames()) {
-//            PDXObject object = null;
-//            try {
-//                object = resources.getXObject(name);
-//            } catch (MissingImageReaderException e) {
-//                EmbeddedDocumentUtil.recordException(e, metadata);
-//                continue;
-//            } catch (IOException e) {
-//                EmbeddedDocumentUtil.recordEmbeddedStreamException(e, metadata);
-//                continue;
-//            }
-//            processImageObject(object, seenThisPage);
-//        }
-//    }
-
-//    private void processImageObject(PDXObject object, Set<COSBase> seenThisPage) throws SAXException, IOException {
-//        if (object == null) {
-//            return;
-//        }
-//        COSStream cosStream = object.getCOSObject();
-//        if (seenThisPage.contains(cosStream)) {
-//            //avoid infinite recursion TIKA-1742
-//            return;
-//        }
-//        seenThisPage.add(cosStream);
-//
-//        if (object instanceof PDFormXObject) {
-//            extractImages(((PDFormXObject) object).getResources(), seenThisPage);
-//        } else if (object instanceof PDImageXObject) {
-//
-//            PDImageXObject image = (PDImageXObject) object;
-//
-//            Metadata embeddedMetadata = new Metadata();
-//            String extension = image.getSuffix();
-//            embeddedMetadata.set(Metadata.CONTENT_TYPE,getContentTypeFromExtension(extension));
-//
-//            Integer imageNumber = processedInlineImages.get(cosStream);
-//            if (imageNumber == null) {
-//                imageNumber = inlineImageCounter.incrementAndGet();
-//            }
-//            String fileName = String.format(Locale.ROOT,"image%05d", imageNumber) + "." + extension;
-//            embeddedMetadata.set(Metadata.RESOURCE_NAME_KEY, fileName);
-//
-//            // Output the img tag
-//            AttributesImpl attr = new AttributesImpl();
-//            attr.addAttribute("", "src", "src", "CDATA", fileName);
-//            attr.addAttribute("", "alt", "alt", "CDATA", fileName);
-//            attr.addAttribute("", "class", "class", "CDATA", "embedded");
-//            //Adding extra attributes to the image tag for consistency
-//            try {
-//                attr.addAttribute("", "id", "id", "CDATA", String.format(Locale.ROOT,"%05d", imageNumber));
-//                attr.addAttribute("", "contenttype", "contenttype", "CDATA", embeddedMetadata.get(Metadata.CONTENT_TYPE));
-//                attr.addAttribute("", "width", "witdh", "CDATA", String.valueOf(image.getWidth()));
-//                attr.addAttribute("", "height", "height", "CDATA", String.valueOf(image.getHeight()));
-//            } catch (Exception e)
-//            {
-//            }
-//
-//            //Do we only want to process unique COSObject ids?
-//            //If so, have we already processed this one?
-//            if (config.getExtractUniqueInlineImagesOnly() == true) {
-//                if (processedInlineImages.containsKey(cosStream)) {
-//                    return;
-//                }
-//                processedInlineImages.put(cosStream, imageNumber);
-//            }
-//
-//            embeddedMetadata.set(TikaCoreProperties.EMBEDDED_RESOURCE_TYPE,
-//                    TikaCoreProperties.EmbeddedResourceType.INLINE.toString());
-//
-//            if (embeddedDocumentExtractor.shouldParseEmbedded(embeddedMetadata)) {
-//                ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-//                try {
-//                    //extract the metadata contained outside of the image
-//                    PDMetadataExtractor.extract(image.getMetadata(),
-//                            embeddedMetadata, context);
-//                    try {
-//                        writeToBuffer(image, extension, buffer);
-//                        // Get the size of the image from the OutputStream for consistency
-//                        attr.addAttribute("", "size", "size", "CDATA", String.valueOf(buffer.size()));
-//                    } catch (IOException e) {
-//                        EmbeddedDocumentUtil.recordEmbeddedStreamException(e, metadata);
-//                        return;
-//                    }
-//                    try (InputStream embeddedIs = TikaInputStream.get(buffer.toByteArray())) {
-//                        embeddedDocumentExtractor.parseEmbedded(
-//                                embeddedIs,
-//                                new EmbeddedContentHandler(xhtml),
-//                                embeddedMetadata, false);
-//                    }
-//                } catch (IOException e) {
-//                    handleCatchableIOE(e);
-//                }
-//            }
-//
-//            xhtml.startElement("img", attr);
-//            xhtml.endElement("img");
-//            xhtml.newline();
-//        }
-//    }
-
-    //nearly directly copied from PDFBox ExtractImages
-//    private void writeToBuffer(PDImageXObject pdImage, String suffix, OutputStream out)
-//            throws IOException {
-//
-//        BufferedImage image = pdImage.getImage();
-//        if (image != null) {
-//            if ("jpg".equals(suffix)) {
-//                String colorSpaceName = pdImage.getColorSpace().getName();
-//                //TODO: figure out if we want directJPEG as a configuration
-//                //previously: if (directJPeg || PDDeviceGray....
-//                if (PDDeviceGray.INSTANCE.getName().equals(colorSpaceName) ||
-//                        PDDeviceRGB.INSTANCE.getName().equals(colorSpaceName)) {
-//                    // RGB or Gray colorspace: get and write the unmodifiedJPEG stream
-//                    InputStream data = pdImage.getStream().createInputStream(JPEG);
-//                    org.apache.pdfbox.io.IOUtils.copy(data, out);
-//                    org.apache.pdfbox.io.IOUtils.closeQuietly(data);
-//                } else {
-//                    // for CMYK and other "unusual" colorspaces, the JPEG will be converted
-//                    ImageIOUtil.writeImage(image, suffix, out);
-//                }
-//            } else if ("jp2".equals(suffix) || "jpx".equals(suffix)) {
-//                InputStream data = pdImage.createInputStream(JP2);
-//                org.apache.pdfbox.io.IOUtils.copy(data, out);
-//                org.apache.pdfbox.io.IOUtils.closeQuietly(data);
-//            } else if ("jb2".equals(suffix)) {
-//                InputStream data = pdImage.createInputStream(JB2);
-//                org.apache.pdfbox.io.IOUtils.copy(data, out);
-//                org.apache.pdfbox.io.IOUtils.closeQuietly(data);
-//            } else{
-//                ImageIOUtil.writeImage(image, suffix, out);
-//            }
-//        }
-//        out.flush();
-//    }
 
     @Override
     protected void writeParagraphStart() throws IOException {
