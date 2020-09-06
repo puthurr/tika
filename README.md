@@ -5,19 +5,81 @@ Apache Tika(TM) is a toolkit for detecting and extracting metadata and structure
 
 Apache Tika, Tika, Apache, the Apache feather logo, and the Apache Tika project logo are trademarks of The Apache Software Foundation.
 
-Why our version ?
+Why this version ?
 -----------------
 
-For an internal project, we require the HTML to contain more informations around embedded images. For instance the embedded images links for PowerPoint were missing. The images links for PDF are there.
+For a Knowledge mining project, my team were looking to have a consistent representation of embedded images in XHTML output. 
+To give you an example, the embedded images links for PowerPoint were missing but the images links for PDF are there.
 
-This version is trying to harmonize the way embedded images are showing in the XHTML in a nutshell.
-
-Once stabilized our plan is to propose our changes to the Apache Tika community.
+This version is trying to harmonize the way embedded images are showing up in the XHTML in a nutshell.Once stabilized our plan is to propose our changes to the Apache Tika community.
 
 Contact : puthurr@gmail.com
 
-Getting Started
----------------
+This version' features
+----------------------
+####XHTML Tags
+
+- PDF Page tags contains the page id.
+```<div class="page" id="2">```
+- PPTX : added a slide div with slide id and title (when available)
+```<div class="slide" id="1">```
+```<div class="slide" id="2" title="Oil Production">```
+- PPT/PPTX slide-notes div renamed to slide-notes-content for consistency 
+```<div class="slide-notes-content">```
+
+####Embedded Images XHTML tags
+- Numbering 5 digits with padding left 0. 
+- Representation in the XHTML for Office and PDF documents. 
+
+**For PDF** 
+- Original 
+```
+<img src="embedded:image0.jpg" alt="image0.jpg"/>
+```
+- Our version
+```
+<img src="image00000.jpg" alt="image00000.jpg" class="embedded" id="00000" 
+    contenttype="image/jpeg" witdh="1491" height="2109" size="775380"/>
+```
+**For PowerPoint**
+- Original 
+```
+<div class="embedded" id="slide6_rId3" />
+```
+- Our version 
+```
+<img class="embedded" id="slide5_rId4" contenttype="image/x-wmf" src="image00005.wmf" alt="image5.wmf" 
+title="Picture 4" witdh="120" height="172" size="7092"/>
+```
+
+Some img attributes aren't HTML compliant we know. This above output is close to provide an HTML preview of any document. 
+
+**Benefits**: we can scan big images, specific type of images, size in bytes or dimensions. 
+
+####PDF Parser new configurations
+
+The new PDF parser configuration are all related to Image extraction thus they will take effects on calling the unpack endpoint. 
+It means they will also requires the **extractInlineImages** option to be set to true as well. 
+
+- **SinglePagePDFAsImage** : this instructs to convert a PDF with a single page to an image.
+- **GraphicsToImage** : a page with graphics objets could be better represented with an image. 
+- **GraphicsToImageThreshold** : represents how much graphics objects we need to convert the page into an image. 
+
+To leverage those features add the corresponding headers prefixed by X-Tika-PDF.
+
+```--header "X-Tika-PDFextractInlineImages:true" --header "X-Tika-PDFSinglePagePDFAsImage:true"``` 
+
+####Azure Blob Storage support for unpacking (tika-server)
+The unpack feature produces an archive response which you can expand and process. 
+For documents containing a lot of high-res images, the unpack will hit some limitations like OOM.
+To avoid hitting those potential limitations and support cloud storage in general, I implemented an azure-unpack resource to write any embedded resource directly into an Azure Storage container and directory. 
+
+**Benefits** : no archive client expansion, network bandwidth reduced, handles documents with a lot of images and more.  
+
+See [tika-server](/tika-server) for more details on how to use that feature. 
+
+TIKA: Getting Started
+---------------------
 
 Pre-built binaries of Apache Tika standalone applications are available
 from https://tika.apache.org/download.html . Pre-built binaries of all the
@@ -32,8 +94,8 @@ The build consists of a number of components, including a standalone runnable ja
 
     java -jar tika-app/target/tika-app-*.jar --help
     
-License (see also LICENSE.txt)
-------------------------------
+TIKA : License (see also LICENSE.txt)
+------------------------------------
 
 Collective work: Copyright 2011 The Apache Software Foundation.
 
@@ -45,8 +107,8 @@ Unless required by applicable law or agreed to in writing, software distributed 
 
 Apache Tika includes a number of subcomponents with separate copyright notices and license terms. Your use of these subcomponents is subject to the terms and conditions of the licenses listed in the LICENSE.txt file.
 
-Export control
---------------
+TIKA : Export control
+---------------------
 
 This distribution includes cryptographic software.  The country in which you currently reside may have restrictions on the import, possession, use, and/or re-export to another country, of encryption software.  BEFORE using any encryption software, please  check your country's laws, regulations and policies concerning the import, possession, or use, and re-export of encryption software, to  see if this is permitted.  See <http://www.wassenaar.org/> for more information.
 
