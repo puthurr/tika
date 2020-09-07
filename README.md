@@ -17,7 +17,7 @@ Contact : puthurr@gmail.com
 
 This version' features
 ----------------------
-####XHTML Tags
+#### XHTML Tags
 
 - PDF Page tags contains the page id.
 ```<div class="page" id="2">```
@@ -27,7 +27,7 @@ This version' features
 - PPT/PPTX slide-notes div renamed to slide-notes-content for consistency 
 ```<div class="slide-notes-content">```
 
-####Embedded Images XHTML tags
+#### Embedded Images XHTML tags
 - Numbering 5 digits with padding left 0. 
 - Representation in the XHTML for Office and PDF documents. 
 
@@ -56,25 +56,27 @@ Some img attributes aren't HTML compliant we know. This above output is close to
 
 **Benefits**: we can scan big images, specific type of images, size in bytes or dimensions. 
 
-####PDF Parser new configurations
+#### PDF Parser new configurations
 
 The new PDF parser configuration are all related to Image extraction thus they will take effects on calling the unpack endpoint. 
 It means they will also requires the **extractInlineImages** option to be set to true as well. 
 
 - **SinglePagePDFAsImage** : this instructs to convert a PDF with a single page to an image.
+- **StripedImagesHandling** : this instructs to convert a PDF page into an image. Some PDF writers tend to stripe an image into multiple contents streams (Array) 
+- **StripedImagesThreshold** : minimum number of contents streams to convert the page into an image
 - **GraphicsToImage** : a page with graphics objets could be better represented with an image. 
-- **GraphicsToImageThreshold** : represents how much graphics objects we need to convert the page into an image. 
+- **GraphicsToImageThreshold** : minimum number of graphics objects to convert the page into an image. 
 
 To leverage those features add the corresponding headers prefixed by X-Tika-PDF.
 
 ```--header "X-Tika-PDFextractInlineImages:true" --header "X-Tika-PDFSinglePagePDFAsImage:true"``` 
 
-####Azure Blob Storage support for unpacking (tika-server)
+#### Azure Blob Storage support for unpacking (tika-server)
 The unpack feature produces an archive response which you can expand and process. 
-For documents containing a lot of high-res images, the unpack will hit some limitations like OOM.
-To avoid hitting those potential limitations and support cloud storage in general, I implemented an azure-unpack resource to write any embedded resource directly into an Azure Storage container and directory. 
+For documents containing a lot of high-res images, the **unpack** will hit some limitations like OOM.
+To avoid hitting those potential limitations, support cloud storage and big-size documents, I implemented an azure-unpack resource to write any embedded resource directly into an Azure Storage container and directory. 
 
-**Benefits** : no archive client expansion, network bandwidth reduced, handles documents with a lot of images and more.  
+**Benefits** : no archive client expansion, network bandwidth reduced, handles documents with a lot of high-res images and more.  
 
 See [tika-server](/tika-server) for more details on how to use that feature. 
 
