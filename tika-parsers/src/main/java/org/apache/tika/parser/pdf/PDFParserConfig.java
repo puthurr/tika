@@ -160,20 +160,29 @@ public class PDFParserConfig implements Serializable {
 
     /* region puthurr */
 
-    // puthurr : some single page PDF are actual scanned image but different scanners
+    // Extract all PDF pages as images.
+    private boolean allPagesAsImages = false;
+
+    // Some single page PDF are actual scanned image but different scanners
     // may create graphics or separate the image from the text themselves.
     // This flag will convert the single page PDF into a single image. regardless of embedded images.
     private boolean singlePagePDFAsImage = false;
+
     // striped-scanned images
     // Old PDF writer could output a scan page by striping the image into multiple streams.
     // We want to avoid outputting too many useless images in that case.
     private boolean stripedImagesHandling = false;
     // Default : an Array of 3 Streams in a page will force the conversion to an image.
     private int stripedImagesThreshold = 3;
+
+    // Graphical objects can overlay background images (i.e. circle, highlights). This flag would allow to convert
+    // the entire page as image to retain all graphical elements.
     // Graphics check or not
     private boolean graphicsToImage = false;
     // If we check for Graphics objects : default threshold = we see one image and one curve.
     private int graphicsToImageThreshold = 100001;
+
+
     /* end region puthurr */
 
     public PDFParserConfig() {
@@ -615,6 +624,21 @@ public class PDFParserConfig implements Serializable {
     /* region PUTHURR */
 
     /**
+     * @return allPagesAsImages
+     */
+    public boolean getAllPagesAsImages() {
+        return allPagesAsImages;
+    }
+
+    /**
+     * Set the flag to extract all pages in a PDF as images.
+     * @param allPagesAsImages
+     */
+    public void setAllPagesAsImages(boolean allPagesAsImages) {
+        this.allPagesAsImages = allPagesAsImages;
+    }
+
+    /**
      * @return PDF with a single page could be extracted as one rendered-page image
      */
     public boolean getSinglePagePDFAsImage() {
@@ -939,6 +963,7 @@ public class PDFParserConfig implements Serializable {
         if (!getAccessChecker().equals(config.getAccessChecker())) return false;
 
         // PUTHURR
+        if (getAllPagesAsImages() != (config.getAllPagesAsImages())) return false;
         if (getSinglePagePDFAsImage() != (config.getSinglePagePDFAsImage())) return false;
         if (getStripedImagesHandling() != (config.getStripedImagesHandling())) return false;
         if (getStripedImagesThreshold() != (config.getStripedImagesThreshold())) return false;
@@ -971,6 +996,7 @@ public class PDFParserConfig implements Serializable {
         result = 31 * result + (getExtractActions() ? 1 : 0);
         result = 31 * result + Long.valueOf(getMaxMainMemoryBytes()).hashCode();
         // PUTHURR
+        result = 31 * result + (getAllPagesAsImages()? 1 : 0);
         result = 31 * result + (getSinglePagePDFAsImage()? 1 : 0);
         result = 31 * result + (getStripedImagesHandling()? 1 : 0);
         result = 31 * result + getStripedImagesThreshold();
@@ -1003,6 +1029,7 @@ public class PDFParserConfig implements Serializable {
                 ", catchIntermediateIOExceptions=" + catchIntermediateIOExceptions +
                 ", maxMainMemoryBytes=" + maxMainMemoryBytes +
                 // puthurr
+                ", allPagesAsImages=" + allPagesAsImages +
                 ", singlePagePDFAsImage=" + singlePagePDFAsImage +
                 ", stripedImagesHandling=" + stripedImagesHandling +
                 ", stripedImagesThreshold=" + stripedImagesThreshold +

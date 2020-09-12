@@ -61,6 +61,33 @@ public class UnpackerResourcePDFTest extends CXFTestBase {
     }
 
     @Test
+    public void testPDF1AllPagesAsImagesTrue() throws Exception {
+        Response response = WebClient.create(endPoint + UNPACKER_PATH)
+                .header(TikaResource.X_TIKA_PDF_HEADER_PREFIX+"ExtractInlineImages", "true")
+                .header(TikaResource.X_TIKA_PDF_HEADER_PREFIX+"allPagesAsImages", "true")
+                .accept("application/zip")
+                .put(ClassLoader.getSystemResourceAsStream(PDF1));
+        Map<String, String> results = readZipArchive((InputStream)response.getEntity());
+        assertTrue((results.size()>30));
+        assertTrue(results.containsKey("image00019.png"));
+        assertTrue(results.containsKey("image00022.png"));
+        assertTrue(results.containsKey("image00033.png"));
+    }
+
+    @Test
+    public void testPDF1AllPagesAsImagesFalse() throws Exception {
+        Response response = WebClient.create(endPoint + UNPACKER_PATH)
+                .header(TikaResource.X_TIKA_PDF_HEADER_PREFIX+"ExtractInlineImages", "true")
+                .header(TikaResource.X_TIKA_PDF_HEADER_PREFIX+"allPagesAsImages", "false")
+                .accept("application/zip")
+                .put(ClassLoader.getSystemResourceAsStream(PDF1));
+        Map<String, String> results = readZipArchive((InputStream)response.getEntity());
+        assertTrue((results.size()<30));
+        assertTrue(results.containsKey("image00019.tif"));
+        assertTrue(results.containsKey("image00022.tif"));
+    }
+
+    @Test
     public void testPDF1GraphicsToImageTrue() throws Exception {
         Response response = WebClient.create(endPoint + UNPACKER_PATH)
                 .header(TikaResource.X_TIKA_PDF_HEADER_PREFIX+"ExtractInlineImages", "true")

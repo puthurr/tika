@@ -250,7 +250,9 @@ class PDF2XHTML extends AbstractPDF2XHTML {
             return;
         }
 
-        boolean convertPageToImage = false;
+        // Set a flag to convert the page to image or not.
+        // Initialized with the config parameter allPagesAsImages.
+        boolean convertPageToImage = config.getAllPagesAsImages();
 
         // puthurr - striped-scanned images ( single image is split into multiple streams in the PDF)
         if ( page.hasContents() && config.getStripedImagesHandling() )
