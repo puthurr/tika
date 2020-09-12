@@ -60,16 +60,16 @@ Some img attributes aren't HTML compliant we know. This above output is close to
 
 The new PDF parser configuration are all related to Image extraction thus they will take effects on calling the unpack endpoint. 
 It means they will also requires the **extractInlineImages** option to be set to true as well. 
-
-- **SinglePagePDFAsImage** : this instructs to convert a PDF with a single page to an image.
-- **StripedImagesHandling** : this instructs to convert a PDF page into an image. Some PDF writers tend to stripe an image into multiple contents streams (Array) 
-- **StripedImagesThreshold** : minimum number of contents streams to convert the page into an image
-- **GraphicsToImage** : a page with graphics objets could be better represented with an image. 
-- **GraphicsToImageThreshold** : minimum number of graphics objects to convert the page into an image. 
+- **allPagesAsImages** : this instructs to convert any PDF page as image.
+- **singlePagePDFAsImage** : this instructs to convert a single page PDF to an image.
+- **stripedImagesHandling** : this instructs to convert a PDF page into an image based on the number of Contents Streams. Some PDF writers tend to stripe an image into multiple contents streams (Array) 
+- **stripedImagesThreshold** : minimum number of contents streams to convert the page into an image.
+- **graphicsToImage** : a page with graphics objets could be better represented with an image. 
+- **graphicsToImageThreshold** : minimum number of graphics objects to convert the page into an image. 
 
 To leverage those features add the corresponding headers prefixed by X-Tika-PDF.
 
-```--header "X-Tika-PDFextractInlineImages:true" --header "X-Tika-PDFSinglePagePDFAsImage:true"``` 
+```--header "X-Tika-PDFextractInlineImages:true" --header "X-Tika-PDFsinglePagePDFAsImage:true"``` 
 
 #### Azure Blob Storage support for unpacking (tika-server)
 The unpack feature produces an archive response which you can expand and process. 
