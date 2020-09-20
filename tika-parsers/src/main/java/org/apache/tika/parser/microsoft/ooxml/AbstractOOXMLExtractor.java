@@ -41,6 +41,7 @@ import org.apache.poi.poifs.filesystem.DirectoryNode;
 import org.apache.poi.poifs.filesystem.Ole10Native;
 import org.apache.poi.poifs.filesystem.Ole10NativeException;
 import org.apache.poi.poifs.filesystem.POIFSFileSystem;
+import org.apache.poi.ss.util.ImageUtils;
 import org.apache.poi.xssf.usermodel.XSSFRelation;
 import org.apache.poi.xwpf.usermodel.XWPFRelation;
 import org.apache.tika.exception.TikaException;
@@ -365,15 +366,23 @@ public abstract class AbstractOOXMLExtractor implements OOXMLExtractor {
         }
     }
 
-    protected String getImageResourceName(String inputname)
+    protected String getImageResourceName(String inputname, String contentType)
     {
         String name = getJustFileName(inputname);
         
         String partstem = name.replaceAll("[0-9]", "");
         int partnumber = Integer.parseInt(name.replaceAll("[^0-9]", ""));
         String extension = FilenameUtils.getExtension(inputname);
-        
-        return (partstem+String.format(Locale.ROOT,"%05d", partnumber) + "." + extension);
+
+        // PUTHURR
+//        return (partstem+String.format(Locale.ROOT,"%05d", partnumber) + "." + extension);
+        if ( contentType.startsWith("image"))
+        {
+            return (config.getImageFilename(0, partnumber, extension));
+        }
+        else {
+            return (config.getResourceFilename(partstem, 0, partnumber, extension));
+        }
     }
     
     /**
@@ -382,12 +391,10 @@ public abstract class AbstractOOXMLExtractor implements OOXMLExtractor {
     protected void handleEmbeddedFile(PackagePart part, ContentHandler handler, String rel)
             throws SAXException, IOException {
         Metadata metadata = new Metadata();
-        metadata.set(Metadata.EMBEDDED_RELATIONSHIP_ID, rel);       
-        metadata.set(Metadata.RESOURCE_NAME_KEY,getImageResourceName(part.getPartName().getName()));
-
+        metadata.set(Metadata.EMBEDDED_RELATIONSHIP_ID, rel);
+        metadata.set(Metadata.RESOURCE_NAME_KEY,getImageResourceName(part.getPartName().getName(),part.getContentType()));
         // Get the content type
-        metadata.set(
-                Metadata.CONTENT_TYPE, part.getContentType());
+        metadata.set(Metadata.CONTENT_TYPE, part.getContentType());
 
         // Call the recursing handler
         if (embeddedExtractor.shouldParseEmbedded(metadata)) {

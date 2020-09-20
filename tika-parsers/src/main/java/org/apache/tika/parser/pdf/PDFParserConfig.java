@@ -25,6 +25,7 @@ import java.util.Properties;
 import org.apache.pdfbox.rendering.ImageType;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.apache.tika.config.Field;
+import org.apache.tika.parser.AbstractParserConfig;
 
 /**
  * Config for PDFParser.
@@ -43,7 +44,7 @@ import org.apache.tika.config.Field;
  * Or, in tika-app-x.x.jar or tika-parsers-x.x.jar:
  * org/apache/tika/parser/pdf
  */
-public class PDFParserConfig implements Serializable {
+public class PDFParserConfig extends AbstractParserConfig implements Serializable {
 
     public enum OCR_STRATEGY {
         AUTO,

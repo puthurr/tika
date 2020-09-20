@@ -539,10 +539,12 @@ public class WordExtractor extends AbstractPOIFSExtractor {
         String extension = picture.suggestFileExtension();
         int pictureNumber = pictures.pictureNumber(picture);
 
+        // PUTHURR
         // Make up a name for the picture
         // There isn't one in the file, but we need to be able to reference
         //  the picture from the img tag and the embedded resource
-        String filename = String.format(Locale.ROOT,"image%05d", pictureNumber) + (extension.length() > 0 ? "." + extension : "");
+//        String filename = String.format(Locale.ROOT,"image%05d", pictureNumber) + (extension.length() > 0 ? "." + extension : "");
+        String filename = officeParserConfig.getImageFilename(0,pictureNumber,(extension.length() > 0 ? extension : ""));
 
         // Grab the mime type for the picture
         String mimeType = picture.getMimeType();
@@ -568,6 +570,7 @@ public class WordExtractor extends AbstractPOIFSExtractor {
 
         xhtml.startElement("img", attr);
         xhtml.endElement("img");
+        xhtml.newline();
 
         // Have we already output this one?
         // (Only expose each individual image once)

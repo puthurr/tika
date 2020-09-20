@@ -69,9 +69,9 @@ public class UnpackerResourcePDFTest extends CXFTestBase {
                 .put(ClassLoader.getSystemResourceAsStream(PDF1));
         Map<String, String> results = readZipArchive((InputStream)response.getEntity());
         assertTrue((results.size()>30));
-        assertTrue(results.containsKey("image00019.png"));
-        assertTrue(results.containsKey("image00022.png"));
-        assertTrue(results.containsKey("image00033.png"));
+        assertTrue(results.containsKey("image-00020-00019.png"));
+        assertTrue(results.containsKey("image-00023-00022.png"));
+        assertTrue(results.containsKey("image-00034-00033.png"));
     }
 
     @Test
@@ -83,8 +83,8 @@ public class UnpackerResourcePDFTest extends CXFTestBase {
                 .put(ClassLoader.getSystemResourceAsStream(PDF1));
         Map<String, String> results = readZipArchive((InputStream)response.getEntity());
         assertTrue((results.size()<30));
-        assertTrue(results.containsKey("image00019.tif"));
-        assertTrue(results.containsKey("image00022.tif"));
+        assertTrue(results.containsKey("image-00031-00019.tif"));
+        assertTrue(results.containsKey("image-00031-00022.tif"));
     }
 
     @Test
@@ -96,9 +96,9 @@ public class UnpackerResourcePDFTest extends CXFTestBase {
                 .put(ClassLoader.getSystemResourceAsStream(PDF1));
         Map<String, String> results = readZipArchive((InputStream)response.getEntity());
         assertTrue((results.size()>=25));
-        assertTrue(results.containsKey("image00003.png"));
-        assertTrue(results.containsKey("image00019.png"));
-        assertTrue(results.containsKey("image00024.png"));
+        assertTrue(results.containsKey("image-00004-00003.png"));
+        assertTrue(results.containsKey("image-00029-00019.png"));
+        assertTrue(results.containsKey("image-00032-00024.png"));
     }
     @Test
     public void testPDF1GraphicsToImageFalse() throws Exception {
@@ -109,9 +109,9 @@ public class UnpackerResourcePDFTest extends CXFTestBase {
                 .put(ClassLoader.getSystemResourceAsStream(PDF1));
         Map<String, String> results = readZipArchive((InputStream)response.getEntity());
         assertFalse((results.size()>=25));
-        assertTrue(results.containsKey("image00003.jpg"));
-        assertTrue(results.containsKey("image00019.tif"));
-        assertTrue(results.containsKey("image00022.tif"));
+        assertTrue(results.containsKey("image-00011-00003.jpg"));
+        assertTrue(results.containsKey("image-00031-00019.tif"));
+        assertTrue(results.containsKey("image-00031-00022.tif"));
     }
 
     @Test
@@ -124,7 +124,7 @@ public class UnpackerResourcePDFTest extends CXFTestBase {
         Map<String, String> results = readZipArchive((InputStream)response.getEntity());
         //All PDF pages are images...
         assertTrue((results.size()>=48));
-        assertTrue(results.containsKey("image00000.png"));
+        assertTrue(results.containsKey("image-00001-00000.png"));
     }
 
     @Test
@@ -137,8 +137,8 @@ public class UnpackerResourcePDFTest extends CXFTestBase {
                 .put(ClassLoader.getSystemResourceAsStream(PDF2));
         Map<String, String> results = readZipArchive((InputStream)response.getEntity());
         assertTrue((results.size()>=71));
-        assertTrue(results.containsKey("image00000.jpg"));
-        assertTrue(results.containsKey("image00009.jpg"));
+        assertTrue(results.containsKey("image-00001-00000.jpg"));
+        assertTrue(results.containsKey("image-00015-00009.jpg"));
     }
 
     @Test
@@ -149,9 +149,9 @@ public class UnpackerResourcePDFTest extends CXFTestBase {
                 .accept("application/zip")
                 .put(ClassLoader.getSystemResourceAsStream(PDF3));
         Map<String, String> results = readZipArchive((InputStream)response.getEntity());
-        assertTrue(results.containsKey("image00000.png"));
-        assertFalse(results.containsKey("image00001.jpg"));
-        assertFalse(results.containsKey("image00002.jpg"));
+        assertTrue(results.containsKey("image-00001-00000.png"));
+        assertFalse(results.containsKey("image-00001-00001.jpg"));
+        assertFalse(results.containsKey("image-00001-00002.jpg"));
     }
 
     @Test
@@ -162,8 +162,8 @@ public class UnpackerResourcePDFTest extends CXFTestBase {
                 .accept("application/zip")
                 .put(ClassLoader.getSystemResourceAsStream(PDF3));
         Map<String, String> results = readZipArchive((InputStream)response.getEntity());
-        assertTrue(results.containsKey("image00000.png"));
-        assertTrue(results.containsKey("image00001.jpg"));
-        assertTrue(results.containsKey("image00002.jpg"));
+        assertTrue(results.containsKey("image-00001-00000.png"));
+        assertTrue(results.containsKey("image-00001-00001.jpg"));
+        assertTrue(results.containsKey("image-00001-00002.jpg"));
     }
 }

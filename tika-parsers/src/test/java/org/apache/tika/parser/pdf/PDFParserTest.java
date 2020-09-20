@@ -563,7 +563,7 @@ public class PDFParserTest extends TikaTest {
 
         assertEquals(3, tracker.filenames.size());
         assertEquals(3, tracker.mediaTypes.size());
-        assertEquals("image00001.emf", tracker.filenames.get(0));
+        assertEquals("image-00000-00001.emf", tracker.filenames.get(0));
         assertNull(tracker.filenames.get(1));
         assertEquals("Test.docx", tracker.filenames.get(2));
         assertEquals(TYPE_EMF, tracker.mediaTypes.get(0));
@@ -659,7 +659,7 @@ public class PDFParserTest extends TikaTest {
 
         assertEquals(5, metadatas.size());
         assertNull(metadatas.get(0).get(Metadata.RESOURCE_NAME_KEY));
-        assertEquals("image00000.jpg", metadatas.get(1).get(Metadata.RESOURCE_NAME_KEY));
+        assertEquals("image-00001-00000.jpg", metadatas.get(1).get(Metadata.RESOURCE_NAME_KEY));
         assertEquals("Press Quality(1).joboptions", metadatas.get(3).get(Metadata.RESOURCE_NAME_KEY));
         assertEquals("Unit10.doc", metadatas.get(4).get(Metadata.RESOURCE_NAME_KEY));
         assertEquals(MediaType.image("jpeg").toString(), metadatas.get(1).get(Metadata.CONTENT_TYPE));
@@ -677,7 +677,6 @@ public class PDFParserTest extends TikaTest {
         config.setExtractUniqueInlineImagesOnly(false);
         context.set(PDFParserConfig.class, config);
 
-
         List<Metadata> metadatas = getRecursiveMetadata("testPDF_JBIG2.pdf", context);
         assertEquals(2, metadatas.size());
         assertContains("test images compressed using JBIG2", metadatas.get(0).get(RecursiveParserWrapper.TIKA_CONTENT));
@@ -691,7 +690,7 @@ public class PDFParserTest extends TikaTest {
         assertEquals("Invalid width.", "352", metadatas.get(1).get("width"));
         
         assertNull(metadatas.get(0).get(Metadata.RESOURCE_NAME_KEY));
-        assertEquals("image00000.jb2", 
+        assertEquals("image-00001-00000.jb2",
                 metadatas.get(1).get(Metadata.RESOURCE_NAME_KEY));
         assertEquals(MediaType.image("x-jbig2").toString(), 
                 metadatas.get(1).get(Metadata.CONTENT_TYPE));
@@ -947,7 +946,7 @@ public class PDFParserTest extends TikaTest {
         //regular attachment
         assertContains("<div source=\"attachment\" class=\"embedded\" id=\"Unit10.doc\" />", r.xml);
         //inline image
-        assertContains("<img src=\"image00001.tif\" alt=\"image00001.tif\" class=\"embedded\"", r.xml);
+        assertContains("<img src=\"image-00066-00001.tif\" alt=\"image-00066-00001.tif\" class=\"embedded\"", r.xml);
 
         //doc embedded inside an annotation
         r = getXML("testPDFFileEmbInAnnotation.pdf");

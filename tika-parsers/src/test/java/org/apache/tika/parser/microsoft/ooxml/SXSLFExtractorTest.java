@@ -640,7 +640,7 @@ public class SXSLFExtractorTest extends TikaTest {
         assertContains("smart1", content);
         assertContains("MyTitle", content);
 
-        assertEquals("/image00001.jpg",
+        assertEquals("/image-00000-00001.jpg",
                 metadataList.get(1).get(RecursiveParserWrapper.EMBEDDED_RESOURCE_PATH));
 
         assertEquals("/thumbnail.jpeg",

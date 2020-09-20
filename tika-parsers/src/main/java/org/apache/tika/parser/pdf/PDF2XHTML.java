@@ -19,10 +19,13 @@ package org.apache.tika.parser.pdf;
 import org.apache.pdfbox.cos.COSArray;
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.cos.COSStream;
+import org.apache.pdfbox.filter.MissingImageReaderException;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDStream;
+import org.apache.pdfbox.pdmodel.graphics.image.PDImage;
+import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.pdfbox.rendering.ImageType;
 import org.apache.pdfbox.rendering.PDFRenderer;
 import org.apache.pdfbox.text.PDFTextStripper;
@@ -153,26 +156,26 @@ class PDF2XHTML extends AbstractPDF2XHTML {
         }
     }
 
-    private String getContentTypeFromExtension (String extension)
-    {
-        if (extension == null || extension.equals("png")) {
-            extension = "png";
-            return  "image/png";
-        } else if (extension.equals("jpg") || extension.equals("jpeg")) {
-            return "image/jpeg";
-        } else if (extension.equals("tiff") || extension.equals("tif")) {
-            extension = "tiff";
-            return "image/tiff";
-        } else if (extension.equals("jpx")) {
-            return "image/jp2";
-        } else if (extension.equals("jb2")) {
-            return "image/x-jbig2";
-        } else {
-            //TODO: determine if we need to add more image types
-//                    throw new RuntimeException("EXTEN:" + extension);
-        }
-        return null;
-    }
+//    private String getContentTypeFromExtension (String extension)
+//    {
+//        if (extension == null || extension.equals("png")) {
+//            extension = "png";
+//            return  "image/png";
+//        } else if (extension.equals("jpg") || extension.equals("jpeg")) {
+//            return "image/jpeg";
+//        } else if (extension.equals("tiff") || extension.equals("tif")) {
+//            extension = "tiff";
+//            return "image/tiff";
+//        } else if (extension.equals("jpx")) {
+//            return "image/jp2";
+//        } else if (extension.equals("jb2")) {
+//            return "image/x-jbig2";
+//        } else {
+//            //TODO: determine if we need to add more image types
+////                    throw new RuntimeException("EXTEN:" + extension);
+//        }
+//        return null;
+//    }
 
     /**
      * PUTHURR : Method to convert a page into an image. Using PDFBOX renderImageWithDPI
@@ -185,33 +188,27 @@ class PDF2XHTML extends AbstractPDF2XHTML {
         PDFRenderer renderer = new PDFRenderer(pdDocument);
         int dpi = config.getOcrDPI();
         BufferedImage image = renderer.renderImageWithDPI(pageIndex, dpi, ImageType.RGB);
-        Metadata embeddedMetadata = new Metadata();
+        Metadata imgMetadata = new Metadata();
         String extension = config.getOcrImageFormatName();
-        embeddedMetadata.set(Metadata.CONTENT_TYPE, getContentTypeFromExtension(extension));
+        extension = ImageGraphicsEngine.getSuffix(extension,imgMetadata);
+//        imgMetadata.set(Metadata.CONTENT_TYPE, getContentTypeFromExtension(extension));
+
         // Increment the Image Number and put a new COSStream object in
         int imageNumber = inlineImageCounter.getAndIncrement();
         processedInlineImages.put(new COSStream(), imageNumber);
 
-        String fileName = String.format(Locale.ROOT, "image%05d", imageNumber) + "." + extension;
-        embeddedMetadata.set(Metadata.RESOURCE_NAME_KEY, fileName);
-        // Output the img tag
-        AttributesImpl attr = new AttributesImpl();
-        attr.addAttribute("", "src", "src", "CDATA", fileName);
-        attr.addAttribute("", "alt", "alt", "CDATA", fileName);
-        attr.addAttribute("", "class", "class", "CDATA", "embedded");
-        //Adding extra attributes to the image tag for consistency
-        try {
-            attr.addAttribute("", "id", "id", "CDATA", String.format(Locale.ROOT, "%05d", imageNumber));
-            attr.addAttribute("", "contenttype", "contenttype", "CDATA", embeddedMetadata.get(Metadata.CONTENT_TYPE));
-            attr.addAttribute("", "width", "witdh", "CDATA", String.valueOf(image.getWidth()));
-            attr.addAttribute("", "height", "height", "CDATA", String.valueOf(image.getHeight()));
-        } catch (Exception e) {
-            // Ignore those
-        }
-        embeddedMetadata.set(TikaCoreProperties.EMBEDDED_RESOURCE_TYPE,
+//        String fileName = String.format(Locale.ROOT, "image%05d", imageNumber) + "." + extension;
+        String fileName = config.getImageFilename(pageIndex+1,imageNumber,extension);
+
+        imgMetadata.set(Metadata.RESOURCE_NAME_KEY, fileName);
+
+        // Build the Image Tag Attributes
+        AttributesImpl attr = buildImageAttributes(imageNumber, imgMetadata, fileName, image.getWidth(), image.getHeight());
+
+        imgMetadata.set(TikaCoreProperties.EMBEDDED_RESOURCE_TYPE,
                 TikaCoreProperties.EmbeddedResourceType.INLINE.toString());
 
-        if (embeddedDocumentExtractor.shouldParseEmbedded(embeddedMetadata)) {
+        if (embeddedDocumentExtractor.shouldParseEmbedded(imgMetadata)) {
             ByteArrayOutputStream buffer = new ByteArrayOutputStream();
             try {
                 try {
@@ -226,15 +223,14 @@ class PDF2XHTML extends AbstractPDF2XHTML {
                     embeddedDocumentExtractor.parseEmbedded(
                             embeddedIs,
                             new EmbeddedContentHandler(xhtml),
-                            embeddedMetadata, false);
+                            imgMetadata, false);
                 }
             } catch (IOException e) {
                 handleCatchableIOE(e);
             }
         }
-        xhtml.startElement("img", attr);
-        xhtml.endElement("img");
-        xhtml.newline();
+
+        writeImageTag(attr);
     }
 
 
@@ -279,8 +275,7 @@ class PDF2XHTML extends AbstractPDF2XHTML {
         }
 
         // Create a Graphics Engine
-        ImageGraphicsEngine engine = new ImageGraphicsEngine(page, embeddedDocumentExtractor,
-                config, processedInlineImages, inlineImageCounter, xhtml, metadata, context);
+        ImageGraphicsEngine engine = new ImageGraphicsEngine(page, config, processedInlineImages, inlineImageCounter);
 
         // puthurr - when PDF page contains Graphics like curve, stroke etc. annotating any background image
         // they should be considered part of the extracted image.
@@ -297,11 +292,24 @@ class PDF2XHTML extends AbstractPDF2XHTML {
         }
 
         // no presence of graphics on top of images, we can carry on as usual.
-        engine.imagesExtractionRun();
+        Map<PDImage, Integer> extractedImages = engine.imagesExtractionRun();
 
+        for (PDImage image : extractedImages.keySet()) {
+            try {
+                processExtractedImage(image, extractedImages.get(image));
+            } catch (TikaException e) {
+                e.printStackTrace();
+            }
+        }
+        
         List<IOException> engineExceptions = engine.getExceptions();
         if (engineExceptions.size() > 0) {
             IOException first = engineExceptions.remove(0);
+            String msg = first.getMessage();
+            if (msg == null) {
+                msg = "IOException, no message";
+            }
+            metadata.add(TikaCoreProperties.TIKA_META_EXCEPTION_WARNING, msg);
             if (config.getCatchIntermediateIOExceptions()) {
                 exceptions.addAll(engineExceptions);
             }
@@ -309,6 +317,77 @@ class PDF2XHTML extends AbstractPDF2XHTML {
         }
     }
 
+
+    private void processExtractedImage(PDImage pdImage, int imageNumber) throws IOException, TikaException, SAXException {
+        //this is the metadata for this particular image
+        Metadata imgMetadata = new Metadata();
+        String suffix = ImageGraphicsEngine.getSuffix(pdImage, imgMetadata);
+        String fileName = config.getImageFilename(pageIndex+1,imageNumber,suffix);
+
+        // Build the Image Tag Attributes
+        AttributesImpl attr = buildImageAttributes(imageNumber, imgMetadata, fileName, pdImage.getWidth(), pdImage.getHeight());
+
+        imgMetadata.set(Metadata.RESOURCE_NAME_KEY, fileName);
+        imgMetadata.set(TikaCoreProperties.EMBEDDED_RESOURCE_TYPE,
+                TikaCoreProperties.EmbeddedResourceType.INLINE.toString());
+
+        if (embeddedDocumentExtractor.shouldParseEmbedded(imgMetadata)) {
+            ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+            try {
+                //extract the metadata contained outside of the image
+                if (pdImage instanceof PDImageXObject) {
+                    PDMetadataExtractor.extract(((PDImageXObject) pdImage).getMetadata(),
+                            imgMetadata, context);
+                }
+                try {
+                    ImageGraphicsEngine.writeToBuffer(pdImage, suffix, ImageGraphicsEngine.useDirectJPEG, buffer);
+                    // Get the size of the image from the OutputStream for consistency
+                    attr.addAttribute("", "size", "size", "CDATA", String.valueOf(buffer.size()));
+                }  catch (MissingImageReaderException e) {
+                    EmbeddedDocumentUtil.recordException(e, imgMetadata);
+                    return;
+                } catch (IOException e) {
+                    EmbeddedDocumentUtil.recordEmbeddedStreamException(e, metadata);
+                    return;
+                }
+                try (InputStream embeddedIs = TikaInputStream.get(buffer.toByteArray())) {
+                    embeddedDocumentExtractor.parseEmbedded(
+                            embeddedIs,
+                            new EmbeddedContentHandler(xhtml),
+                            imgMetadata, false);
+                }
+            } catch (IOException e) {
+                handleCatchableIOE(e);
+            }
+        }
+
+        writeImageTag(attr);
+    }
+
+    private AttributesImpl buildImageAttributes(int imageNumber, Metadata imgMetadata, String fileName, int width, int height) {
+        // Output the img metadata and html
+        AttributesImpl attr = new AttributesImpl();
+        attr.addAttribute("", "src", "src", "CDATA", fileName);
+        attr.addAttribute("", "alt", "alt", "CDATA", fileName);
+        attr.addAttribute("", "class", "class", "CDATA", "embedded");
+        //Adding extra attributes to the image tag for consistency
+        try {
+            attr.addAttribute("", "id", "id", "CDATA", config.getImageName(pageIndex, imageNumber));
+            attr.addAttribute("", "contenttype", "contenttype", "CDATA", imgMetadata.get(Metadata.CONTENT_TYPE));
+            attr.addAttribute("", "width", "witdh", "CDATA", String.valueOf(width));
+            attr.addAttribute("", "height", "height", "CDATA", String.valueOf(height));
+        } catch (Exception e) {
+        }
+        return attr;
+    }
+
+    private void writeImageTag(AttributesImpl attributes) throws SAXException
+    {
+        xhtml.startElement("img", attributes);
+        xhtml.endElement("img");
+        xhtml.newline();
+    }
+    
     @Override
     protected void writeParagraphStart() throws IOException {
         super.writeParagraphStart();

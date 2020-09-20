@@ -422,9 +422,9 @@ public class OOXMLParserTest extends TikaTest {
         xml = result.xml;
 
         // Images 2-4 (there is no 1!)
-        assertTrue("Image not found in:\n" + xml, xml.contains("src=\"image00002.png\""));
-        assertTrue("Image not found in:\n" + xml, xml.contains("src=\"image00003.jpeg\""));
-        assertTrue("Image not found in:\n" + xml, xml.contains("src=\"image00004.png\""));
+        assertTrue("Image not found in:\n" + xml, xml.contains("src=\"image-00000-00002.png\""));
+        assertTrue("Image not found in:\n" + xml, xml.contains("src=\"image-00000-00003.jpeg\""));
+        assertTrue("Image not found in:\n" + xml, xml.contains("src=\"image-00000-00004.png\""));
 
         // Text too
         assertTrue(xml.contains("<p>The end!</p>"));
@@ -1682,7 +1682,7 @@ public class OOXMLParserTest extends TikaTest {
         assertContains("smart1", content);
         assertContains("MyTitle", content);
 
-        assertEquals("/image00001.jpg",
+        assertEquals("/image-00000-00001.jpg",
                 metadataList.get(1).get(RecursiveParserWrapper.EMBEDDED_RESOURCE_PATH));
 
         assertEquals("/thumbnail.jpeg",

@@ -240,7 +240,7 @@ public class RecursiveParserWrapperTest extends TikaTest {
         targets.add("/embed1.zip/embed2.zip/embed2b.txt");
         targets.add("/embed1.zip/embed1b.txt");
         targets.add("/embed1.zip/embed1a.txt");
-        targets.add("/image00001.emf");
+        targets.add("/image-00000-00001.emf");
 
         Metadata metadata = new Metadata();
         metadata.set(Metadata.RESOURCE_NAME_KEY, "test_recursive_embedded.docx");
