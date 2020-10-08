@@ -191,7 +191,6 @@ class PDF2XHTML extends AbstractPDF2XHTML {
         Metadata imgMetadata = new Metadata();
         String extension = config.getOcrImageFormatName();
         extension = ImageGraphicsEngine.getSuffix(extension,imgMetadata);
-//        imgMetadata.set(Metadata.CONTENT_TYPE, getContentTypeFromExtension(extension));
 
         // Increment the Image Number and put a new COSStream object in
         int imageNumber = inlineImageCounter.getAndIncrement();

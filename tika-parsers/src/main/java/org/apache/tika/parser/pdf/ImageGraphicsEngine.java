@@ -293,6 +293,7 @@ public class ImageGraphicsEngine extends PDFGraphicsStreamEngine {
     public static String getSuffix(PDImage pdImage, Metadata metadata) throws IOException {
         if (hasMasks(pdImage)) {
             // TIKA-3040, PDFBOX-4771: can't save ARGB as JPEG
+            metadata.set(Metadata.CONTENT_TYPE, "image/png");
             return "png";
         }
         return getSuffix(pdImage.getSuffix(),metadata);
@@ -304,7 +305,12 @@ public class ImageGraphicsEngine extends PDFGraphicsStreamEngine {
             suffix = "png";
         } else if (suffix.equals("jpg")) {
             metadata.set(Metadata.CONTENT_TYPE, "image/jpeg");
+        } else if (suffix.equals("jpeg")) {
+            metadata.set(Metadata.CONTENT_TYPE, "image/jpeg");
         } else if (suffix.equals("tiff")) {
+            metadata.set(Metadata.CONTENT_TYPE, "image/tiff");
+            suffix = "tif";
+        } else if (suffix.equals("tif")) {
             metadata.set(Metadata.CONTENT_TYPE, "image/tiff");
             suffix = "tif";
         } else if (suffix.equals("jpx")) {
