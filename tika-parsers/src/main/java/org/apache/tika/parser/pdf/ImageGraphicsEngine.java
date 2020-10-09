@@ -22,6 +22,7 @@ import org.apache.pdfbox.cos.COSStream;
 import org.apache.pdfbox.io.IOUtils;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDResources;
+import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDFont;
 import org.apache.pdfbox.pdmodel.graphics.color.PDColor;
 import org.apache.pdfbox.pdmodel.graphics.color.PDDeviceGray;
@@ -199,7 +200,16 @@ public class ImageGraphicsEngine extends PDFGraphicsStreamEngine {
     @Override
     public void appendRectangle(Point2D p0, Point2D p1, Point2D p2, Point2D p3)
             throws IOException {
-        graphicsPresence+=10000;
+        if ( Math.floor(p0.getY()) == 0.0 && (Math.floor(p0.getX()) == 0.0)
+                && (Math.floor(p1.getY()) == 0.0)
+                && (Math.floor(p3.getX()) == 0.0))
+        {
+            //Do Nothing
+        }
+        else
+        {
+            graphicsPresence+=10000;
+        }
     }
 
     @Override

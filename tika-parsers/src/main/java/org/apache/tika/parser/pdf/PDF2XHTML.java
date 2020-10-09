@@ -156,27 +156,6 @@ class PDF2XHTML extends AbstractPDF2XHTML {
         }
     }
 
-//    private String getContentTypeFromExtension (String extension)
-//    {
-//        if (extension == null || extension.equals("png")) {
-//            extension = "png";
-//            return  "image/png";
-//        } else if (extension.equals("jpg") || extension.equals("jpeg")) {
-//            return "image/jpeg";
-//        } else if (extension.equals("tiff") || extension.equals("tif")) {
-//            extension = "tiff";
-//            return "image/tiff";
-//        } else if (extension.equals("jpx")) {
-//            return "image/jp2";
-//        } else if (extension.equals("jb2")) {
-//            return "image/x-jbig2";
-//        } else {
-//            //TODO: determine if we need to add more image types
-////                    throw new RuntimeException("EXTEN:" + extension);
-//        }
-//        return null;
-//    }
-
     /**
      * PUTHURR : Method to convert a page into an image. Using PDFBOX renderImageWithDPI
      * Resulting image is added as an embedded object.
@@ -263,6 +242,7 @@ class PDF2XHTML extends AbstractPDF2XHTML {
             {
                 convertPageToImage = true;
             }
+            metadata.add(TikaCoreProperties.TIKA_META_PREFIX+"StripedImagesCount", String.valueOf(counter));
         }
 
         // puthurr - Our project is focused on Image, A single page PDF is forced into an image covering all our base
@@ -286,6 +266,7 @@ class PDF2XHTML extends AbstractPDF2XHTML {
             {
                 // puthurr - not taking any risk of losing graphical annotation, we treat the entire page as a single image
                 processPageAsImage(page);
+                metadata.add(TikaCoreProperties.TIKA_META_PREFIX+"GraphicsToImage", String.valueOf(result));
                 return;
             }
         }
