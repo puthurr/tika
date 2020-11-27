@@ -296,6 +296,7 @@ public class TikaServerCli {
             rCoreProviders.add(new SingletonResourceProvider(new TikaVersion()));
             // AZURE BLOB STORAGE SUPPORT
             rCoreProviders.add(new SingletonResourceProvider(new AzureUnpackerResource()));
+            rCoreProviders.add(new SingletonResourceProvider(new AzureStatusResource()));
 
             List<ResourceProvider> rAllProviders = new ArrayList<>(rCoreProviders);
             rAllProviders.add(new SingletonResourceProvider(new TikaWelcome(rCoreProviders)));
