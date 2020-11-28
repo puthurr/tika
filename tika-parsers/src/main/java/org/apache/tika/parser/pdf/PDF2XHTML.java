@@ -181,7 +181,7 @@ class PDF2XHTML extends AbstractPDF2XHTML {
         imgMetadata.set(Metadata.RESOURCE_NAME_KEY, fileName);
 
         // Build the Image Tag Attributes
-        AttributesImpl attr = buildImageAttributes(imageNumber, imgMetadata, fileName, image.getWidth(), image.getHeight());
+        AttributesImpl attr = buildImageAttributes(imageNumber, imgMetadata, fileName);
 
         imgMetadata.set(TikaCoreProperties.EMBEDDED_RESOURCE_TYPE,
                 TikaCoreProperties.EmbeddedResourceType.INLINE.toString());
@@ -202,6 +202,8 @@ class PDF2XHTML extends AbstractPDF2XHTML {
                             embeddedIs,
                             new EmbeddedContentHandler(xhtml),
                             imgMetadata, false);
+
+                    adjustImageWidthHeightAttributes(attr, imgMetadata, image.getWidth(), image.getHeight());
                 }
             } catch (IOException e) {
                 handleCatchableIOE(e);
@@ -297,7 +299,6 @@ class PDF2XHTML extends AbstractPDF2XHTML {
         }
     }
 
-
     private void processExtractedImage(PDImage pdImage, int imageNumber) throws IOException, TikaException, SAXException {
         //this is the metadata for this particular image
         Metadata imgMetadata = new Metadata();
@@ -305,7 +306,7 @@ class PDF2XHTML extends AbstractPDF2XHTML {
         String fileName = config.getImageFilename(pageIndex+1,imageNumber,suffix);
 
         // Build the Image Tag Attributes
-        AttributesImpl attr = buildImageAttributes(imageNumber, imgMetadata, fileName, pdImage.getWidth(), pdImage.getHeight());
+        AttributesImpl attr = buildImageAttributes(imageNumber, imgMetadata, fileName);
 
         imgMetadata.set(Metadata.RESOURCE_NAME_KEY, fileName);
         imgMetadata.set(TikaCoreProperties.EMBEDDED_RESOURCE_TYPE,
@@ -330,11 +331,14 @@ class PDF2XHTML extends AbstractPDF2XHTML {
                     EmbeddedDocumentUtil.recordEmbeddedStreamException(e, metadata);
                     return;
                 }
+                // Parse Image metadata
                 try (InputStream embeddedIs = TikaInputStream.get(buffer.toByteArray())) {
                     embeddedDocumentExtractor.parseEmbedded(
                             embeddedIs,
                             new EmbeddedContentHandler(xhtml),
                             imgMetadata, false);
+
+                    adjustImageWidthHeightAttributes(attr, imgMetadata, pdImage.getWidth(), pdImage.getHeight());
                 }
             } catch (IOException e) {
                 handleCatchableIOE(e);
@@ -342,6 +346,10 @@ class PDF2XHTML extends AbstractPDF2XHTML {
         }
 
         writeImageTag(attr);
+    }
+
+    private AttributesImpl buildImageAttributes(int imageNumber, Metadata imgMetadata, String fileName) {
+        return buildImageAttributes(imageNumber,imgMetadata,fileName,0,0);
     }
 
     private AttributesImpl buildImageAttributes(int imageNumber, Metadata imgMetadata, String fileName, int width, int height) {
@@ -354,11 +362,38 @@ class PDF2XHTML extends AbstractPDF2XHTML {
         try {
             attr.addAttribute("", "id", "id", "CDATA", config.getImageName(pageIndex, imageNumber));
             attr.addAttribute("", "contenttype", "contenttype", "CDATA", imgMetadata.get(Metadata.CONTENT_TYPE));
-            attr.addAttribute("", "width", "witdh", "CDATA", String.valueOf(width));
-            attr.addAttribute("", "height", "height", "CDATA", String.valueOf(height));
+            if (width>0) {
+                attr.addAttribute("", "width", "witdh", "CDATA", String.valueOf(width));
+            }
+            if (height>0) {
+                attr.addAttribute("", "height", "height", "CDATA", String.valueOf(height));
+            }
         } catch (Exception e) {
         }
         return attr;
+    }
+
+    private void adjustImageWidthHeightAttributes(AttributesImpl attr, Metadata imgMetadata, int iwidth, int iheight) {
+        try {
+            String width = imgMetadata.get(Metadata.IMAGE_WIDTH);
+            if ( width != null) {
+                attr.addAttribute("", "width", "witdh", "CDATA", width);
+            }
+            else
+            {
+                attr.addAttribute("", "width", "witdh", "CDATA", String.valueOf(iwidth));
+            }
+
+            String height = imgMetadata.get(Metadata.IMAGE_LENGTH);
+            if ( height != null) {
+                attr.addAttribute("", "height", "height", "CDATA", height);
+            }
+            else
+            {
+                attr.addAttribute("", "height", "height", "CDATA", String.valueOf(iheight));
+            }
+        } catch (Exception e) {
+        }
     }
 
     private void writeImageTag(AttributesImpl attributes) throws SAXException

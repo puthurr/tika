@@ -610,5 +610,4 @@ public class HSLFExtractor extends AbstractPOIFSExtractor {
             xhtml.endElement("img");
         }
     }
-
 }
