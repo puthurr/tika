@@ -17,6 +17,14 @@
 
 package org.apache.tika.parser.microsoft.ooxml.xwpf;
 
+import javax.xml.parsers.ParserConfigurationException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.commons.io.input.CloseShieldInputStream;
 import org.apache.poi.ooxml.POIXMLDocument;
 import org.apache.poi.ooxml.POIXMLProperties;
@@ -24,7 +32,10 @@ import org.apache.poi.ooxml.extractor.POIXMLTextExtractor;
 import org.apache.poi.ooxml.util.SAXHelper;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.openxml4j.exceptions.OpenXML4JException;
-import org.apache.poi.openxml4j.opc.*;
+import org.apache.poi.openxml4j.opc.OPCPackage;
+import org.apache.poi.openxml4j.opc.PackagePart;
+import org.apache.poi.openxml4j.opc.PackageRelationship;
+import org.apache.poi.openxml4j.opc.PackageRelationshipCollection;
 import org.apache.poi.xwpf.usermodel.XWPFNumbering;
 import org.apache.poi.xwpf.usermodel.XWPFRelation;
 import org.apache.tika.parser.microsoft.ooxml.OOXMLWordAndPowerPointTextHandler;
@@ -37,14 +48,6 @@ import org.slf4j.LoggerFactory;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
-
-import javax.xml.parsers.ParserConfigurationException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 //TODO: move this into POI?
 /**
@@ -59,7 +62,7 @@ public class XWPFEventBasedWordExtractor extends POIXMLTextExtractor {
     private POIXMLProperties properties;
 
     public XWPFEventBasedWordExtractor(String path) throws XmlException, OpenXML4JException, IOException {
-        this(OPCPackage.open(path, PackageAccess.READ));
+        this(OPCPackage.open(path));
     }
 
     public XWPFEventBasedWordExtractor(OPCPackage container) throws XmlException, OpenXML4JException, IOException {
@@ -217,7 +220,7 @@ public class XWPFEventBasedWordExtractor extends POIXMLTextExtractor {
         return hyperlinks;
     }
 
-    private XWPFNumbering loadNumbering(PackagePart packagePart) {
+    private XWPFNumbering loadNumbering(PackagePart packagePart) throws IOException {
         try {
             PackageRelationshipCollection numberingParts = packagePart.getRelationshipsByType(XWPFRelation.NUMBERING.getRelation());
             if (numberingParts.size() > 0) {

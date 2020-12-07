@@ -31,7 +31,7 @@
 
   <groupId>org.apache.tika</groupId>
   <artifactId>tika-parent</artifactId>
-  <version>1.24.1</version>
+  <version>1.25</version>
   <packaging>pom</packaging>
 
   <name>Apache Tika parent</name>
@@ -322,11 +322,11 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>${project.build.sourceEncoding}</project.reporting.outputEncoding>
     <!-- plugin versions -->
-    <forbiddenapis.version>2.7</forbiddenapis.version>
+    <forbiddenapis.version>3.0.1</forbiddenapis.version>
     <groovy.maven.version>2.1</groovy.maven.version>
     <maven.antrun.version>1.8</maven.antrun.version>
     <maven.assembly.version>3.1.0</maven.assembly.version>
-    <maven.bundle.version>4.1.0</maven.bundle.version>
+    <maven.bundle.version>5.1.1</maven.bundle.version>
     <maven.failsafe.version>2.22.1</maven.failsafe.version>
     <maven.javadoc.version>3.1.1</maven.javadoc.version>
     <maven.scr.version>1.26.0</maven.scr.version>
@@ -336,22 +336,22 @@
     <!-- NOTE: sync tukaani version with commons-compress in tika-parsers -->
     <poi.version>4.1.2</poi.version>
     <commons.compress.version>1.20</commons.compress.version>
-    <commons.io.version>2.6</commons.io.version>
-    <commons.lang3.version>3.10</commons.lang3.version>
+    <commons.io.version>2.8.0</commons.io.version>
+    <commons.lang3.version>3.11</commons.lang3.version>
     <gson.version>2.8.6</gson.version>
-    <guava.version>28.2-jre</guava.version>
+    <guava.version>30.0-jre</guava.version>
     <osgi.core.version>6.0.0</osgi.core.version>
 
-    <cxf.version>3.3.6</cxf.version>
+    <cxf.version>3.4.1</cxf.version>
     <slf4j.version>1.7.28</slf4j.version>
-    <jackson.version>2.10.3</jackson.version>
+    <jackson.version>2.11.3</jackson.version>
     <!-- when this is next upgraded, see if we can get rid of
          javax.activation dependency in tika-server -->
-    <jaxb.version>2.3.2</jaxb.version>
+    <jaxb.version>2.3.3</jaxb.version>
     <cli.version>1.4</cli.version>
-    <lucene.version>8.5.0</lucene.version>
-    <mockito.version>3.3.3</mockito.version>
-    <opennlp.version>1.9.2</opennlp.version>
+    <lucene.version>8.7.0</lucene.version>
+    <mockito.version>3.6.0</mockito.version>
+    <opennlp.version>1.9.3</opennlp.version>
   </properties>
 
   <build>
@@ -382,6 +382,13 @@
         <version>3.1.0</version>
         <configuration>
           <fail>false</fail>
+          <excludeCoordinates>
+            <coordinate>
+              <groupId>junit</groupId>
+              <artifactId>junit</artifactId>
+              <version>4.13.1</version>
+            </coordinate>
+          </excludeCoordinates>
         </configuration>
         <executions>
           <execution>
@@ -408,11 +415,10 @@
       <plugin>
         <groupId>de.thetaphi</groupId>
         <artifactId>forbiddenapis</artifactId>
-        <!-- if this version contains commons-io 2.6, remove hard-coded commons-io version below -->
         <version>${forbiddenapis.version}</version>
         <configuration>
           <targetVersion>${maven.compiler.target}</targetVersion>
-          <failOnUnresolvableSignatures>false</failOnUnresolvableSignatures>
+          <ignoreSignaturesOfMissingClasses>true</ignoreSignaturesOfMissingClasses>
           <failOnUnsupportedJava>false</failOnUnsupportedJava>
           <excludes>test-documents/*.class</excludes>
           <bundledSignatures>
@@ -420,7 +426,8 @@
             <bundledSignature>jdk-deprecated</bundledSignature>
             <bundledSignature>jdk-non-portable</bundledSignature>
             <bundledSignature>jdk-internal</bundledSignature>
-            <bundledSignature>commons-io-unsafe-${commons.io.version}</bundledSignature>
+            <!-- replace with ${commons.io.version} when available -->
+            <bundledSignature>commons-io-unsafe-2.7</bundledSignature>
           </bundledSignatures>
         </configuration>
         <executions>
@@ -442,7 +449,7 @@
         <artifactId>maven-surefire-plugin</artifactId>
         <version>${maven.surefire.version}</version> <!-- versions greater than this don't like System.exit calls in tika-batch -->
         <configuration>
-          <argLine>-Xmx3072m -Duser.timezone=UTC</argLine>
+          <argLine>-Xmx3072m -Duser.timezone=UTC -Djava.awt.headless=true</argLine>
         </configuration>
       </plugin>
       <plugin>
@@ -486,7 +493,6 @@
           <execution>
             <id>enforce</id>
             <configuration>
-              <fail>false</fail>
               <rules>
                 <dependencyConvergence />
                 <requireMavenVersion>
@@ -581,6 +587,6 @@
     <connection>scm:git:https://github.com/apache/</connection>
     <developerConnection>scm:git:https://github.com/apache/</developerConnection>
     <url>https://github.com/apache/tika</url>
-    <tag>1.24.1-rc1</tag>
+    <tag>1.25-rc2</tag>
   </scm>
 </project>

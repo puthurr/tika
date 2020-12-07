@@ -107,6 +107,7 @@ import org.apache.tika.sax.BodyContentHandler;
 import org.apache.tika.sax.ContentHandlerFactory;
 import org.apache.tika.sax.ExpandedTitleContentHandler;
 import org.apache.tika.sax.RecursiveParserWrapperHandler;
+import org.apache.tika.sax.WriteOutContentHandler;
 import org.apache.tika.xmp.XMPMetadata;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -264,7 +265,15 @@ public class TikaCLI {
             return new BoilerpipeContentHandler(getOutputWriter(output, encoding));
         }
     };
-    
+
+    private final OutputType TEXT_ALL = new OutputType() {
+        @Override
+        protected ContentHandler getContentHandler(
+            OutputStream output, Metadata metadata) throws Exception {
+            return new WriteOutContentHandler(getOutputWriter(output, encoding));
+        }
+    };
+
     private final OutputType METADATA = new OutputType() {
         @Override
         protected ContentHandler getContentHandler(
@@ -395,7 +404,7 @@ public class TikaCLI {
             displaySupportedTypes();
         } else if (arg.startsWith("--compare-file-magic=")) {
             pipeMode = false;
-            compareFileMagic(arg.substring(arg.indexOf('=')+1));
+            compareFileMagic(arg.substring("--compare-file-magic=".length()));
         } else if (arg.equals("--dump-minimal-config")) {
             pipeMode = false;
             dumpConfig(TikaConfigSerializer.Mode.MINIMAL);
@@ -440,6 +449,8 @@ public class TikaCLI {
             type = TEXT;
         } else if (arg.equals("-T") || arg.equals("--text-main")) {
             type = TEXT_MAIN;
+        } else if (arg.equals("-A") || arg.equals("--text-all")) {
+            type = TEXT_ALL;
         } else if (arg.equals("-m") || arg.equals("--metadata")) {
             type = METADATA;
         } else if (arg.equals("-l") || arg.equals("--language")) {
@@ -467,7 +478,7 @@ public class TikaCLI {
         } else if (arg.startsWith("-c")) {
             networkURI = new URI(arg.substring("-c".length()));
         } else if (arg.startsWith("--client=")) {
-            networkURI = new URI(arg.substring("-c".length()));
+            networkURI = new URI(arg.substring("--client=".length()));
         } else {
             pipeMode = false;
             configure();
@@ -513,7 +524,9 @@ public class TikaCLI {
     private void handleRecursiveJson(URL url, OutputStream output) throws IOException, SAXException, TikaException {
         Metadata metadata = new Metadata();
         RecursiveParserWrapper wrapper = new RecursiveParserWrapper(parser);
-        RecursiveParserWrapperHandler handler = new RecursiveParserWrapperHandler(getContentHandlerFactory(type), -1);
+        RecursiveParserWrapperHandler handler =
+                new RecursiveParserWrapperHandler(getContentHandlerFactory(type),
+                        -1, config.getMetadataFilter());
         try (InputStream input = TikaInputStream.get(url, metadata)) {
             wrapper.parse(input, handler, metadata, context);
         }
@@ -563,8 +576,9 @@ public class TikaCLI {
         out.println("");
         out.println("    -x  or --xml           Output XHTML content (default)");
         out.println("    -h  or --html          Output HTML content");
-        out.println("    -t  or --text          Output plain text content");
-        out.println("    -T  or --text-main     Output plain text content (main content only)");
+        out.println("    -t  or --text          Output plain text content (body)");
+        out.println("    -T  or --text-main     Output plain text content (main content only via boilerpipe handler)");
+        out.println("    -A  or --text-all      Output all text content");
         out.println("    -m  or --metadata      Output only metadata");
         out.println("    -j  or --json          Output metadata in JSON");
         out.println("    -y  or --xmp           Output metadata in XMP");

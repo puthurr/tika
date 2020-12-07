@@ -36,8 +36,8 @@ public class MimeBuffer extends AbstractDBBuffer {
     private final Connection connection;
 
 
-    public MimeBuffer(Connection connection, TikaConfig config) throws SQLException {
-        st = connection.prepareStatement("insert into " + AbstractProfiler.MIME_TABLE.getName() + "( " +
+    public MimeBuffer(Connection connection, TableInfo mimeTable, TikaConfig config) throws SQLException {
+        st = connection.prepareStatement("insert into " + mimeTable.getName() + "( " +
                 Cols.MIME_ID.name() + ", " +
                 Cols.MIME_STRING.name() + ", " +
                 Cols.FILE_EXTENSION.name() + ") values (?,?,?)");
@@ -72,7 +72,6 @@ public class MimeBuffer extends AbstractDBBuffer {
     public void close() throws SQLException {
         st.close();
         connection.commit();
-        connection.close();
     }
 
     private static class MimeUtil {

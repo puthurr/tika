@@ -142,6 +142,20 @@ public class TikaCLITest {
     }
 
     /**
+     * Tests -A option of the cli
+     *
+     * @throws Exception
+     */
+    @Test
+    public void testContentAllOutput() throws Exception{
+        String[] params = {"-A", resourcePrefix + "testJsonMultipleInts.html"};
+        TikaCLI.main(params);
+        String out = outContent.toString(UTF_8.name());
+        assertTrue(out.contains("this is a title"));
+        assertTrue(out.contains("body"));
+    }
+
+    /**
      * Tests -f option of the cli
      *
      * @throws Exception

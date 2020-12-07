@@ -90,10 +90,11 @@ public abstract class CXFTestBase {
 
     @Before
     public void setUp() throws Exception {
-        this.tika = new TikaConfig(getClass().getResourceAsStream("tika-config-for-server-tests.xml"));
+
+        this.tika = new TikaConfig(getTikaConfigInputStream());
         TikaResource.init(tika,
                 new CommonsDigester(DIGESTER_READ_LIMIT, "md5,sha1:32"),
-                new DefaultInputStreamFactory(), new ServerStatus(true));
+                new DefaultInputStreamFactory(), new ServerStatus("", 0,true));
         JAXRSServerFactoryBean sf = new JAXRSServerFactoryBean();
         //set compression interceptors
         sf.setOutInterceptors(
@@ -120,6 +121,10 @@ public abstract class CXFTestBase {
         server = sf.create();
     }
 
+    protected InputStream getTikaConfigInputStream() {
+        return getClass().getResourceAsStream("tika-config-for-server-tests.xml");
+    }
+
     /**
      * Have the test do {@link JAXRSServerFactoryBean#setResourceClasses(Class...)}
      * and {@link JAXRSServerFactoryBean#setResourceProvider(Class, org.apache.cxf.jaxrs.lifecycle.ResourceProvider)}
@@ -137,7 +142,7 @@ public abstract class CXFTestBase {
         server.destroy();
     }
 
-    protected String getStringFromInputStream(InputStream in) throws Exception {
+    static String getStringFromInputStream(InputStream in) throws Exception {
         return IOUtils.toString(in, UTF_8);
     }
 

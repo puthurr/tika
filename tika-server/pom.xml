@@ -20,7 +20,7 @@
   <parent>
     <groupId>org.apache.tika</groupId>
     <artifactId>tika-parent</artifactId>
-    <version>1.24.1</version>
+    <version>1.25</version>
     <relativePath>../tika-parent/pom.xml</relativePath>
   </parent>
 
@@ -29,6 +29,7 @@
   <url>http://tika.apache.org/</url>
 
   <properties>
+    <maven.build.timestamp.format>yyyy-MM-dd'T'HHmmss'Z'</maven.build.timestamp.format>
   </properties>
 
   <pluginRepositories>
@@ -78,6 +79,14 @@
         <exclusion>
           <groupId>javax.annotation</groupId>
           <artifactId>javax.annotation-api</artifactId>
+        </exclusion>
+        <exclusion>
+          <artifactId>jaxb-runtime</artifactId>
+          <groupId>org.glassfish.jaxb</groupId>
+        </exclusion>
+        <exclusion>
+          <groupId>jakarta.xml.bind</groupId>
+          <artifactId>jakarta.xml.bind-api</artifactId>
         </exclusion>
       </exclusions>
     </dependency>
@@ -170,6 +179,7 @@
   </dependencies>
 
   <build>
+<!--    <finalName>${project.artifactId}-${project.version}-${maven.build.timestamp}</finalName> -->
     <plugins>
       <plugin>
         <artifactId>maven-surefire-plugin</artifactId>

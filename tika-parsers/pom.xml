@@ -25,7 +25,7 @@
   <parent>
     <groupId>org.apache.tika</groupId>
     <artifactId>tika-parent</artifactId>
-    <version>1.24.1</version>
+    <version>1.25</version>
     <relativePath>../tika-parent/pom.xml</relativePath>
   </parent>
 
@@ -40,22 +40,23 @@
     in XML2003ParserTest#testBasicWord see:
     https://issues.apache.org/jira/browse/CODEC-263?focusedCommentId=17043716&page=com.atlassian.jira.plugin.system.issuetabpanels%3Acomment-tabpanel#comment-17043716
     -->
-    <codec.version>1.13</codec.version>
+    <codec.version>1.15</codec.version>
     <!-- NOTE: sync tukaani version with commons-compress in tika-parent-->
     <tukaani.version>1.8</tukaani.version>
     <!-- NOTE: sync brotli version with commons-compress in tika-parent-->
     <brotli.version>0.1.2</brotli.version>
     <mime4j.version>0.8.3</mime4j.version>
     <vorbis.version>0.8</vorbis.version>
-    <pdfbox.version>2.0.19</pdfbox.version>
+    <pdfbox.version>2.0.21</pdfbox.version>
     <jempbox.version>1.8.16</jempbox.version>
+    <xmpbox.version>2.0.21</xmpbox.version>
     <netcdf-java.version>4.5.5</netcdf-java.version>
     <sis.version>1.0</sis.version>
-    <parso.version>2.0.11</parso.version>
+    <parso.version>2.0.12</parso.version>
     <!-- used by POI, PDFBox and Jackcess ...try to sync -->
-    <bouncycastle.version>1.65</bouncycastle.version>
+    <bouncycastle.version>1.67</bouncycastle.version>
     <commonsexec.version>1.3</commonsexec.version>
-    <httpcomponents.version>4.5.12</httpcomponents.version>
+    <httpcomponents.version>4.5.13</httpcomponents.version>
   </properties>
 
   <!-- Note: as of the 1.23 release, we're waiting for external changes or fixes
@@ -87,26 +88,7 @@
       <scope>test</scope>
     </dependency>
 
-   <!-- for java 10
-      See TIKA-2778 for why we need to do this now.
-      May the gods of API design fix this in the future.
-      -->
-    <dependency>
-      <groupId>org.glassfish.jaxb</groupId>
-      <artifactId>jaxb-runtime</artifactId>
-      <version>${jaxb.version}</version>
-      <exclusions>
-        <exclusion>
-          <groupId>jakarta.activation</groupId>
-          <artifactId>jakarta.activation-api</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>com.sun.activation</groupId>
-      <artifactId>jakarta.activation</artifactId>
-      <version>1.2.1</version>
-    </dependency>
+
     <dependency>
       <groupId>xerces</groupId>
       <artifactId>xercesImpl</artifactId>
@@ -160,6 +142,11 @@
       <version>${mime4j.version}</version>
     </dependency>
     <dependency>
+      <groupId>com.googlecode.plist</groupId>
+      <artifactId>dd-plist</artifactId>
+      <version>1.23</version>
+    </dependency>
+    <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-compress</artifactId>
       <version>${commons.compress.version}</version>
@@ -182,7 +169,7 @@
     <dependency>
       <groupId>com.github.luben</groupId>
       <artifactId>zstd-jni</artifactId>
-      <version>1.4.4-9</version>
+      <version>1.4.5-12</version>
       <scope>provided</scope>
     </dependency>
 
@@ -226,6 +213,11 @@
       <groupId>org.apache.pdfbox</groupId>
       <artifactId>jempbox</artifactId>
       <version>${jempbox.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.pdfbox</groupId>
+      <artifactId>xmpbox</artifactId>
+      <version>${xmpbox.version}</version>
     </dependency>
     <!-- TIKA-370: PDFBox declares the Bouncy Castle dependencies
          as optional, but we prefer to have them always to avoid
@@ -278,7 +270,7 @@
     <dependency>
       <groupId>com.healthmarketscience.jackcess</groupId>
       <artifactId>jackcess</artifactId>
-      <version>3.0.1</version>
+      <version>3.5.1</version>
       <exclusions>
         <exclusion>
           <groupId>org.apache.commons</groupId>
@@ -319,12 +311,12 @@
     <dependency>
       <groupId>org.ow2.asm</groupId>
       <artifactId>asm</artifactId>
-      <version>8.0.1</version>
+      <version>9.0</version>
     </dependency>
     <dependency>
       <groupId>org.tallison</groupId>
       <artifactId>isoparser</artifactId>
-      <version>1.9.41.2</version>
+      <version>1.9.41.4</version>
     </dependency>
     <!-- this is a fork of com.drewnoakes
       metadata extractor that shade/relocates com.adobe.internal
@@ -333,7 +325,7 @@
     <dependency>
       <groupId>org.tallison</groupId>
       <artifactId>metadata-extractor</artifactId>
-      <version>2.13.0</version>
+      <version>2.15.0.1</version>
     </dependency>
     <dependency>
       <groupId>de.l3s.boilerpipe</groupId>
@@ -343,7 +335,7 @@
     <dependency>
       <groupId>com.rometools</groupId>
       <artifactId>rome</artifactId>
-      <version>1.12.2</version>
+      <version>1.15.0</version>
       <exclusions>
         <exclusion>
           <groupId>org.jdom</groupId>
@@ -380,7 +372,7 @@
     <dependency>
       <groupId>com.github.junrar</groupId>
       <artifactId>junrar</artifactId>
-      <version>4.0.0</version>
+      <version>7.4.0</version>
       <exclusions>
         <exclusion>
           <groupId>commons-logging</groupId>
@@ -406,7 +398,20 @@
           <groupId>javax.annotation</groupId>
           <artifactId>javax.annotation-api</artifactId>
         </exclusion>
+        <exclusion>
+          <groupId>org.glassfish.jaxb</groupId>
+          <artifactId>jaxb-runtime</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>jakarta.xml.bind</groupId>
+          <artifactId>jakarta.xml.bind-api</artifactId>
+        </exclusion>
       </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.glassfish.jaxb</groupId>
+      <artifactId>jaxb-runtime</artifactId>
+      <version>${jaxb.version}</version>
     </dependency>
     <!-- TIKA-2021: Tesseract OCR Parser dependencies,
     used for executing image processing script -->
@@ -421,7 +426,7 @@
     <dependency>
       <groupId>org.xerial</groupId>
       <artifactId>sqlite-jdbc</artifactId>
-      <version>3.30.1</version>
+      <version>3.32.3.2</version>
       <scope>provided</scope>
     </dependency>
 
@@ -556,6 +561,12 @@
         </exclusion>
       </exclusions>
     </dependency>
+    <!-- TIKA-3095: Required for grib -->
+    <dependency>
+	  <groupId>net.jcip</groupId>
+	  <artifactId>jcip-annotations</artifactId>
+	  <version>1.0</version>
+	</dependency>
     <!-- TIKA-3052 -->
     <dependency>
       <groupId>com.beust</groupId>
@@ -567,7 +578,7 @@
     <dependency>
       <groupId>net.java.dev.jna</groupId>
       <artifactId>jna</artifactId>
-      <version>5.5.0</version>
+      <version>5.6.0</version>
     </dependency>
 
     <!-- grib's current jsoup is vulnerable to xss
@@ -580,7 +591,7 @@
     <dependency>
       <groupId>com.google.protobuf</groupId>
       <artifactId>protobuf-java</artifactId>
-      <version>3.11.4</version>
+      <version>3.12.2</version>
     </dependency>
     <dependency>
       <groupId>edu.ucar</groupId>
@@ -836,7 +847,7 @@
     <dependency>
       <groupId>org.apache.uima</groupId>
       <artifactId>uimafit-core</artifactId>
-      <version>3.0.0</version>
+      <version>3.1.0</version>
       <scope>provided</scope>
       <exclusions>
         <exclusion>

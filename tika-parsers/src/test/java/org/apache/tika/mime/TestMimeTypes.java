@@ -430,6 +430,14 @@ public class TestMimeTypes {
     }
 
     @Test
+    public void testAVIFDetection() throws Exception {
+        // The test file is an avif header fragment only, not a complete image.
+        assertType("image/avif", "testAVIF.avif");
+        assertTypeByData("image/avif", "testAVIF.avif");
+        assertTypeByName("image/avif", "testAVIF.avif");
+    }
+
+    @Test
     public void testHeifDetection() throws Exception {
         // HEIF image using the HEVC Codec == HEIC
         //  created using https://compare.rokka.io/_compare on testJPEG_GEO.jpg
@@ -729,6 +737,7 @@ public class TestMimeTypes {
        
        assertTypeByData("video/x-ms-asf", "testASF.asf");
        assertTypeByData("video/x-ms-wmv", "testWMV.wmv");
+       assertTypeByData("video/x-ms-wmv", "testWMV_WMV2.wmv");
        assertTypeByData("audio/x-ms-wma", "testWMA.wma");
     }
     
@@ -1134,6 +1143,24 @@ public class TestMimeTypes {
     }
 
     @Test
+    public void testCertificatesKeys() throws Exception {
+        assertType("application/x-x509-cert; format=pem", "testCERT.pem");
+        assertType("application/x-x509-cert; format=der", "testCERT.der");
+        assertTypeByData("application/x-x509-cert; format=pem", "testCERT.pem");
+        assertTypeByData("application/x-x509-cert; format=der", "testCERT.der");
+        // Keys need the data to identify, name isn't enough
+        assertTypeByData("application/x-x509-key; format=pem", "testECKEY.pem");
+        assertTypeByData("application/x-x509-key; format=der", "testECKEY.der");
+        assertTypeByData("application/x-x509-key; format=pem", "testRSAKEY.pem");
+        assertTypeByData("application/x-x509-key; format=der", "testRSAKEY.der");
+        assertTypeByData("application/x-x509-key; format=pem", "testDSAKEY.pem");
+        assertTypeByData("application/x-x509-key; format=der", "testDSAKEY.der");
+        // Parameters only have PEM form, always need data
+        assertTypeByData("application/x-x509-dsa-parameters", "testDSAPARAMS.pem");
+        assertTypeByData("application/x-x509-ec-parameters", "testECPARAMS.pem");
+    }
+
+    @Test
     public void testVandICalendars() throws Exception {
         assertType("text/calendar", "testICalendar.ics");
         assertType("text/x-vcalendar", "testVCalendar.vcs");
@@ -1216,6 +1243,11 @@ public class TestMimeTypes {
         assertTypeByData("application/x-ms-nls", "testNLS2.nls");
     }
 
+    @Test
+    public void testHPROF() throws Exception {
+        assertTypeByData("application/vnd.java.hprof", "testJavaHprofBinary");
+        assertTypeByData("application/vnd.java.hprof.text", "testJavaHprofText");
+    }
     private void assertText(byte[] prefix) throws IOException {
         assertMagic("text/plain", prefix);
     }

@@ -25,6 +25,9 @@ import java.util.LinkedList;
 
 import org.apache.tika.exception.TikaException;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 /**
  * Utility class for tracking and ultimately closing or otherwise disposing
  * a collection of temporary resources.
@@ -34,6 +37,8 @@ import org.apache.tika.exception.TikaException;
  * @since Apache Tika 0.10
  */
 public class TemporaryResources implements Closeable {
+
+    private static final Logger LOG = Logger.getLogger(TemporaryResources.class.getName());
 
     /**
      * Tracked resources in LIFO order.
@@ -81,7 +86,13 @@ public class TemporaryResources implements Closeable {
                 : Files.createTempFile(tempFileDir, "apache-tika-", ".tmp");
         addResource(new Closeable() {
             public void close() throws IOException {
-                Files.delete(path);
+                try {
+                    Files.delete(path);
+                } catch (IOException e) {
+                    // delete when exit if current delete fail
+                    LOG.log(Level.WARNING, "delete tmp file failed; will delete it on exit");
+                    path.toFile().deleteOnExit();
+                }
             }
         });
         return path;

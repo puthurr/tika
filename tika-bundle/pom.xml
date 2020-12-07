@@ -25,7 +25,7 @@
   <parent>
     <groupId>org.apache.tika</groupId>
     <artifactId>tika-parent</artifactId>
-    <version>1.24.1</version>
+    <version>1.25</version>
     <relativePath>../tika-parent/pom.xml</relativePath>
   </parent>
 
@@ -68,6 +68,12 @@
       <groupId>org.ops4j.pax.exam</groupId>
       <artifactId>pax-exam-junit4</artifactId>
       <version>${pax.exam.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>org.ops4j.base</groupId>
+          <artifactId>ops4j-base-store</artifactId>
+        </exclusion>
+      </exclusions>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -128,6 +134,12 @@
       <version>${osgi.core.version}</version>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>org.osgi</groupId>
+      <artifactId>org.osgi.service.cm</artifactId>
+      <version>1.6.0</version>
+      <scope>test</scope>
+    </dependency>
 
     <!-- use non-log4j slf4j backend to prevent main classloader from loading log4j classes -->
     <dependency>
@@ -135,6 +147,19 @@
       <artifactId>slf4j-simple</artifactId>
       <scope>test</scope>
     </dependency>
+    
+    <dependency>
+	    <groupId>org.glassfish.jaxb</groupId>
+	    <artifactId>jaxb-runtime</artifactId>
+	    <version>${jaxb.version}</version>
+	    <scope>test</scope>
+	</dependency>
+	<dependency>
+	    <groupId>com.sun.xml.fastinfoset</groupId>
+	    <artifactId>FastInfoset</artifactId>
+	    <version>1.2.16</version>
+	    <scope>test</scope>
+	</dependency>
   </dependencies>
 
   <build>
@@ -160,11 +185,13 @@
               commons-io|
               commons-exec|
               commons-collections4|
+              dd-plist|
               junrar|
               pdfbox|
               pdfbox-tools|
               pdfbox-debugger|
               pdfbox-preflight|
+              xmpbox|
               fontbox|
               jempbox|
               bcmail-jdk15on|
@@ -178,7 +205,6 @@
               xmlbeans|
               jackcess|
               jackcess-encrypt|
-              commons-lang|
               commons-lang3|
               tagsoup|
               asm|
@@ -187,11 +213,12 @@
               vorbis-java-tika|
               isoparser|
               metadata-extractor|
-              xmpcore|
+              xmpcore-shaded|
               json-simple|
               boilerpipe|
               rome|
               rome-utils|
+              jdom2|
               sentiment-analysis-parser|
               opennlp-tools|
               geoapi|
@@ -212,7 +239,9 @@
               jcip-annotations|
               jmatio|
               guava|
-              age-predictor-api</Embed-Dependency>
+              age-predictor-api|
+              SparseBitSet
+            </Embed-Dependency>
             <Embed-Transitive>true</Embed-Transitive>
             <Bundle-DocURL>${project.url}</Bundle-DocURL>
             <Export-Package>
@@ -239,6 +268,7 @@
               com.adobe.xmp;resolution:=optional,
               com.adobe.xmp.impl;resolution:=optional,
               com.adobe.xmp.options;resolution:=optional,
+              com.dd.plist;resolution:=optional,
               com.adobe.xmp.properties;resolution:=optional,
               com.github.luben.zstd;resolution:=optional,
               com.github.openjson;resolution:=optional,
@@ -258,7 +288,6 @@
               com.sun.msv.datatype;resolution:=optional,
               com.sun.msv.datatype.xsd;resolution:=optional,
               com.sun.tools.javadoc;resolution:=optional,
-              com.zaxxer.sparsebits;resolution:=optional,
               edu.mit.ll.mitie;resolution:=optional,
               edu.stanford.nlp.*;resolution:=optional,
               edu.wisc.ssec.mcidas;resolution:=optional,
@@ -342,6 +371,7 @@
               org.apache.tools.ant;resolution:=optional,
               org.apache.tools.ant.taskdefs;resolution:=optional,
               org.apache.tools.ant.types;resolution:=optional,
+              org.apache.xerces.impl;resolution:=optional,
               org.apache.xerces.parsers;resolution:=optional,
               org.apache.xerces.util;resolution:=optional,
               org.apache.xerces.xni;resolution:=optional,
@@ -371,6 +401,7 @@
               org.jaxen.dom4j;resolution:=optional,
               org.jaxen.pattern;resolution:=optional,
               org.jaxen.saxpath;resolution:=optional,
+              org.jaxen.util;resolution:=optional,
               org.jdom;resolution:=optional,
               org.jdom.input;resolution:=optional,
               org.jdom.output;resolution:=optional,
@@ -396,6 +427,7 @@
               org.xmlpull.v1;resolution:=optional,
               com.microsoft.schemas.office.powerpoint;resolution:=optional,
               com.microsoft.schemas.office.word;resolution:=optional,
+              sun.java2d.cmm.kcms;resolution:=optional,
               sun.misc;resolution:=optional,
               ucar.units;resolution:=optional,
               ucar.httpservices;resolution:=optional,
@@ -559,6 +591,9 @@
           </execution>
         </executions>
         <configuration>
+          <additionalClasspathElements>
+          	<additionalClasspathElement>${project.build.directory}/test-bundles/jdk9plus</additionalClasspathElement>
+          </additionalClasspathElements>
           <systemPropertyVariables>
             <org.ops4j.pax.logging.DefaultServiceLog.level>
               INFO

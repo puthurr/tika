@@ -26,6 +26,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -45,9 +46,25 @@ import org.apache.tika.config.TikaConfig;
 import org.apache.tika.parser.DigestingParser;
 import org.apache.tika.parser.utils.BouncyCastleDigester;
 import org.apache.tika.parser.utils.CommonsDigester;
-import org.apache.tika.server.resource.*;
+import org.apache.tika.server.resource.DetectorResource;
+import org.apache.tika.server.resource.LanguageResource;
+import org.apache.tika.server.resource.MetadataResource;
+import org.apache.tika.server.resource.RecursiveMetadataResource;
+import org.apache.tika.server.resource.TikaDetectors;
+import org.apache.tika.server.resource.TikaMimeTypes;
+import org.apache.tika.server.resource.TikaParsers;
+import org.apache.tika.server.resource.TikaResource;
+import org.apache.tika.server.resource.TikaServerStatus;
+import org.apache.tika.server.resource.TikaVersion;
+import org.apache.tika.server.resource.TikaWelcome;
+import org.apache.tika.server.resource.TranslateResource;
+import org.apache.tika.server.resource.UnpackerResource;
+
+import org.apache.tika.server.resource.azure.AzureStatusResource;
+import org.apache.tika.server.resource.azure.AzureUnpackerResource;
 import org.apache.tika.server.writer.CSVMessageBodyWriter;
 import org.apache.tika.server.writer.JSONMessageBodyWriter;
+import org.apache.tika.server.writer.JSONObjWriter;
 import org.apache.tika.server.writer.MetadataListMessageBodyWriter;
 import org.apache.tika.server.writer.TarWriter;
 import org.apache.tika.server.writer.TextMessageBodyWriter;
@@ -79,6 +96,7 @@ public class TikaServerCli {
     private static final List<String> ONLY_IN_SPAWN_CHILD_MODE =
             Arrays.asList(new String[] { "taskTimeoutMillis", "taskPulseMillis",
             "pingTimeoutMillis", "pingPulseMillis", "maxFiles", "javaHome", "maxRestarts",
+                    "numRestarts",
             "childStatusFile", "maxChildStartupMillis", "tmpFilePrefix"});
 
     private static Options getOptions() {
@@ -91,6 +109,8 @@ public class TikaServerCli {
         options.addOption("dml", "digestMarkLimit", true, "max number of bytes to mark on stream for digest");
         options.addOption("l", "log", true, "request URI log level ('debug' or 'info')");
         options.addOption("s", "includeStack", false, "whether or not to return a stack trace\nif there is an exception during 'parse'");
+        options.addOption("i", "id", true, "id to use for server in server status endpoint");
+        options.addOption("status", false, "enable the status endpoint");
         options.addOption("?", "help", false, "this help message");
         options.addOption("enableUnsecureFeatures", false, "this is required to enable fileUrl.");
         options.addOption("enableFileUrl", false, "allows user to pass in fileUrl instead of InputStream.");
@@ -109,7 +129,7 @@ public class TikaServerCli {
         options.addOption("childStatusFile", true, "Only in spawn child mode: temporary file used as mmap to communicate " +
                 "with parent process -- do not use this! Should only be invoked by parent process.");
         options.addOption("tmpFilePrefix", true, "Only in spawn child mode: prefix for temp file - for debugging only");
-
+        options.addOption("numRestarts", true, "Only in spawn child mode: number of times that the child has had to be restarted.");
         return options;
     }
 
@@ -255,10 +275,13 @@ public class TikaServerCli {
                 inputStreamFactory = new DefaultInputStreamFactory();
             }
 
+            String serverId = line.hasOption("i") ? line.getOptionValue("i") : UUID.randomUUID().toString();
+            LOG.debug("SERVER ID:" +serverId);
             ServerStatus serverStatus;
             //if this is a child process
             if (line.hasOption("child")) {
-                serverStatus = new ServerStatus();
+                serverStatus = new ServerStatus(serverId, Integer.parseInt(line.getOptionValue("numRestarts")),
+                        false);
                 //redirect!!!
                 InputStream in = System.in;
                 System.setIn(new ByteArrayInputStream(new byte[0]));
@@ -277,7 +300,7 @@ public class TikaServerCli {
 
                 serverThread.start();
             } else {
-                serverStatus = new ServerStatus(true);
+                serverStatus = new ServerStatus(serverId, 0, true);
             }
             TikaResource.init(tika, digester, inputStreamFactory, serverStatus);
             JAXRSServerFactoryBean sf = new JAXRSServerFactoryBean();
@@ -297,7 +320,9 @@ public class TikaServerCli {
             // AZURE BLOB STORAGE SUPPORT
             rCoreProviders.add(new SingletonResourceProvider(new AzureUnpackerResource()));
             rCoreProviders.add(new SingletonResourceProvider(new AzureStatusResource()));
-
+            if (line.hasOption("status")) {
+                rCoreProviders.add(new SingletonResourceProvider(new TikaServerStatus(serverStatus)));
+            }
             List<ResourceProvider> rAllProviders = new ArrayList<>(rCoreProviders);
             rAllProviders.add(new SingletonResourceProvider(new TikaWelcome(rCoreProviders)));
             sf.setResourceProviders(rAllProviders);
@@ -311,6 +336,9 @@ public class TikaServerCli {
             providers.add(new XMPMessageBodyWriter());
             providers.add(new TextMessageBodyWriter());
             providers.add(new TikaServerParseExceptionMapper(returnStackTrace));
+            if (line.hasOption("status")) {
+                providers.add(new JSONObjWriter());
+            }
             if (logFilter != null) {
                 providers.add(logFilter);
             }

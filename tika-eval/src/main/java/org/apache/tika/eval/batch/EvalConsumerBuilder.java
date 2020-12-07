@@ -76,7 +76,8 @@ public abstract class EvalConsumerBuilder {
         dbUtil.createTables(getRefTableInfos(), createRefTable);
 
         //step 3. create mime buffer
-        this.mimeBuffer = new MimeBuffer(dbUtil.getConnection(), TikaConfig.getDefaultConfig());
+        this.mimeBuffer = new MimeBuffer(dbUtil.getConnection(), getMimeTable(),
+                TikaConfig.getDefaultConfig());
 
         //step 4. populate the reference tables
         populateRefTables();
@@ -100,11 +101,14 @@ public abstract class EvalConsumerBuilder {
      */
     protected abstract List<TableInfo> getNonRefTableInfos();
 
+    protected abstract TableInfo getMimeTable();
+
     protected abstract void addErrorLogTablePairs(DBConsumersManager manager);
 
     public void populateRefTables() throws IOException, SQLException {
         boolean refTablesPopulated = true;
-        try (Connection connection = dbUtil.getConnection()) {
+        try{
+            Connection connection = dbUtil.getConnection();
             for (TableInfo tableInfo : getRefTableInfos()) {
                 int rows = 0;
                 try (ResultSet rs = connection.createStatement().executeQuery("select * from "+
