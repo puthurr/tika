@@ -149,6 +149,7 @@
       <type>test-jar</type>
       <scope>test</scope>
     </dependency>
+
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>tika-parsers</artifactId>
@@ -162,10 +163,11 @@
       <artifactId>junit</artifactId>
       <scope>test</scope>
     </dependency>
+
       <dependency>
           <groupId>${project.groupId}</groupId>
           <artifactId>tika-core</artifactId>
-          <version>1.24.1</version>
+          <version>1.25</version>
           <scope>compile</scope>
       </dependency>
 
@@ -173,7 +175,18 @@
     <dependency>
       <groupId>com.azure</groupId>
       <artifactId>azure-storage-blob</artifactId>
-      <version>12.8.0</version>
+      <version>12.9.0</version>
+      <scope>compile</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>com.fasterxml.jackson.core</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>com.fasterxml.jackson.module</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
 
   </dependencies>
