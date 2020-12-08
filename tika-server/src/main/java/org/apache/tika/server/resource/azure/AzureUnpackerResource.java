@@ -15,9 +15,8 @@
  * limitations under the License.
  */
 
-package org.apache.tika.server.resource;
+package org.apache.tika.server.resource.azure;
 
-import au.com.bytecode.opencsv.CSVWriter;
 import com.azure.storage.blob.BlobClient;
 import com.azure.storage.blob.BlobContainerClient;
 import com.azure.storage.blob.BlobServiceClientBuilder;
@@ -43,6 +42,7 @@ import org.apache.tika.parser.microsoft.OfficeParser;
 import org.apache.tika.sax.BodyContentHandler;
 import org.apache.tika.sax.RichTextContentHandler;
 import org.apache.tika.server.MetadataList;
+import org.apache.tika.server.resource.TikaResource;
 import org.apache.tika.utils.ParserUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,30 +63,11 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import com.azure.storage.blob.BlobServiceClient;
 
 @Path("/azure-unpack")
-public class AzureUnpackerResource {
+public class AzureUnpackerResource extends AbstractAzureResource {
     // 100MB max size
     private static final long MAX_ATTACHMENT_BYTES = 100*1024*1024;
 
-    public static final String TEXT_FILENAME = "__TEXT__";
-    private static final String META_FILENAME = "__METADATA__";
-
     private static final Logger LOG = LoggerFactory.getLogger(AzureUnpackerResource.class);
-
-    // AZURE
-    private static final String AZURE_CONTAINER = "X-TIKA-AZURE-CONTAINER";
-    private static final String AZURE_CONTAINER_DIRECTORY = "X-TIKA-AZURE-CONTAINER-DIRECTORY";
-    private static final String METADATA_PREFIX = "X-TIKA-AZURE-META-";
-
-    // Retrieve the connection string for use with the application. The storage
-    // connection string is stored in an environment variable on the machine
-    // running the application called AZURE_STORAGE_CONNECTION_STRING. If the environment variable
-    // is created after the application is launched in a console or with
-    // Visual Studio, the shell or application needs to be closed and reloaded
-    // to take the environment variable into account.
-    private static String connectStr = System.getenv("AZURE_STORAGE_CONNECTION_STRING");
-
-    /* Create a new BlobServiceClient with a connection string */
-    private static BlobServiceClient blobServiceClient;
 
     static {
         if (connectStr != null) {
@@ -127,7 +108,12 @@ public class AzureUnpackerResource {
 
         if ( blobServiceClient == null )
         {
-            throw new WebApplicationException(Response.Status.SERVICE_UNAVAILABLE);
+            this.AcquireBlobServiceClient();
+
+            if ( blobServiceClient == null)
+            {
+                throw new WebApplicationException(Response.Status.SERVICE_UNAVAILABLE);
+            }
         }
 
         List<Metadata> metadataList = new LinkedList<>();
@@ -135,13 +121,8 @@ public class AzureUnpackerResource {
         // Get the headers
         MultivaluedMap<String, String> headers = httpHeaders.getRequestHeaders();
 
-        String containerName = headers.getFirst(AZURE_CONTAINER);
-        String containerDirectory = "";
-
-        if ( headers.containsKey(AZURE_CONTAINER_DIRECTORY) )
-        {
-            containerDirectory = headers.getFirst((AZURE_CONTAINER_DIRECTORY));
-        }
+        String containerName = this.GetContainer(headers);
+        String containerDirectory = this.GetContainerDirectory(headers);
 
         if (containerName == null) {
             throw new WebApplicationException(Response.Status.BAD_REQUEST);
@@ -151,16 +132,9 @@ public class AzureUnpackerResource {
         BlobContainerClient containerClient = null;
 
         try {
-            containerClient = blobServiceClient.createBlobContainer(containerName);
+            containerClient = this.AcquireBlobContainerClient(containerName);
         } catch (BlobStorageException ex) {
-            // The container may already exist, so don't throw an error
-            if (!ex.getErrorCode().equals(BlobErrorCode.CONTAINER_ALREADY_EXISTS)) {
-                throw new WebApplicationException(Response.Status.BAD_REQUEST);
-            }
-            else
-            {
-                containerClient=blobServiceClient.getBlobContainerClient(containerName);
-            }
+            throw new WebApplicationException(Response.Status.BAD_REQUEST);
         }
 
         Metadata metadata = new Metadata();
@@ -193,8 +167,8 @@ public class AzureUnpackerResource {
         Map<String, String> blobMetadata = new HashMap<>();
         // Populate the blobMetadata from headers. Use the prefix x-ms-meta-name:string-value
         for (String key : headers.keySet()) {
-            if ( key.startsWith(METADATA_PREFIX)){
-                blobMetadata.put(key.replaceAll(METADATA_PREFIX,""),headers.getFirst(key));
+            if ( key.startsWith(AZURE_METADATA_PREFIX)){
+                blobMetadata.put(key.replaceAll(AZURE_METADATA_PREFIX,""),headers.getFirst(key));
             }
         }
         // Set the EmbeddedDocumentExtractor we need

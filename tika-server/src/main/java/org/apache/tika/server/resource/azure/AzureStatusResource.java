@@ -15,12 +15,9 @@
  * limitations under the License.
  */
 
-package org.apache.tika.server.resource;
+package org.apache.tika.server.resource.azure;
 
 import com.azure.storage.blob.BlobContainerClient;
-import com.azure.storage.blob.BlobServiceClient;
-import com.azure.storage.blob.BlobServiceClientBuilder;
-import com.azure.storage.blob.models.BlobErrorCode;
 import com.azure.storage.blob.models.BlobStorageException;
 import org.apache.tika.server.HTMLHelper;
 import org.slf4j.Logger;
@@ -37,26 +34,11 @@ import java.io.InputStream;
 import java.util.Map;
 
 @Path("/azure-status")
-public class AzureStatusResource {
+public class AzureStatusResource extends AbstractAzureResource {
 
     private static final Logger LOG = LoggerFactory.getLogger(AzureStatusResource.class);
 
-    // AZURE
-    private static final String AZURE_CONTAINER = "X-TIKA-AZURE-CONTAINER";
-    private static final String AZURE_CONTAINER_DIRECTORY = "X-TIKA-AZURE-CONTAINER-DIRECTORY";
-
-    // Retrieve the connection string for use with the application. The storage
-    // connection string is stored in an environment variable on the machine
-    // running the application called AZURE_STORAGE_CONNECTION_STRING. If the environment variable
-    // is created after the application is launched in a console or with
-    // Visual Studio, the shell or application needs to be closed and reloaded
-    // to take the environment variable into account.
-    private static String connectStr = System.getenv("AZURE_STORAGE_CONNECTION_STRING");
-
-    /* Create a new BlobServiceClient with a connection string */
-    private static BlobServiceClient blobServiceClient;
-
-    private HTMLHelper html = new HTMLHelper();;
+    private HTMLHelper html = new HTMLHelper();
 
     @GET
     @Produces({"text/html"})
@@ -73,7 +55,12 @@ public class AzureStatusResource {
         h.append("<ul>");
         Map<String, String> env = System.getenv();
         for (String envName : env.keySet()) {
-            h.append("<li>"+envName+" : " +env.get(envName)+"</li>");
+            if ( envName.equals(AZURE_STORAGE_CONNECTION_STRING)) {
+                h.append("<li>"+envName+" : <secured> </li>");
+            }
+            else{
+                h.append("<li>"+envName+" : " +env.get(envName)+"</li>");
+            }
         }
         h.append("</ul>");
 
@@ -85,25 +72,23 @@ public class AzureStatusResource {
             // Get the headers
             MultivaluedMap<String, String> headers = httpHeaders.getRequestHeaders();
 
-            String containerName = headers.getFirst(AZURE_CONTAINER);
-            h.append("<li>Container : " +containerName+"</li>");
-
-            String containerDirectory = "";
-
-            if ( headers.containsKey(AZURE_CONTAINER_DIRECTORY) )
+            String containerName = this.GetContainer(headers);
+            if ( containerName != null )
             {
-                containerDirectory = headers.getFirst((AZURE_CONTAINER_DIRECTORY));
+                h.append("<li>Container : " +containerName+"</li>");
+            }
+
+            String containerDirectory = this.GetContainerDirectory(headers);
+            if ( containerDirectory != null )
+            {
                 h.append("<li>Container Directory : " +containerDirectory+"</li>");
             }
+
             h.append("</ul>");
 
-            if (connectStr != null) {
-                blobServiceClient = new BlobServiceClientBuilder()
-                        .connectionString(connectStr)
-                        .buildClient();
-            }
+            this.AcquireBlobServiceClient();
 
-            if ( blobServiceClient == null )
+            if ( this.blobServiceClient == null )
             {
                 h.append("<p>");
                 h.append("<strong>Blob Service Client is null...</strong>");
@@ -112,28 +97,22 @@ public class AzureStatusResource {
             }
             else
             {
-                h.append("<p>Account Url "+blobServiceClient.getAccountUrl()+"</p>");
-                h.append("<p>Account Name "+blobServiceClient.getAccountName()+"</p>");
+                h.append("<p>Account Url <strong>"+this.blobServiceClient.getAccountUrl()+"</strong></p>");
+                h.append("<p>Account Name <strong>"+this.blobServiceClient.getAccountName()+"</strong></p>");
             }
 
             /* Create a new container client */
             BlobContainerClient containerClient = null;
 
             try {
-
-                containerClient = blobServiceClient.createBlobContainer(containerName);
+                containerClient = this.AcquireBlobContainerClient(containerName);
+                h.append("<p> Successfully Acquired Container Client "+containerClient.getBlobContainerName());
+                h.append("</p>");
 
             } catch (BlobStorageException ex) {
-                // The container may already exist, so don't throw an error
-                if (!ex.getErrorCode().equals(BlobErrorCode.CONTAINER_ALREADY_EXISTS)) {
-                    h.append("<p>");
-                    h.append(ex.getMessage());
-                    h.append("</p>");
-                }
-                else
-                {
-                    containerClient=blobServiceClient.getBlobContainerClient(containerName);
-                }
+                h.append("<p>");
+                h.append(ex.getMessage());
+                h.append("</p>");
             }
         }
         catch (Exception e)
