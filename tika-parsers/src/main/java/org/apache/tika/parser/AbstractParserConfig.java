@@ -31,7 +31,14 @@ public class AbstractParserConfig implements Serializable {
      */
     public String getImageFilename(int sourceNumber,int imageNumber,String extension)
     {
-        return String.format(Locale.ROOT, EMBEDDED_IMAGE_NAMING_FORMAT, sourceNumber, imageNumber) + "." + extension;
+        if (extension.startsWith("."))
+        {
+            return String.format(Locale.ROOT, EMBEDDED_IMAGE_NAMING_FORMAT, sourceNumber, imageNumber) + extension;
+        }
+        else
+        {
+            return String.format(Locale.ROOT, EMBEDDED_IMAGE_NAMING_FORMAT, sourceNumber, imageNumber) + "." + extension;
+        }
     }
 
     /**
@@ -43,6 +50,13 @@ public class AbstractParserConfig implements Serializable {
      */
     public String getResourceFilename(String prefix, int sourceNumber,int resourceNumber,String extension)
     {
-        return prefix + "-"+ String.format(Locale.ROOT, EMBEDDED_RESOURCE_NAMING_FORMAT, sourceNumber, resourceNumber) + "." + extension;
+        if (extension.startsWith("."))
+        {
+            return prefix + "-"+ String.format(Locale.ROOT, EMBEDDED_RESOURCE_NAMING_FORMAT, sourceNumber, resourceNumber) + extension;
+        }
+        else
+        {
+            return prefix + "-"+ String.format(Locale.ROOT, EMBEDDED_RESOURCE_NAMING_FORMAT, sourceNumber, resourceNumber) + "." + extension;
+        }
     }
 }
