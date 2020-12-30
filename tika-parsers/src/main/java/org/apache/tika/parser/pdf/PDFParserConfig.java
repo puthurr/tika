@@ -173,8 +173,8 @@ public class PDFParserConfig extends AbstractParserConfig implements Serializabl
     // Old PDF writer could output a scan page by striping the image into multiple streams.
     // We want to avoid outputting too many useless images in that case.
     private boolean stripedImagesHandling = false;
-    // Default : an Array of 3 Streams in a page will force the conversion to an image.
-    private int stripedImagesThreshold = 3;
+    // Default : an Array of 5 Streams in a page will force the conversion to an image.
+    private int stripedImagesThreshold = 5;
 
     // Graphical objects can overlay background images (i.e. circle, highlights). This flag would allow to convert
     // the entire page as image to retain all graphical elements.

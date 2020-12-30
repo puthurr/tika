@@ -22,7 +22,6 @@ import org.apache.pdfbox.cos.COSStream;
 import org.apache.pdfbox.io.IOUtils;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDResources;
-import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDFont;
 import org.apache.pdfbox.pdmodel.graphics.color.PDColor;
 import org.apache.pdfbox.pdmodel.graphics.color.PDDeviceGray;
@@ -85,8 +84,8 @@ public class ImageGraphicsEngine extends PDFGraphicsStreamEngine {
     private Map<PDImage, Integer> extractedImages;
 
     // PUTHURR
-    private boolean checkForGraphics = false ;
-    private int graphicsPresence = 0 ;
+    private boolean statisticsRun = false ;
+    private PDFStatistics stats= new PDFStatistics();
 
     //TODO: this is an embarrassment of an initializer...fix
     protected ImageGraphicsEngine(PDPage page, PDFParserConfig pdfParserConfig, Map<COSStream, Integer> processedInlineImages,
@@ -100,13 +99,13 @@ public class ImageGraphicsEngine extends PDFGraphicsStreamEngine {
     }
 
     /**
-     * @return integer representing the presence of certain Graphical objects
+     * @return statistics representing the presence of certain type of objects in a page
      * @throws IOException
      */
-    public int checkForGraphicsRun() throws IOException {
-        setCheckForGraphics(true);
+    public PDFStatistics runStatistics() throws IOException {
+        setStatisticsRun(true);
         run();
-        return graphicsPresence;
+        return stats;
     }
 
     /**
@@ -114,8 +113,7 @@ public class ImageGraphicsEngine extends PDFGraphicsStreamEngine {
      * @throws IOException
      */
     public Map<PDImage, Integer> imagesExtractionRun() throws IOException {
-        graphicsPresence=0;
-        setCheckForGraphics(false);
+        setStatisticsRun(false);
         return run();
     }
 
@@ -159,9 +157,9 @@ public class ImageGraphicsEngine extends PDFGraphicsStreamEngine {
 
     @Override
     public void drawImage(PDImage pdImage) throws IOException {
-        if (isCheckForGraphics())
+        if (isStatisticsRun())
         {
-            graphicsPresence+=1;
+            stats.incrementImageCounter();
             return ;
         }
 
@@ -208,7 +206,7 @@ public class ImageGraphicsEngine extends PDFGraphicsStreamEngine {
         }
         else
         {
-            graphicsPresence+=10000;
+            stats.incrementGraphicCounter(10000);
         }
     }
 
@@ -231,7 +229,7 @@ public class ImageGraphicsEngine extends PDFGraphicsStreamEngine {
     public void curveTo(float x1, float y1, float x2, float y2, float x3, float y3)
             throws IOException {
         // A Curve could be considered as a graphical element used to annotate an image.
-        graphicsPresence+=100000;
+        stats.incrementGraphicCounter(100000);
     }
 
     @Override
@@ -460,11 +458,11 @@ public class ImageGraphicsEngine extends PDFGraphicsStreamEngine {
         return false;
     }
 
-    public boolean isCheckForGraphics() {
-        return checkForGraphics;
+    public boolean isStatisticsRun() {
+        return statisticsRun;
     }
 
-    public void setCheckForGraphics(boolean checkForGraphics) {
-        this.checkForGraphics = checkForGraphics;
+    public void setStatisticsRun(boolean statisticsRun) {
+        this.statisticsRun = statisticsRun;
     }
 }

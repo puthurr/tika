@@ -175,7 +175,6 @@ class PDF2XHTML extends AbstractPDF2XHTML {
         int imageNumber = inlineImageCounter.getAndIncrement();
         processedInlineImages.put(new COSStream(), imageNumber);
 
-//        String fileName = String.format(Locale.ROOT, "image%05d", imageNumber) + "." + extension;
         String fileName = config.getImageFilename(pageIndex+1,imageNumber,extension);
 
         imgMetadata.set(Metadata.RESOURCE_NAME_KEY, fileName);
@@ -239,12 +238,12 @@ class PDF2XHTML extends AbstractPDF2XHTML {
                 PDStream i = it.next();
                 counter++;
             }
-            // striped-scanned images usually have an Array of Streams instead of a single COSStream
+            // Case: striped-scanned images oftenly have an Array of Streams instead of a single COSStream
             if ( counter > config.getStripedImagesThreshold())
             {
                 convertPageToImage = true;
             }
-            metadata.add(TikaCoreProperties.TIKA_META_PREFIX+"StripedImagesCount", String.valueOf(counter));
+            metadata.add(TikaCoreProperties.TIKA_META_PREFIX+"ContentStreamsCount", String.valueOf(counter));
         }
 
         // puthurr - Our project is focused on Image, A single page PDF is forced into an image covering all our base
@@ -258,17 +257,29 @@ class PDF2XHTML extends AbstractPDF2XHTML {
         // Create a Graphics Engine
         ImageGraphicsEngine engine = new ImageGraphicsEngine(page, config, processedInlineImages, inlineImageCounter);
 
+        PDFStatistics stats = engine.runStatistics();
+
+        // puthurr - many images on a single page could indicate a stripe issue (similar to the number of content streams)
+        if ( config.getStripedImagesHandling() )
+        {
+            // Case: striped-scanned images oftenly have an Array of Streams instead of a single COSStream
+            if ( stats.getNumberOfImages() > config.getStripedImagesThreshold())
+            {
+                processPageAsImage(page);
+                metadata.add(TikaCoreProperties.TIKA_META_PREFIX+"StripedImagesCount", String.valueOf(stats.getNumberOfImages()));
+                return;
+            }
+        }
+
         // puthurr - when PDF page contains Graphics like curve, stroke etc. annotating any background image
         // they should be considered part of the extracted image.
         if (config.getGraphicsToImage())
         {
-            int result = engine.checkForGraphicsRun();
-
-            if ( result > config.getGraphicsToImageThreshold())
+            if ( stats.getNumberOfGraphics() > config.getGraphicsToImageThreshold())
             {
                 // puthurr - not taking any risk of losing graphical annotation, we treat the entire page as a single image
                 processPageAsImage(page);
-                metadata.add(TikaCoreProperties.TIKA_META_PREFIX+"GraphicsToImage", String.valueOf(result));
+                metadata.add(TikaCoreProperties.TIKA_META_PREFIX+"GraphicsToImage", String.valueOf(stats.getNumberOfGraphics()));
                 return;
             }
         }

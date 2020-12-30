@@ -374,8 +374,6 @@ public abstract class AbstractOOXMLExtractor implements OOXMLExtractor {
         int partnumber = Integer.parseInt(name.replaceAll("[^0-9]", ""));
         String extension = FilenameUtils.getExtension(inputname);
 
-        // PUTHURR
-//        return (partstem+String.format(Locale.ROOT,"%05d", partnumber) + "." + extension);
         if ( contentType.startsWith("image"))
         {
             return (config.getImageFilename(0, partnumber, extension));
