@@ -69,7 +69,10 @@ class PDF2XHTML extends AbstractPDF2XHTML {
      * TIKA-1742, we're limiting the export to one image per page.
      */
     private Map<COSStream, Integer> processedInlineImages = new HashMap<>();
-    private AtomicInteger inlineImageCounter = new AtomicInteger(0);
+
+    // puthurr - Image number starting to 1 -
+    private AtomicInteger inlineImageCounter = new AtomicInteger(1);
+
     PDF2XHTML(PDDocument document, ContentHandler handler, ParseContext context, Metadata metadata,
                       PDFParserConfig config)
             throws IOException {

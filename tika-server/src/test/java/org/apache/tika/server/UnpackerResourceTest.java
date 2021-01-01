@@ -207,8 +207,8 @@ public class UnpackerResourceTest extends CXFTestBase {
                 .accept("application/zip")
                 .put(ClassLoader.getSystemResourceAsStream("testOCR.pdf"));
         Map<String, String> results = readZipArchive((InputStream)response.getEntity());
-        assertTrue(results.containsKey("image-00001-00000.png"));
-        String md5 = results.get("image-00001-00000.png");
+        assertTrue(results.containsKey("image-00001-00001.png"));
+        String md5 = results.get("image-00001-00001.png");
         assertTrue(
                 //pre Java 11
                 md5.equals("7c2f14acbb737672a1245f4ceb50622a") ||

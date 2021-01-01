@@ -659,7 +659,7 @@ public class PDFParserTest extends TikaTest {
 
         assertEquals(5, metadatas.size());
         assertNull(metadatas.get(0).get(Metadata.RESOURCE_NAME_KEY));
-        assertEquals("image-00001-00000.jpg", metadatas.get(1).get(Metadata.RESOURCE_NAME_KEY));
+        assertEquals("image-00001-00001.jpg", metadatas.get(1).get(Metadata.RESOURCE_NAME_KEY));
         assertEquals("Press Quality(1).joboptions", metadatas.get(3).get(Metadata.RESOURCE_NAME_KEY));
         assertEquals("Unit10.doc", metadatas.get(4).get(Metadata.RESOURCE_NAME_KEY));
         assertEquals(MediaType.image("jpeg").toString(), metadatas.get(1).get(Metadata.CONTENT_TYPE));
@@ -690,7 +690,7 @@ public class PDFParserTest extends TikaTest {
         assertEquals("Invalid width.", "352", metadatas.get(1).get("width"));
         
         assertNull(metadatas.get(0).get(Metadata.RESOURCE_NAME_KEY));
-        assertEquals("image-00001-00000.jb2",
+        assertEquals("image-00001-00001.jb2",
                 metadatas.get(1).get(Metadata.RESOURCE_NAME_KEY));
         assertEquals(MediaType.image("x-jbig2").toString(), 
                 metadatas.get(1).get(Metadata.CONTENT_TYPE));
@@ -946,7 +946,7 @@ public class PDFParserTest extends TikaTest {
         //regular attachment
         assertContains("<div source=\"attachment\" class=\"embedded\" id=\"Unit10.doc\" />", r.xml);
         //inline image
-        assertContains("<img src=\"image-00066-00001.tif\" alt=\"image-00066-00001.tif\" class=\"embedded\"", r.xml);
+        assertContains("<img src=\"image-00066-00002.tif\" alt=\"image-00066-00002.tif\" class=\"embedded\"", r.xml);
 
         //doc embedded inside an annotation
         r = getXML("testPDFFileEmbInAnnotation.pdf");
