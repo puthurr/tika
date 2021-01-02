@@ -398,7 +398,7 @@ public class XWPFWordExtractorDecorator extends AbstractOOXMLExtractor {
                     if (ctPic.getBlipFill() != null && ctPic.getBlipFill().getBlip() != null) {
                         attributes.addAttribute("", "id", "id", "CDATA", picture.getCTPicture().getBlipFill().getBlip().getEmbed());
                     }
-                    attributes.addAttribute("", "src", "src", "CDATA", getImageResourceName(imgdata.getFileName(),imgdata.getPackagePart().getContentType()));
+                    attributes.addAttribute("", "src", "src", "CDATA", getImageResourceName(0, imgdata.getFileName(),imgdata.getPackagePart().getContentType()));
                     attributes.addAttribute("", "title", "title", "CDATA", picture.getDescription());
                     attributes.addAttribute("", "alt", "alt", "CDATA", imgdata.getFileName());
                     

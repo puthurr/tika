@@ -374,7 +374,7 @@ class PDF2XHTML extends AbstractPDF2XHTML {
         attr.addAttribute("", "class", "class", "CDATA", "embedded");
         //Adding extra attributes to the image tag for consistency
         try {
-            attr.addAttribute("", "id", "id", "CDATA", config.getImageName(pageIndex, imageNumber));
+            attr.addAttribute("", "id", "id", "CDATA", config.getImageName(pageIndex+1, imageNumber));
             attr.addAttribute("", "contenttype", "contenttype", "CDATA", imgMetadata.get(Metadata.CONTENT_TYPE));
             if (width>0) {
                 attr.addAttribute("", "width", "witdh", "CDATA", String.valueOf(width));

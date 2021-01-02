@@ -9,15 +9,36 @@ Why this version ?
 -----------------
 
 For a Knowledge mining project, my team were looking to have a consistent representation of embedded images in XHTML output. 
-To give you an example, the embedded images links for PowerPoint were missing but the images links for PDF are there.
+To give you an example, the embedded images links for PowerPoint were missing but the images links for PDF were there.
 
-This version is trying to harmonize the way embedded images are showing up in the XHTML in a nutshell.Once stabilized our plan is to propose our changes to the Apache Tika community.
+This version is trying to harmonize the way embedded images are showing up in the XHTML in a nutshell. 
 
-Contact : puthurr@gmail.com
+Once stabilized our plan is to propose our changes to the Apache Tika community.
 
-This version' features
-----------------------
-#### XHTML Tags
+Main contact : [puthurr@gmail.com](mailto:puthurr@gmail.com)
+
+## Added Features Set 
+
+### Embedded Resources Naming consistency for Office and PDF
+
+Extracting the embedded images of any document is a great feature. We implement a consistent images numbering format to identify quickly which page or slide a specific was referenced.
+
+Format **image-(source)-(absolute image number).extension**
+
+```java
+    // Define how to name an embeddded resource
+public final String EMBEDDED_RESOURCE_NAMING_FORMAT = "%05d-%05d";
+
+// Define how to name an embeddded image
+public final String EMBEDDED_IMAGE_NAMING_FORMAT = "image-"+EMBEDDED_RESOURCE_NAMING_FORMAT;
+```
+
+The final resource name for images would be
+
+- image-00001-00001.png => first image of the document located on page/slide 1
+- image-00004-00006.png => sixth image of the document located on page/slide 4 
+
+### XHTML Tags
 
 - PDF Page tags contains the page id.
 ```<div class="page" id="2">```
@@ -26,30 +47,30 @@ This version' features
 ```<div class="slide" id="2" title="Oil Production">```
 - PPT/PPTX slide-notes div renamed to slide-notes-content for consistency 
 ```<div class="slide-notes-content">```
+  
+### Embedded Images XHTML tags
 
-#### Embedded Images XHTML tags
-- Numbering 5 digits with padding left 0. 
-- Representation in the XHTML for Office and PDF documents. 
+Embedded representation in the XHTML for Office and PDF documents was diverse. 
+Images are now represented with an image tag containing extra information like the size or type.
+The fact to have images in W3C img tag allow us to work towards a standardized document preview. 
 
 **For PDF** 
 - Original 
-```
+```html
 <img src="embedded:image0.jpg" alt="image0.jpg"/>
 ```
 - Our version
+```html
+<img src="image-00001-00001.jpg" alt="image-00001-00001.jpg" class="embedded" id="image-00000-00001" contenttype="image/jpeg" size="775380" witdh="1491" height="2109"/>
 ```
-<img src="image00000.jpg" alt="image00000.jpg" class="embedded" id="00000" 
-    contenttype="image/jpeg" witdh="1491" height="2109" size="775380"/>
-```
-**For PowerPoint**
+**For PowerPoint**  
 - Original 
-```
+```html
 <div class="embedded" id="slide6_rId3" />
 ```
 - Our version 
-```
-<img class="embedded" id="slide5_rId4" contenttype="image/x-wmf" src="image00005.wmf" alt="image5.wmf" 
-title="Picture 4" witdh="120" height="172" size="7092"/>
+```html
+<img class="embedded" id="slide6_rId3" contenttype="image/jpeg" src="image-00006-00006.jpeg" alt="image6.jpeg" title="Picture 58" witdh="271" height="280" size="26789"/>
 ```
 
 Some img attributes aren't HTML compliant we know. This above output is close to provide an HTML preview of any document. 
@@ -60,14 +81,15 @@ Some img attributes aren't HTML compliant we know. This above output is close to
 
 The new PDF parser configuration are all related to Image extraction thus they will take effects on calling the unpack endpoint. 
 It means they will also requires the **extractInlineImages** option to be set to true as well. 
+
 - **allPagesAsImages** : this instructs to convert any PDF page as image.
 - **singlePagePDFAsImage** : this instructs to convert a single page PDF to an image.
-- **stripedImagesHandling** : this instructs to convert a PDF page into an image based on the number of Contents Streams. Some PDF writers tend to stripe an image into multiple contents streams (Array) 
+- **stripedImagesHandling** : this instructs to convert a PDF page into an image based on the number of Contents Streams or images in a page. Some PDF writers tend to stripe an image into multiple contents streams (Array) 
 - **stripedImagesThreshold** : minimum number of contents streams to convert the page into an image.
 - **graphicsToImage** : a page with graphics objets could be better represented with an image. 
 - **graphicsToImageThreshold** : minimum number of graphics objects to convert the page into an image. 
 
-To leverage those features add the corresponding headers prefixed by X-Tika-PDF.
+To leverage those features add the corresponding headers prefixed by **X-Tika-PDF**.
 
 ```--header "X-Tika-PDFextractInlineImages:true" --header "X-Tika-PDFsinglePagePDFAsImage:true"``` 
 

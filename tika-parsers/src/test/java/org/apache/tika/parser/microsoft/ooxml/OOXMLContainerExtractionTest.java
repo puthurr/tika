@@ -93,9 +93,9 @@ public class OOXMLContainerExtractionTest extends AbstractPOIContainerExtraction
         assertEquals(3 + 1 /*thumbnail */, handler.filenames.size());
         assertEquals(3 + 1 /*thumbnail */, handler.mediaTypes.size());
 
-        assertEquals("image-00000-00001.png", handler.filenames.get(0));
-        assertEquals("image-00000-00002.gif", handler.filenames.get(1));
-        assertEquals("image-00000-00003.png", handler.filenames.get(2));
+        assertEquals("image-00001-00001.png", handler.filenames.get(0));
+        assertEquals("image-00001-00002.gif", handler.filenames.get(1));
+        assertEquals("image-00001-00003.png", handler.filenames.get(2));
         assertEquals(TYPE_PNG, handler.mediaTypes.get(0));
         assertEquals(TYPE_GIF, handler.mediaTypes.get(1)); // icon of sound
         assertEquals(TYPE_PNG, handler.mediaTypes.get(2));
@@ -256,12 +256,12 @@ public class OOXMLContainerExtractionTest extends AbstractPOIContainerExtraction
         assertEquals("image-00000-00001.emf", handler.filenames.get(0));
         assertEquals("image-00000-00002.emf", handler.filenames.get(1));
         assertEquals("image-00000-00003.emf", handler.filenames.get(2));
-        assertEquals("image-00000-00004.png", handler.filenames.get(3));
-        assertEquals("image-00000-00005.gif", handler.filenames.get(4));
-        assertEquals("image-00000-00006.png", handler.filenames.get(5));
-        assertEquals("Microsoft_Office_Excel_Worksheet-00000-00001.xlsx", handler.filenames.get(6));
-        assertEquals("Microsoft_Office_Word_Document-00000-00002.docx", handler.filenames.get(7));
-        assertEquals("Microsoft_Office_Word__-__Document-00000-9720031.doc", handler.filenames.get(8));
+        assertEquals("image-00001-00004.png", handler.filenames.get(3));
+        assertEquals("image-00001-00005.gif", handler.filenames.get(4));
+        assertEquals("image-00001-00006.png", handler.filenames.get(5));
+        assertEquals("Microsoft_Office_Excel_Worksheet-00001-00001.xlsx", handler.filenames.get(6));
+        assertEquals("Microsoft_Office_Word_Document-00001-00002.docx", handler.filenames.get(7));
+        assertEquals("Microsoft_Office_Word__-__Document-00001-9720031.doc", handler.filenames.get(8));
         assertEquals("/docProps/thumbnail.jpeg", handler.filenames.get(9));
 
         // But we do know their types

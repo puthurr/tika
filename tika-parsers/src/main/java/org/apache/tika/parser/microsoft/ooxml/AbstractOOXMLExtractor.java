@@ -74,8 +74,6 @@ import org.xml.sax.helpers.AttributesImpl;
  */
 public abstract class AbstractOOXMLExtractor implements OOXMLExtractor {
 
-
-
     static final String RELATION_AUDIO = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/audio";
     static final String RELATION_MEDIA = "http://schemas.microsoft.com/office/2007/relationships/media";
     static final String RELATION_VIDEO = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/video";
@@ -227,10 +225,17 @@ public abstract class AbstractOOXMLExtractor implements OOXMLExtractor {
         }
         URI sourceURI = rel.getSourceURI();
         String sourceDesc;
+        int sourceNumber = 0 ;
         if (sourceURI != null) {
             sourceDesc = getJustFileName(sourceURI.getPath());
             if (sourceDesc.startsWith("slide")) {
                 sourceDesc += "_";
+                try {
+                    sourceNumber = Integer.parseInt(sourceDesc.replace("slide","").replace("_",""));
+                }
+                catch (Exception e) {
+                    sourceNumber =0;
+                }
             } else {
                 sourceDesc = "";
             }
@@ -260,16 +265,13 @@ public abstract class AbstractOOXMLExtractor implements OOXMLExtractor {
                         || PackageRelationshipTypes.IMAGE_PART.equals(type)
                         || POIXMLDocument.PACK_OBJECT_REL_TYPE.equals(type)
                         || POIXMLDocument.OLE_OBJECT_REL_TYPE.equals(type)) {
-            handleEmbeddedFile(target, handler, sourceDesc + rel.getId());
+            handleEmbeddedFile(target, handler, sourceNumber ,sourceDesc + rel.getId());
             handledTarget.add(targetURI.toString());
         } else if (XSSFRelation.VBA_MACROS.getRelation().equals(type)) {
             handleMacros(target, handler);
             handledTarget.add(targetURI.toString());
         }
     }
-
-
-
 
     /**
      * Handles an embedded OLE object in the document
@@ -348,7 +350,7 @@ public abstract class AbstractOOXMLExtractor implements OOXMLExtractor {
                             metadata, false);
                 }
             } else {
-                handleEmbeddedFile(part, handler, rel);
+                handleEmbeddedFile(part, handler, 0, rel);
             }
         } catch (FileNotFoundException e) {
             // There was no CONTENTS entry, so skip this part
@@ -366,31 +368,31 @@ public abstract class AbstractOOXMLExtractor implements OOXMLExtractor {
         }
     }
 
-    protected String getImageResourceName(String inputname, String contentType)
+    protected String getImageResourceName(int sourceNumber, String inputName, String contentType)
     {
-        String name = getJustFileName(inputname);
+        String name = getJustFileName(inputName);
         
         String partstem = name.replaceAll("[0-9]", "");
         int partnumber = Integer.parseInt(name.replaceAll("[^0-9]", ""));
-        String extension = FilenameUtils.getExtension(inputname);
+        String extension = FilenameUtils.getExtension(inputName);
 
         if ( contentType.startsWith("image"))
         {
-            return (config.getImageFilename(0, partnumber, extension));
+            return (config.getImageFilename(sourceNumber, partnumber, extension));
         }
         else {
-            return (config.getResourceFilename(partstem, 0, partnumber, extension));
+            return (config.getResourceFilename(partstem, sourceNumber, partnumber, extension));
         }
     }
-    
+
     /**
      * Handles an embedded file in the document
      */
-    protected void handleEmbeddedFile(PackagePart part, ContentHandler handler, String rel)
+    protected void handleEmbeddedFile(PackagePart part, ContentHandler handler, int sourceNumber, String rel)
             throws SAXException, IOException {
         Metadata metadata = new Metadata();
         metadata.set(Metadata.EMBEDDED_RELATIONSHIP_ID, rel);
-        metadata.set(Metadata.RESOURCE_NAME_KEY,getImageResourceName(part.getPartName().getName(),part.getContentType()));
+        metadata.set(Metadata.RESOURCE_NAME_KEY,getImageResourceName(sourceNumber, part.getPartName().getName(),part.getContentType()));
         // Get the content type
         metadata.set(Metadata.CONTENT_TYPE, part.getContentType());
 

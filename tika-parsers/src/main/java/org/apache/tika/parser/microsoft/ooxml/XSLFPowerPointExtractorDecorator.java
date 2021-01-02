@@ -95,18 +95,18 @@ public class XSLFPowerPointExtractorDecorator extends AbstractOOXMLExtractor {
 
             // slide content
             xhtml.startElement("div", "class", "slide-content");
-            extractContent(slide.getShapes(), false, xhtml, slideDesc);
+            extractContent(slide.getShapes(), false, xhtml, slide.getSlideNumber(), slideDesc);
             xhtml.endElement("div");
 
             if (config.getIncludeSlideMasterContent()) {
                 // slide layout which is the master sheet for this slide
                 xhtml.startElement("div", "class", "slide-master-content");
                 XSLFSlideLayout slideLayout = slide.getMasterSheet();
-                extractContent(slideLayout.getShapes(), true, xhtml, null);
+                extractContent(slideLayout.getShapes(), true, xhtml, slide.getSlideNumber(),null);
 
                 // slide master which is the master sheet for all text layouts
                 XSLFSheet slideMaster = slideLayout.getMasterSheet();
-                extractContent(slideMaster.getShapes(), true, xhtml, null);
+                extractContent(slideMaster.getShapes(), true, xhtml, slide.getSlideNumber(), null);
                 
                 //Bound the master content data into a single div
                 xhtml.endElement("div");
@@ -117,12 +117,12 @@ public class XSLFPowerPointExtractorDecorator extends AbstractOOXMLExtractor {
                 if (slideNotes != null) {
                     xhtml.startElement("div", "class", "slide-notes-content");
 
-                    extractContent(slideNotes.getShapes(), false, xhtml, slideDesc);
+                    extractContent(slideNotes.getShapes(), false, xhtml, slide.getSlideNumber(), slideDesc);
 
                     // master sheet for this notes
                     XSLFNotesMaster notesMaster = slideNotes.getMasterSheet();
                     if (notesMaster != null) {
-                        extractContent(notesMaster.getShapes(), true, xhtml, null);
+                        extractContent(notesMaster.getShapes(), true, xhtml, slide.getSlideNumber(), null);
                     }
                     xhtml.endElement("div");
                 }
@@ -187,7 +187,7 @@ public class XSLFPowerPointExtractorDecorator extends AbstractOOXMLExtractor {
         }
     }
 
-    private void extractContent(List<? extends XSLFShape> shapes, boolean skipPlaceholders, XHTMLContentHandler xhtml, String slideDesc)
+    private void extractContent(List<? extends XSLFShape> shapes, boolean skipPlaceholders, XHTMLContentHandler xhtml, int slideNumber, String slideDesc)
             throws SAXException {
         for (XSLFShape sh : shapes) {
             if (sh instanceof XSLFTextShape) {
@@ -224,7 +224,7 @@ public class XSLFPowerPointExtractorDecorator extends AbstractOOXMLExtractor {
             } else if (sh instanceof XSLFGroupShape) {
                 // recurse into groups of shapes
                 XSLFGroupShape group = (XSLFGroupShape) sh;
-                extractContent(group.getShapes(), skipPlaceholders, xhtml, slideDesc);
+                extractContent(group.getShapes(), skipPlaceholders, xhtml, slideNumber, slideDesc);
             } else if (sh instanceof XSLFTable) {
                 //unlike tables in Word, ppt/x can't have recursive tables...I don't think
                 extractTable((XSLFTable)sh, xhtml);
@@ -274,7 +274,7 @@ public class XSLFPowerPointExtractorDecorator extends AbstractOOXMLExtractor {
                                     if ( imgdata.getContentType() != null) {
                                         attributes.addAttribute("", "contenttype", "contenttype", "CDATA", imgdata.getContentType());
 //                                        String ext = getTikaConfig().getMimeRepository().forName(imgdata.getContentType()).getExtension();
-                                        attributes.addAttribute("", "src", "src", "CDATA", getImageResourceName(imgdata.getFileName(),imgdata.getContentType()));
+                                        attributes.addAttribute("", "src", "src", "CDATA", getImageResourceName(slideNumber,imgdata.getFileName(),imgdata.getContentType()));
                                         attributes.addAttribute("", "alt", "alt", "CDATA", imgdata.getFileName());
                                     }
                                     if ( img.getShapeName() != null)

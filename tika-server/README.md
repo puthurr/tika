@@ -70,37 +70,37 @@ HTTP Return Codes
 `500` - Internal error  
 
 
-Azure Blob Storage Support
-----------------------------
+## Azure Blob Storage Support
+
 Our version of Tika Server includes support for Azure Blob Storage for unpacking resources from documents. 
 Tika's unpack implementation loads all resources im memory to serve a zip/tar archive in response. Documents with a lot of embedded images like scanned-pdf you will hit OOM.
 
-To workaround this and support writing embedded resources directly in an Azure Blob storage, we added an azure-unpack endpoint i.e. **http://localhost:9998/azure-unpack**   
+To workaround this and support writing embedded resources directly in an Azure Blob storage, we added an azure-unpack endpoint i.e. **http://localhost:9998/azure-unpack**
 
-Azure Blob Storage Connection
------------------------------
+Another endpoint named **/azure-status** have been created to check the accessibility of the Azure Storage account from the defined connection string. 
+
+### Azure Blob Storage Connection - Environment Variable 
 Azure Blob connection string is taken from the environment variable **AZURE_STORAGE_CONNECTION_STRING**. 
-https://docs.microsoft.com/en-us/azure/storage/blobs/storage-quickstart-blobs-java
 
-https://docs.microsoft.com/en-us/azure/storage/blobs/storage-quickstart-blobs-java#configure-your-storage-connection-string
+Some documentation to help your knowledge on Azure Storage & Java
+- https://docs.microsoft.com/en-us/azure/storage/blobs/storage-quickstart-blobs-java
+- https://docs.microsoft.com/en-us/azure/storage/blobs/storage-quickstart-blobs-java#configure-your-storage-connection-string
 
-Azure Blob Target Container
------------------------------
+Once you have a connection string bound to the environment where your Tika server runs, we need to indicate the container and path where we want our resources to be unpacked.
+
+### Azure Blob Target Container - Header 
 To specify which container is used to write all embedded resources to, send the header **X-TIKA-AZURE-CONTAINER** along with your azure-unpack query. 
 
-Azure Blob Target Container Directory
--------------------------------------
+### Azure Blob Target Container Directory - Header
 To specify which container directory to write all embedded resources to, send the header **X-TIKA-AZURE-CONTAINER-DIRECTORY** along with your azure-unpack query. 
 
-Azure Blob Metadata
--------------------
+### Azure Blob Metadata - Header
 Our implementation supports adding blob metadata to each embedded resource. To your azure-unpack request, any header with the prefix  **X-TIKA-AZURE-META-** will end up in the user-defined blob properties.
 
 Refer to the official documentation for limitations 
 https://docs.microsoft.com/en-us/azure/storage/blobs/storage-blob-properties-metadata?tabs=dotnet
 
-Azure Unpacker Usage
---------------------
+### Azure Unpacker Usage
 
 - Example 1
 
@@ -118,9 +118,11 @@ Each extracted resource will have 2 user-defined metadata property1:test12 & pro
 
 ### Implementation
 
-Refer to the resource class **AzureUnpackerResource.class** 
+All extra resources are located in the server/resource/azure directory. 
 
-Added POM Dependency
+Refer to the resource class **AzureUnpackerResource.class** for the core unpacking code. 
+
+Azure Storage SDK for Java is added POM Dependency
 `    <!-- https://mvnrepository.com/artifact/com.azure/azure-storage-blob -->
     <dependency>
       <groupId>com.azure</groupId>
