@@ -463,7 +463,7 @@ public class TikaResource {
     @Produces("text/plain")
     @Path("form")
     public StreamingOutput getTextFromMultipart(Attachment att, @Context final UriInfo info) {
-        return produceText(att.getObject(InputStream.class), new Metadata(), att.getHeaders(), info);
+        return produceText(att.getObject(InputStream.class), new Metadata(), att.getHeaders(), info, true);
     }
 
     //this is equivalent to text-main in tika-app
@@ -505,16 +505,15 @@ public class TikaResource {
         };
     }
 
-
     @PUT
     @Consumes("*/*")
     @Produces("text/plain")
-    public StreamingOutput getText(final InputStream is, @Context HttpHeaders httpHeaders, @Context final UriInfo info) {
+    public StreamingOutput getRichText(final InputStream is, @Context HttpHeaders httpHeaders, @Context final UriInfo info) {
         final Metadata metadata = new Metadata();
-        return produceText(getInputStream(is, metadata, httpHeaders), metadata, httpHeaders.getRequestHeaders(), info);
+        return produceText(getInputStream(is, metadata, httpHeaders), metadata, httpHeaders.getRequestHeaders(), info,true);
     }
 
-    public StreamingOutput produceText(final InputStream is, final Metadata metadata, MultivaluedMap<String, String> httpHeaders, final UriInfo info) {
+    public StreamingOutput produceText(final InputStream is, final Metadata metadata, MultivaluedMap<String, String> httpHeaders, final UriInfo info, boolean richText) {
         final Parser parser = createParser();
         final ParseContext context = new ParseContext();
 
@@ -527,11 +526,27 @@ public class TikaResource {
             public void write(OutputStream outputStream) throws IOException, WebApplicationException {
                 Writer writer = new OutputStreamWriter(outputStream, UTF_8);
 
-                BodyContentHandler body = new BodyContentHandler(new RichTextContentHandler(writer));
+                BodyContentHandler body;
+                if ( richText ){
+                    body = new BodyContentHandler(new RichTextContentHandler(writer));
+                }
+                else
+                {
+                    body = new BodyContentHandler(writer);
+                }
 
                 parse(parser, LOG, info.getPath(), is, body, metadata, context);
             }
         };
+    }
+
+    @PUT
+    @Consumes("*/*")
+    @Produces("text/plain")
+    @Path("plain")
+    public StreamingOutput getPlainText(final InputStream is, @Context HttpHeaders httpHeaders, @Context final UriInfo info) {
+        final Metadata metadata = new Metadata();
+        return produceText(getInputStream(is, metadata, httpHeaders), metadata, httpHeaders.getRequestHeaders(), info, false);
     }
 
     @POST
