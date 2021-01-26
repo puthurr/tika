@@ -80,18 +80,35 @@ Some img attributes aren't HTML compliant we know. This above output is close to
 #### PDF Parser new configurations
 
 The new PDF parser configuration are all related to Image extraction thus they will take effects on calling the unpack endpoint. 
-It means they will also requires the **extractInlineImages** option to be set to true as well. 
+It means they will also requires the **extractInlineImages** option to be set to **true** as well. 
+
+The below options goal is to validate if a PDF page is better off rendered as an image or not. The benefit of rendering a page as image is to: 
+
+1. Workaround fragmented/striped images in PDF.
+2. Capture graphical elements. 
+3. Reduce the effect of the various scanning techniques.
+
+##### New options
 
 - **allPagesAsImages** : this instructs to convert any PDF page as image.
 - **singlePagePDFAsImage** : this instructs to convert a single page PDF to an image.
 - **stripedImagesHandling** : this instructs to convert a PDF page into an image based on the number of Contents Streams or images in a page. Some PDF writers tend to stripe an image into multiple contents streams (Array) 
-- **stripedImagesThreshold** : minimum number of contents streams to convert the page into an image.
+- **stripedImagesThreshold** : minimum number of contents streams to convert the page into an image. Default is 5 content streams or images.
 - **graphicsToImage** : a page with graphics objets could be better represented with an image. 
 - **graphicsToImageThreshold** : minimum number of graphics objects to convert the page into an image. 
 
 To leverage those features add the corresponding headers prefixed by **X-Tika-PDF**.
 
-```--header "X-Tika-PDFextractInlineImages:true" --header "X-Tika-PDFsinglePagePDFAsImage:true"``` 
+```--header "X-Tika-PDFextractInlineImages:true" --header "X-Tika-PDFsinglePagePDFAsImage:true"```
+
+An image originating from the above processing options i.e. singlePagePDFAsImage, the resulting image name will hold a -99999 suffix 
+
+```image-<page/slide number>-99999.png```
+
+##### Changing the image resulting format
+
+The extension of the resulting is taken from OcrImageFormatName which default to png. To change the extension 
+```--header "X-Tika-PDFOcrImageFormatName:jpg"```
 
 #### Azure Blob Storage support for unpacking (tika-server)
 The unpack feature produces an archive response which you can expand and process. 

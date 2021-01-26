@@ -174,9 +174,10 @@ class PDF2XHTML extends AbstractPDF2XHTML {
         String extension = config.getOcrImageFormatName();
         extension = ImageGraphicsEngine.getSuffix(extension,imgMetadata);
 
+        int imageNumber = 99999;
         // Increment the Image Number and put a new COSStream object in
-        int imageNumber = inlineImageCounter.getAndIncrement();
-        processedInlineImages.put(new COSStream(), imageNumber);
+//        int imageNumber = inlineImageCounter.getAndIncrement();
+//        processedInlineImages.put(new COSStream(), imageNumber);
 
         String fileName = config.getImageFilename(pageIndex+1,imageNumber,extension);
 

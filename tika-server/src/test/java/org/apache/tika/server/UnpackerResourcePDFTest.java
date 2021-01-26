@@ -69,9 +69,9 @@ public class UnpackerResourcePDFTest extends CXFTestBase {
                 .put(ClassLoader.getSystemResourceAsStream(PDF1));
         Map<String, String> results = readZipArchive((InputStream)response.getEntity());
         assertTrue((results.size()>30));
-        assertTrue(results.containsKey("image-00020-00020.png"));
-        assertTrue(results.containsKey("image-00023-00023.png"));
-        assertTrue(results.containsKey("image-00034-00034.png"));
+        assertTrue(results.containsKey("image-00020-99999.png"));
+        assertTrue(results.containsKey("image-00023-99999.png"));
+        assertTrue(results.containsKey("image-00034-99999.png"));
     }
 
     @Test
@@ -96,9 +96,9 @@ public class UnpackerResourcePDFTest extends CXFTestBase {
                 .put(ClassLoader.getSystemResourceAsStream(PDF1));
         Map<String, String> results = readZipArchive((InputStream)response.getEntity());
         assertTrue((results.size()>=25));
-        assertTrue(results.containsKey("image-00004-00004.png"));
-        assertTrue(results.containsKey("image-00029-00020.png"));
-        assertTrue(results.containsKey("image-00032-00025.png"));
+        assertTrue(results.containsKey("image-00004-99999.png"));
+        assertTrue(results.containsKey("image-00029-99999.png"));
+        assertTrue(results.containsKey("image-00032-99999.png"));
     }
     @Test
     public void testPDF1GraphicsToImageFalse() throws Exception {
@@ -124,7 +124,7 @@ public class UnpackerResourcePDFTest extends CXFTestBase {
         Map<String, String> results = readZipArchive((InputStream)response.getEntity());
         //All PDF pages are images...
         assertTrue((results.size()>=48));
-        assertTrue(results.containsKey("image-00001-00001.png"));
+        assertTrue(results.containsKey("image-00001-99999.png"));
     }
 
     @Test
@@ -149,7 +149,7 @@ public class UnpackerResourcePDFTest extends CXFTestBase {
                 .accept("application/zip")
                 .put(ClassLoader.getSystemResourceAsStream(PDF3));
         Map<String, String> results = readZipArchive((InputStream)response.getEntity());
-        assertTrue(results.containsKey("image-00001-00001.png"));
+        assertTrue(results.containsKey("image-00001-99999.png"));
         assertFalse(results.containsKey("image-00001-00002.jpg"));
         assertFalse(results.containsKey("image-00001-00003.jpg"));
     }
