@@ -40,6 +40,17 @@ public class OfficeParserConfig extends AbstractParserConfig implements Serializ
 
     private String dateOverrideFormat = null;
 
+    // PUTHURR
+    private boolean includeSlideShowEmbeddedResources = true;
+
+    public boolean isIncludeSlideShowEmbeddedResources() {
+        return includeSlideShowEmbeddedResources;
+    }
+
+    public void setIncludeSlideShowEmbeddedResources(boolean includeSlideShowEmbeddedResources) {
+        this.includeSlideShowEmbeddedResources = includeSlideShowEmbeddedResources;
+    }
+
     /**
      * Sets whether or not MSOffice parsers should extract macros.
      * As of Tika 1.15, the default is <code>false</code>.

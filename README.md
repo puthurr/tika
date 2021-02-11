@@ -77,7 +77,7 @@ Some img attributes aren't HTML compliant we know. This above output is close to
 
 **Benefits**: we can scan big images, specific type of images, size in bytes or dimensions. 
 
-#### PDF Parser new configurations
+#### PDF Parser new configuration(s)
 
 The new PDF parser configuration are all related to Image extraction thus they will take effects on calling the unpack endpoint. 
 It means they will also requires the **extractInlineImages** option to be set to **true** as well. 
@@ -109,6 +109,10 @@ An image originating from the above processing options i.e. singlePagePDFAsImage
 
 The extension of the resulting is taken from OcrImageFormatName which default to png. To change the extension 
 ```--header "X-Tika-PDFOcrImageFormatName:jpg"```
+
+#### Office Parser new configuration(s)
+
+- **IncludeSlideShowEmbeddedResources** : for PPT Office documents, by default, images are extracted at the slideshow level. Setting this flag to false extracts the images at the slide level. 
 
 #### Azure Blob Storage support for unpacking (tika-server)
 The unpack feature produces an archive response which you can expand and process. 
