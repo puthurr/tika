@@ -183,6 +183,11 @@ public class PDFParserConfig extends AbstractParserConfig implements Serializabl
     // If we check for Graphics objects : default threshold = we see one image and one curve.
     private int graphicsToImageThreshold = 100001;
 
+    // JB2 Images aren't supported by many post-processing tools. This flag would allow to convert
+    // the entire page as image if any JB2 formatted images is found.
+    private boolean jB2Images = false;
+    // default threshold = we see one JB2 image.
+    private int jB2ImagesThreshold = 1;
 
     /* end region puthurr */
 
@@ -702,6 +707,31 @@ public class PDFParserConfig extends AbstractParserConfig implements Serializabl
         this.graphicsToImageThreshold = graphicsToImageThreshold;
     }
 
+    /**
+     * @return Check for JB2 images in a page to convert it to an image or not
+     */
+    public boolean getJB2Images() {
+        return jB2Images;
+    }
+    /**
+     * @param jb2Images
+     */
+    public void setJB2Images(boolean jb2Images) {
+        this.jB2Images = jb2Images;
+    }
+    /**
+     * @return how many images and graphics we saw in that page
+     */
+    public int getJB2ImagesThreshold() {
+        return jB2ImagesThreshold;
+    }
+    /**
+     * @param jb2ImagesThreshold
+     */
+    public void setJB2ImagesThreshold(int jb2ImagesThreshold) {
+        this.jB2ImagesThreshold = jb2ImagesThreshold;
+    }
+
     /* end section PUTHURR */
 
     private boolean getBooleanProp(String p, boolean defaultMissing) {
@@ -970,6 +1000,8 @@ public class PDFParserConfig extends AbstractParserConfig implements Serializabl
         if (getStripedImagesThreshold() != (config.getStripedImagesThreshold())) return false;
         if (getGraphicsToImage() != (config.getGraphicsToImage())) return false;
         if (getGraphicsToImageThreshold()!= (config.getGraphicsToImageThreshold())) return false;
+        if (getJB2Images() != (config.getJB2Images())) return false;
+        if (getJB2ImagesThreshold()!= (config.getJB2ImagesThreshold())) return false;
 
         return getMaxMainMemoryBytes() == config.getMaxMainMemoryBytes();
     }
@@ -1003,6 +1035,8 @@ public class PDFParserConfig extends AbstractParserConfig implements Serializabl
         result = 31 * result + getStripedImagesThreshold();
         result = 31 * result + (getGraphicsToImage()? 1 : 0);
         result = 31 * result + getGraphicsToImageThreshold();
+        result = 31 * result + (getJB2Images()? 1 : 0);
+        result = 31 * result + getJB2ImagesThreshold();
         return result;
     }
 
@@ -1036,6 +1070,8 @@ public class PDFParserConfig extends AbstractParserConfig implements Serializabl
                 ", stripedImagesThreshold=" + stripedImagesThreshold +
                 ", graphicsToImage=" + graphicsToImage +
                 ", graphicsToImageThreshold=" + graphicsToImageThreshold +
+                ", jb2Images=" + jB2Images +
+                ", jb2ImagesThreshold=" + jB2ImagesThreshold +
                 '}';
     }
 }

@@ -263,7 +263,7 @@ class PDF2XHTML extends AbstractPDF2XHTML {
 
         PDFStatistics stats = engine.runStatistics();
 
-        // puthurr - many images on a single page could indicate a stripe issue (similar to the number of content streams)
+        // PUTHURR - many images on a single page could indicate a stripe issue (similar to the number of content streams)
         if ( config.getStripedImagesHandling() )
         {
             // Case: striped-scanned images oftenly have an Array of Streams instead of a single COSStream
@@ -275,7 +275,7 @@ class PDF2XHTML extends AbstractPDF2XHTML {
             }
         }
 
-        // puthurr - when PDF page contains Graphics like curve, stroke etc. annotating any background image
+        // PUTHURR - when PDF page contains Graphics like curve, stroke etc. annotating any background image
         // they should be considered part of the extracted image.
         if (config.getGraphicsToImage())
         {
@@ -284,6 +284,18 @@ class PDF2XHTML extends AbstractPDF2XHTML {
                 // puthurr - not taking any risk of losing graphical annotation, we treat the entire page as a single image
                 processPageAsImage(page);
                 metadata.add(TikaCoreProperties.TIKA_META_PREFIX+"GraphicsToImage", String.valueOf(stats.getNumberOfGraphics()));
+                return;
+            }
+        }
+
+        // PUTHURR - when PDF page contains Graphics like curve, stroke etc. annotating any background image
+        // they should be considered part of the extracted image.
+        if (config.getJB2Images())
+        {
+            if ( stats.getNumberOfJB2Images() >= config.getJB2ImagesThreshold())
+            {
+                processPageAsImage(page);
+                metadata.add(TikaCoreProperties.TIKA_META_PREFIX+"JB2Images", String.valueOf(stats.getNumberOfJB2Images()));
                 return;
             }
         }
