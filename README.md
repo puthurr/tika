@@ -96,6 +96,8 @@ The below options goal is to validate if a PDF page is better off rendered as an
 - **stripedImagesThreshold** : minimum number of contents streams to convert the page into an image. Default is 5 content streams or images.
 - **graphicsToImage** : a page with graphics objets could be better represented with an image. 
 - **graphicsToImageThreshold** : minimum number of graphics objects to convert the page into an image. 
+- **jB2Images** : flag to convert any PDF page into image given that there is a minimum of one JB2 image in that page.
+- **jB2ImagesThreshold** : minimum number of JB2 images found in a page to convert it to an image. Default is 1. 
 
 To leverage those features add the corresponding headers prefixed by **X-Tika-PDF**.
 
