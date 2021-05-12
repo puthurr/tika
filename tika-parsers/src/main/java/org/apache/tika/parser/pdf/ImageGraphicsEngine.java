@@ -189,6 +189,13 @@ public class ImageGraphicsEngine extends PDFGraphicsStreamEngine {
         if (isStatisticsRun())
         {
             stats.incrementImageCounter();
+
+            // Specific to JB2 images
+            if ( pdImage.getSuffix().equals("jb2"))
+            {
+                stats.incrementJB2Counter();
+            }
+
             return ;
         }
 
