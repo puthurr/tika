@@ -93,7 +93,6 @@ public class PDFParserConfig extends AbstractParserConfig implements Serializabl
 
     // True if we should sort text tokens by position
     // (necessary for some PDFs, but messes up other PDFs):
-    @Field
     private boolean sortByPosition = false;
 
     //True if acroform content should be extracted
@@ -102,9 +101,12 @@ public class PDFParserConfig extends AbstractParserConfig implements Serializabl
 	//True if bookmarks content should be extracted
     private boolean extractBookmarksText = true;
 
-    // True if inline PDXImage objects should be extracted
-    // puthurr : Change default to true
-    private boolean extractInlineImages = true;
+    //True if inline PDXImage objects should be extracted
+    private boolean extractInlineImages = false;
+
+    //True if inline images should only have their metadata
+    //extracted.
+    private boolean extractInlineImageMetadataOnly = false;
 
     //True if inline images (as identified by their object id within
     //a pdf file) should only be extracted once.
@@ -116,11 +118,11 @@ public class PDFParserConfig extends AbstractParserConfig implements Serializabl
 
     //The character width-based tolerance value used to estimate where spaces in text should be added
     //Default taken from PDFBox.
-    private Float averageCharTolerance = 0.5f;
+    private Float averageCharTolerance = 0.3f;
 
     //The space width-based tolerance value used to estimate where spaces in text should be added
     //Default taken from PDFBox.
-    private Float spacingTolerance = 0.3f;
+    private Float spacingTolerance = 0.5f;
 
     // The multiplication factor for line height to decide when a new paragraph starts.
     //Default taken from PDFBox.
@@ -243,6 +245,10 @@ public class PDFParserConfig extends AbstractParserConfig implements Serializabl
         setExtractUniqueInlineImagesOnly(
                 getBooleanProp(props.getProperty("extractUniqueInlineImagesOnly"),
                         getExtractUniqueInlineImagesOnly()));
+        setExtractInlineImageMetadataOnly(
+                getBooleanProp(props.getProperty("extractInlineImageMetadataOnly"),
+                        getExtractInlineImageMetadataOnly())
+        );
         setExtractFontNames(
                 getBooleanProp(props.getProperty("extractFontNames"),
                         getExtractFontNames()));
@@ -289,6 +295,29 @@ public class PDFParserConfig extends AbstractParserConfig implements Serializabl
 
         maxMainMemoryBytes = getLongProp(props.getProperty("maxMainMemoryBytes"), -1);
         detectAngles = getBooleanProp(props.getProperty("detectAngles"), false);
+    }
+
+    /**
+     * Use this when you want to know how many images of what formats are in a PDF
+     * but you don't need to render the images (e.g. for OCR).  This is far
+     * faster than {@link #extractInlineImages} because it doesn't have to render the
+     * images, which can be very slow.  This does not extract metadata from
+     * within each image, rather it extracts the XMP that may be stored
+     * external to an image in PDImageXObjects.
+     *
+     * @param extractInlineImageMetadataOnly
+     * @since 1.25
+     */
+    void setExtractInlineImageMetadataOnly(boolean extractInlineImageMetadataOnly) {
+        this.extractInlineImageMetadataOnly = extractInlineImageMetadataOnly;
+    }
+
+    /**
+     *
+     * @return whether or not to extract only inline image metadata and not render the images
+     */
+    boolean getExtractInlineImageMetadataOnly() {
+        return extractInlineImageMetadataOnly;
     }
 
     /**

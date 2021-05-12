@@ -19,6 +19,7 @@ package org.apache.tika.parser.pdf;
 import org.apache.pdfbox.contentstream.PDFGraphicsStreamEngine;
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.cos.COSStream;
+import org.apache.pdfbox.filter.MissingImageReaderException;
 import org.apache.pdfbox.io.IOUtils;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDResources;
@@ -40,12 +41,27 @@ import org.apache.pdfbox.util.Matrix;
 import org.apache.pdfbox.util.Vector;
 import org.apache.tika.exception.TikaException;
 import org.apache.tika.exception.TikaMemoryLimitException;
+import org.apache.tika.exception.ZeroByteFileException;
+import org.apache.tika.extractor.EmbeddedDocumentExtractor;
+import org.apache.tika.extractor.EmbeddedDocumentUtil;
+import org.apache.tika.extractor.ParsingEmbeddedDocumentExtractor;
 import org.apache.tika.io.BoundedInputStream;
+import org.apache.tika.io.IOExceptionWithCause;
+import org.apache.tika.io.TikaInputStream;
 import org.apache.tika.metadata.Metadata;
+import org.apache.tika.metadata.TikaCoreProperties;
+import org.apache.tika.parser.EmptyParser;
+import org.apache.tika.parser.ParseContext;
+import org.apache.tika.parser.Parser;
+import org.apache.tika.parser.RecursiveParserWrapper;
+import org.apache.tika.sax.EmbeddedContentHandler;
+import org.apache.tika.sax.XHTMLContentHandler;
 import org.xml.sax.SAXException;
+import org.xml.sax.helpers.AttributesImpl;
 
 import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -76,11 +92,15 @@ public class ImageGraphicsEngine extends PDFGraphicsStreamEngine {
     public static boolean useDirectJPEG = false;
 
     final List<IOException> exceptions = new ArrayList<>();
-
+    private final EmbeddedDocumentExtractor embeddedDocumentExtractor;
     private final PDFParserConfig pdfParserConfig;
     private final Map<COSStream, Integer> processedInlineImages;
     private final AtomicInteger imageCounter;
-
+    private final Metadata parentMetadata;
+    private final XHTMLContentHandler xhtml;
+    private final ParseContext parseContext;
+    private final boolean extractInlineImageMetadataOnly;
+	
     private Map<PDImage, Integer> extractedImages;
 
     // PUTHURR
@@ -88,12 +108,21 @@ public class ImageGraphicsEngine extends PDFGraphicsStreamEngine {
     private PDFStatistics stats= new PDFStatistics();
 
     //TODO: this is an embarrassment of an initializer...fix
-    protected ImageGraphicsEngine(PDPage page, PDFParserConfig pdfParserConfig, Map<COSStream, Integer> processedInlineImages,
-                                  AtomicInteger imageCounter) {
+    protected ImageGraphicsEngine(PDPage page, EmbeddedDocumentExtractor embeddedDocumentExtractor,
+                                  PDFParserConfig pdfParserConfig, Map<COSStream, Integer> processedInlineImages,
+                                  AtomicInteger imageCounter, XHTMLContentHandler xhtml, Metadata parentMetadata,
+                                  ParseContext parseContext) {
         super(page);
+        this.embeddedDocumentExtractor = embeddedDocumentExtractor;
         this.pdfParserConfig = pdfParserConfig;
         this.processedInlineImages = processedInlineImages;
         this.imageCounter = imageCounter;
+        this.xhtml = xhtml;
+        this.parentMetadata = parentMetadata;
+        this.parseContext = parseContext;
+				
+        this.extractInlineImageMetadataOnly = pdfParserConfig.getExtractInlineImageMetadataOnly();
+		
         // An ImagesGraphicsEngine is created per page
         this.extractedImages = new HashMap<>();
     }
@@ -298,6 +327,30 @@ public class ImageGraphicsEngine extends PDFGraphicsStreamEngine {
 
     // PUTHURR
     // Utils methods
+
+
+    private void extractInlineImageMetadataOnly(PDImage pdImage, Metadata metadata) throws IOException, SAXException {
+        if (pdImage instanceof PDImageXObject) {
+            PDMetadataExtractor.extract(((PDImageXObject) pdImage).getMetadata(),
+                    metadata, parseContext);
+        }
+        metadata.set(Metadata.IMAGE_WIDTH, pdImage.getWidth());
+        metadata.set(Metadata.IMAGE_LENGTH, pdImage.getHeight());
+        //TODO: what else can we extract from the PDImage without rendering?
+        ZeroByteFileException.IgnoreZeroByteFileException before =
+                parseContext.get(ZeroByteFileException.IgnoreZeroByteFileException.class);
+        try {
+            parseContext.set(ZeroByteFileException.IgnoreZeroByteFileException.class,
+                    ZeroByteFileException.IGNORE_ZERO_BYTE_FILE_EXCEPTION);
+            embeddedDocumentExtractor.parseEmbedded(TikaInputStream.get(new byte[0]),
+                    new EmbeddedContentHandler(xhtml), metadata, false);
+        } finally {
+            //replace whatever was there before
+            parseContext.set(ZeroByteFileException.IgnoreZeroByteFileException.class,
+                    before);
+        }
+    }
+
     public static String getSuffix(PDImage pdImage, Metadata metadata) throws IOException {
         if (hasMasks(pdImage)) {
             // TIKA-3040, PDFBOX-4771: can't save ARGB as JPEG
@@ -306,8 +359,8 @@ public class ImageGraphicsEngine extends PDFGraphicsStreamEngine {
         }
         return getSuffix(pdImage.getSuffix(),metadata);
     }
-
-    public static String getSuffix(String suffix, Metadata metadata) throws IOException {
+	
+	public static String getSuffix(String suffix, Metadata metadata) throws IOException {
         if (suffix == null || suffix.equals("png")) {
             metadata.set(Metadata.CONTENT_TYPE, "image/png");
             suffix = "png";
@@ -344,12 +397,12 @@ public class ImageGraphicsEngine extends PDFGraphicsStreamEngine {
                 // WriteOutContentHandler.WriteLimitReachedException?
                 throw e;
             }
-//
-//            String msg = e.getMessage();
-//            if (msg == null) {
-//                msg = "IOException, no message";
-//            }
-//            parentMetadata.add(TikaCoreProperties.TIKA_META_EXCEPTION_WARNING, msg);
+
+            String msg = e.getMessage();
+            if (msg == null) {
+                msg = "IOException, no message";
+            }
+            parentMetadata.add(TikaCoreProperties.TIKA_META_EXCEPTION_WARNING, msg);
             exceptions.add(e);
         } else {
             throw e;

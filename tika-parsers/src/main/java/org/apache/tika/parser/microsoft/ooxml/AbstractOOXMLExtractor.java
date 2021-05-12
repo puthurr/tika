@@ -23,7 +23,11 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.poi.extractor.POITextExtractor;
@@ -73,6 +77,8 @@ import org.xml.sax.helpers.AttributesImpl;
  * populates the {@link XHTMLContentHandler} object received as parameter.
  */
 public abstract class AbstractOOXMLExtractor implements OOXMLExtractor {
+
+
 
     static final String RELATION_AUDIO = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/audio";
     static final String RELATION_MEDIA = "http://schemas.microsoft.com/office/2007/relationships/media";
@@ -172,6 +178,8 @@ public abstract class AbstractOOXMLExtractor implements OOXMLExtractor {
                 thumbnailMetadata.set(Metadata.EMBEDDED_RELATIONSHIP_ID, thumbName);
                 thumbnailMetadata.set(Metadata.CONTENT_TYPE, tPart.getContentType());
                 thumbnailMetadata.set(TikaCoreProperties.TITLE, tPart.getPartName().getName());
+                thumbnailMetadata.set(TikaCoreProperties.EMBEDDED_RESOURCE_TYPE,
+                        TikaCoreProperties.EmbeddedResourceType.THUMBNAIL.toString());
 
                 if (embeddedExtractor.shouldParseEmbedded(thumbnailMetadata)) {
                     embeddedExtractor.parseEmbedded(TikaInputStream.get(tStream), new EmbeddedContentHandler(handler), thumbnailMetadata, false);
@@ -272,6 +280,9 @@ public abstract class AbstractOOXMLExtractor implements OOXMLExtractor {
             handledTarget.add(targetURI.toString());
         }
     }
+
+
+
 
     /**
      * Handles an embedded OLE object in the document
@@ -394,7 +405,8 @@ public abstract class AbstractOOXMLExtractor implements OOXMLExtractor {
         metadata.set(Metadata.EMBEDDED_RELATIONSHIP_ID, rel);
         metadata.set(Metadata.RESOURCE_NAME_KEY,getImageResourceName(sourceNumber, part.getPartName().getName(),part.getContentType()));
         // Get the content type
-        metadata.set(Metadata.CONTENT_TYPE, part.getContentType());
+        metadata.set(
+                Metadata.CONTENT_TYPE, part.getContentType());
 
         // Call the recursing handler
         if (embeddedExtractor.shouldParseEmbedded(metadata)) {

@@ -38,10 +38,12 @@ import org.apache.tika.parser.ParserDecorator;
 import org.apache.tika.parser.PasswordProvider;
 import org.apache.tika.parser.html.BoilerpipeContentHandler;
 import org.apache.tika.parser.ocr.TesseractOCRConfig;
+import org.apache.tika.parser.ocr.TesseractOCRParser;
 import org.apache.tika.parser.pdf.PDFParserConfig;
 import org.apache.tika.sax.BodyContentHandler;
 import org.apache.tika.sax.ExpandedTitleContentHandler;
 import org.apache.tika.sax.RichTextContentHandler;
+import org.apache.tika.sax.PlainTextContentHandler;
 import org.apache.tika.server.InputStreamFactory;
 import org.apache.tika.server.ServerStatus;
 import org.apache.tika.server.TikaServerParseException;
@@ -75,6 +77,7 @@ import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -147,6 +150,13 @@ public class TikaResource {
         return httpHeaders.getFirst("File-Name");
     }
 
+    /**
+     * Fills the parse context.
+     *
+     * @param parseContext the parse context to fil.
+     * @param httpHeaders the HTTP headers for the request.
+     * @param embeddedParser the embedded parser.
+     */
     public static void fillParseContext(ParseContext parseContext, MultivaluedMap<String, String> httpHeaders,
                                         Parser embeddedParser) {
         //lazily initialize configs
@@ -155,15 +165,15 @@ public class TikaResource {
         TesseractOCRConfig ocrConfig = null;
         PDFParserConfig pdfParserConfig = null;
         DocumentSelector documentSelector = null;
-        for (String key : httpHeaders.keySet()) {
-            if (StringUtils.startsWith(key, X_TIKA_OCR_HEADER_PREFIX)) {
+        for (Map.Entry<String, List<String>> kvp : httpHeaders.entrySet()) {
+            if (StringUtils.startsWithIgnoreCase(kvp.getKey(), X_TIKA_OCR_HEADER_PREFIX)) {
                 ocrConfig = (ocrConfig == null) ? new TesseractOCRConfig() : ocrConfig;
-                processHeaderConfig(httpHeaders, ocrConfig, key, X_TIKA_OCR_HEADER_PREFIX);
-            } else if (StringUtils.startsWith(key, X_TIKA_PDF_HEADER_PREFIX)) {
+                processHeaderConfig(ocrConfig, kvp.getKey(), kvp.getValue().get(0).trim(), X_TIKA_OCR_HEADER_PREFIX);
+            } else if (StringUtils.startsWithIgnoreCase(kvp.getKey(), X_TIKA_PDF_HEADER_PREFIX)) {
                 pdfParserConfig = (pdfParserConfig == null) ? new PDFParserConfig() : pdfParserConfig;
-                processHeaderConfig(httpHeaders, pdfParserConfig, key, X_TIKA_PDF_HEADER_PREFIX);
-            } else if (StringUtils.endsWithIgnoreCase(key, X_TIKA_SKIP_EMBEDDED_HEADER)) {
-                String skipEmbedded = httpHeaders.getFirst(key);
+                processHeaderConfig(pdfParserConfig, kvp.getKey(), kvp.getValue().get(0).trim(), X_TIKA_PDF_HEADER_PREFIX);
+            } else if (StringUtils.endsWithIgnoreCase(kvp.getKey(), X_TIKA_SKIP_EMBEDDED_HEADER)) {
+                String skipEmbedded = kvp.getValue().get(0);
                 if (Boolean.parseBoolean(skipEmbedded)) {
                     documentSelector = metadata -> false;
                 }
@@ -194,23 +204,30 @@ public class TikaResource {
     /**
      * Utility method to set a property on a class via reflection.
      *
-     * @param httpHeaders the HTTP headers set.
      * @param object      the <code>Object</code> to set the property on.
      * @param key         the key of the HTTP Header.
+     * @param val         the value of HTTP header.
      * @param prefix      the name of the HTTP Header prefix used to find property.
      * @throws WebApplicationException thrown when field cannot be found.
      */
-    private static void processHeaderConfig(MultivaluedMap<String, String> httpHeaders, Object object, String key, String prefix) {
-
-        try {String property = StringUtils.removeStart(key, prefix);
+    private static void processHeaderConfig(Object object, String key, String val, String prefix) {
+        try {
+            String property = StringUtils.removeStartIgnoreCase(key, prefix);
             Field field = null;
             try {
                 field = object.getClass().getDeclaredField(StringUtils.uncapitalize(property));
             } catch (NoSuchFieldException e) {
-                //swallow
+                // try to match field case-insensitive way
+                for(Field aField : object.getClass().getDeclaredFields()) {
+                    if (aField.getName().equalsIgnoreCase(property)) {
+                        field = aField;
+                        break;
+                    }
+                }
             }
-            String setter = property;
-            setter = "set"+setter.substring(0,1).toUpperCase(Locale.US)+setter.substring(1);
+
+            String setter = field != null ? field.getName() : property;
+            setter = "set" + setter.substring(0, 1).toUpperCase(Locale.US) + setter.substring(1);
             //default assume string class
             //if there's a more specific type, e.g. double, int, boolean
             //try that.
@@ -245,8 +262,6 @@ public class TikaResource {
             }
 
             if (m != null) {
-                String val = httpHeaders.getFirst(key);
-                val = val.trim();
                 if (clazz == String.class) {
                     checkTrustWorthy(setter, val);
                     m.invoke(object, val);
@@ -264,14 +279,14 @@ public class TikaResource {
                     throw new IllegalArgumentException("setter must be String, int, float, double or boolean...for now");
                 }
             } else {
-                throw new NoSuchMethodException("Couldn't find: "+setter);
+                throw new NoSuchMethodException("Couldn't find: " + setter);
             }
 
         } catch (Throwable ex) {
             throw new WebApplicationException(
                     String.format(Locale.ROOT,
                     "%s is an invalid %s header",
-                            key, X_TIKA_OCR_HEADER_PREFIX), Response.Status.BAD_REQUEST);
+                            key, prefix), Response.Status.BAD_REQUEST);
         }
     }
 
@@ -463,7 +478,7 @@ public class TikaResource {
     @Produces("text/plain")
     @Path("form")
     public StreamingOutput getTextFromMultipart(Attachment att, @Context final UriInfo info) {
-        return produceText(att.getObject(InputStream.class), new Metadata(), att.getHeaders(), info, true);
+        return produceText(att.getObject(InputStream.class), new Metadata(), att.getHeaders(), info,false);
     }
 
     //this is equivalent to text-main in tika-app
@@ -507,7 +522,8 @@ public class TikaResource {
 
     @PUT
     @Consumes("*/*")
-    @Produces("text/plain")
+    @Produces("text/rtf")
+    @Path("rich")
     public StreamingOutput getRichText(final InputStream is, @Context HttpHeaders httpHeaders, @Context final UriInfo info) {
         final Metadata metadata = new Metadata();
         return produceText(getInputStream(is, metadata, httpHeaders), metadata, httpHeaders.getRequestHeaders(), info,true);
@@ -532,7 +548,7 @@ public class TikaResource {
                 }
                 else
                 {
-                    body = new BodyContentHandler(writer);
+                    body = new BodyContentHandler(new PlainTextContentHandler(writer));
                 }
 
                 parse(parser, LOG, info.getPath(), is, body, metadata, context);
@@ -543,7 +559,6 @@ public class TikaResource {
     @PUT
     @Consumes("*/*")
     @Produces("text/plain")
-    @Path("plain")
     public StreamingOutput getPlainText(final InputStream is, @Context HttpHeaders httpHeaders, @Context final UriInfo info) {
         final Metadata metadata = new Metadata();
         return produceText(getInputStream(is, metadata, httpHeaders), metadata, httpHeaders.getRequestHeaders(), info, false);

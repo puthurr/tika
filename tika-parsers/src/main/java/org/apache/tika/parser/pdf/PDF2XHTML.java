@@ -247,7 +247,7 @@ class PDF2XHTML extends AbstractPDF2XHTML {
             {
                 convertPageToImage = true;
             }
-            metadata.add(TikaCoreProperties.TIKA_META_PREFIX+"ContentStreamsCount", String.valueOf(counter));
+            metadata.add(TikaCoreProperties.TIKA_META_PREFIX+"PDFContentStreamsCount", String.valueOf(counter));
         }
 
         // puthurr - Our project is focused on Image, A single page PDF is forced into an image covering all our base
@@ -255,11 +255,12 @@ class PDF2XHTML extends AbstractPDF2XHTML {
         if ( (config.getSinglePagePDFAsImage() && getTotalPagesCount() == 1) || convertPageToImage )
         {
             processPageAsImage(page);
+            metadata.add(TikaCoreProperties.TIKA_META_PREFIX+"PDFSinglePagePDFAsImage", String.valueOf(true));
             return;
         }
 
         // Create a Graphics Engine
-        ImageGraphicsEngine engine = new ImageGraphicsEngine(page, config, processedInlineImages, inlineImageCounter);
+        ImageGraphicsEngine engine = new ImageGraphicsEngine(page, embeddedDocumentExtractor, config, processedInlineImages,inlineImageCounter,xhtml,metadata,context);
 
         PDFStatistics stats = engine.runStatistics();
 
@@ -270,7 +271,7 @@ class PDF2XHTML extends AbstractPDF2XHTML {
             if ( stats.getNumberOfImages() > config.getStripedImagesThreshold())
             {
                 processPageAsImage(page);
-                metadata.add(TikaCoreProperties.TIKA_META_PREFIX+"StripedImagesCount", String.valueOf(stats.getNumberOfImages()));
+                metadata.add(TikaCoreProperties.TIKA_META_PREFIX+"PDFStripedImagesCount", String.valueOf(stats.getNumberOfImages()));
                 return;
             }
         }
@@ -283,7 +284,7 @@ class PDF2XHTML extends AbstractPDF2XHTML {
             {
                 // puthurr - not taking any risk of losing graphical annotation, we treat the entire page as a single image
                 processPageAsImage(page);
-                metadata.add(TikaCoreProperties.TIKA_META_PREFIX+"GraphicsToImage", String.valueOf(stats.getNumberOfGraphics()));
+                metadata.add(TikaCoreProperties.TIKA_META_PREFIX+"PDFGraphicsToImage", String.valueOf(stats.getNumberOfGraphics()));
                 return;
             }
         }

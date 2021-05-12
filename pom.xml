@@ -25,7 +25,7 @@
   <parent>
     <groupId>org.apache.tika</groupId>
     <artifactId>tika-parent</artifactId>
-    <version>1.25</version>
+    <version>1.26</version>
     <relativePath>tika-parent/pom.xml</relativePath>
   </parent>
 
@@ -38,20 +38,12 @@
     <module>tika-parent</module>
     <module>tika-core</module>
     <module>tika-parsers</module>
-    <module>tika-bundle</module>
     <module>tika-xmp</module>
     <module>tika-serialization</module>
-    <module>tika-batch</module>
-    <module>tika-app</module>
     <module>tika-server</module>
-    <module>tika-fuzzing</module>
     <module>tika-translate</module>
     <module>tika-langdetect</module>
-    <module>tika-example</module>
-    <module>tika-java7</module>
     <module>tika-eval</module>
-    <module>tika-dl</module>
-    <module>tika-nlp</module>
   </modules>
 
   <profiles>

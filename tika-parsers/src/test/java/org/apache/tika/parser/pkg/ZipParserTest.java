@@ -222,6 +222,8 @@ public class ZipParserTest extends AbstractPkgTest {
         assertEquals("application/java-archive", metadataList.get(0).get(HttpHeaders.CONTENT_TYPE));
     }
 
+    // PUTHURR - droste.zip shows virus signatures in many AV software.
+
 //    @Test
 //    public void testQuineRecursiveParserWrapper() throws Exception {
 //        //received permission from author via dm
@@ -231,6 +233,12 @@ public class ZipParserTest extends AbstractPkgTest {
 //        //the original file name
 //        getRecursiveMetadata("droste.zip");
 //    }
+
+//    @Test(expected = TikaException.class)
+//    public void testQuine() throws Exception {
+//        getXML("droste.zip");
+//    }
+
 
 //    @Test(expected = TikaException.class)
 //    public void testQuine() throws Exception {

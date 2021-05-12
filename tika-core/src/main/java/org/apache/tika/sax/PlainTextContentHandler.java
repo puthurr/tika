@@ -15,22 +15,26 @@
  * limitations under the License.
  */
 
-package org.apache.tika.example;
+package org.apache.tika.sax;
 
-import java.io.File;
+import org.xml.sax.Attributes;
+import org.xml.sax.SAXException;
 
-import org.apache.tika.Tika;
+import java.io.Writer;
 
-public class SimpleTextExtractor {
-    public static void main(String[] args) throws Exception {
-        // Create a Tika instance with the default configuration
-        Tika tika = new Tika();
+/**
+ * Content handler for Plain Text, it will only extract text attributes into the output.
+ */
+public class PlainTextContentHandler extends WriteOutContentHandler {
 
-        // Parse all given files and print out the extracted
-        // text content
-        for (String file : args) {
-            String text = tika.parseToString(new File(file));
-            System.out.print(text);
-        }
+    /**
+     * Creates a content handler that writes XHTML body character events to
+     * the given writer.
+     *
+     * @param writer writer
+     */
+    public PlainTextContentHandler(Writer writer) {
+        super(writer);
     }
+
 }

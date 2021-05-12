@@ -9,13 +9,21 @@ Why this version ?
 -----------------
 
 For a Knowledge mining project, my team were looking to have a consistent representation of embedded images in XHTML output. 
-To give you an example, the embedded images links for PowerPoint were missing but the images links for PDF were there.
+To give you an example, the embedded images links for PowerPoint were missing while the images links for PDF were there.
 
 This version is trying to harmonize the way embedded images are showing up in the XHTML in a nutshell. 
 
 Once stabilized our plan is to propose our changes to the Apache Tika community.
 
 Main contact : [puthurr@gmail.com](mailto:puthurr@gmail.com)
+
+## Tika project
+
+This project doesn't contain all Tika projects modules, only those necessary to run a tika server.
+
+The tika server includes PDFBOX [additional components](https://pdfbox.apache.org/2.0/dependencies.html#optional-components). See tika-server pom.xml for actual dependencies. 
+
+**Current Tika base Version is 1.26 (May 2021)**
 
 ## Added Features Set 
 

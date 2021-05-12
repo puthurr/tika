@@ -31,16 +31,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.ListIterator;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
+import java.util.*;
 
 import org.apache.commons.io.IOExceptionWithCause;
 import org.apache.commons.io.IOUtils;
@@ -137,10 +128,11 @@ class AbstractPDF2XHTML extends PDFTextStripper {
     };
 
     /**
-     * Maximum recursive depth during AcroForm processing.
-     * Prevents theoretical AcroForm recursion bomb.
+     * Maximum recursive depth to prevent cycles/recursion bombs.
+     * This applies to AcroForm processing and processing
+     * the embedded document tree.
      */
-    private final static int MAX_ACROFORM_RECURSIONS = 10;
+    private final static int MAX_RECURSION_DEPTH = 100;
 
     private final static TesseractOCRConfig DEFAULT_TESSERACT_CONFIG = new TesseractOCRConfig();
 
@@ -217,6 +209,10 @@ class AbstractPDF2XHTML extends PDFTextStripper {
             supportedTypes = embeddedParser.getSupportedTypes(context);
         }
 
+        if (supportedTypes == null || supportedTypes.size() == 0) {
+            return;
+        }
+
         if (supportedTypes.contains(XMP_MEDIA_TYPE)) {
             //try the main metadata
             if (pdfDocument.getDocumentCatalog().getMetadata() != null) {
@@ -241,8 +237,8 @@ class AbstractPDF2XHTML extends PDFTextStripper {
         }
 
         //now try the xfa
-        if (pdfDocument.getDocumentCatalog().getAcroForm() != null &&
-            pdfDocument.getDocumentCatalog().getAcroForm().getXFA() != null) {
+        if (pdfDocument.getDocumentCatalog().getAcroForm(null) != null &&
+            pdfDocument.getDocumentCatalog().getAcroForm(null).getXFA() != null) {
 
             Metadata xfaMetadata = new Metadata();
             xfaMetadata.set(Metadata.CONTENT_TYPE, XFA_MEDIA_TYPE.toString());
@@ -251,7 +247,7 @@ class AbstractPDF2XHTML extends PDFTextStripper {
                     supportedTypes.contains(XFA_MEDIA_TYPE)) {
                 byte[] bytes = null;
                 try {
-                    bytes = pdfDocument.getDocumentCatalog().getAcroForm().getXFA().getBytes();
+                    bytes = pdfDocument.getDocumentCatalog().getAcroForm(null).getXFA().getBytes();
                 } catch (IOException e) {
                     EmbeddedDocumentUtil.recordEmbeddedStreamException(e, parentMetadata);
                 }
@@ -295,32 +291,48 @@ class AbstractPDF2XHTML extends PDFTextStripper {
 
     private void extractEmbeddedDocuments(PDDocument document)
             throws IOException, SAXException, TikaException {
-            PDDocumentNameDictionary namesDictionary =
-                    new PDDocumentNameDictionary(document.getDocumentCatalog());
-            PDEmbeddedFilesNameTreeNode efTree = namesDictionary.getEmbeddedFiles();
-            if (efTree == null) {
-                return;
-            }
+        PDDocumentNameDictionary namesDictionary =
+                new PDDocumentNameDictionary(document.getDocumentCatalog());
+        PDEmbeddedFilesNameTreeNode efTree = namesDictionary.getEmbeddedFiles();
 
-        Map<String, PDComplexFileSpecification> embeddedFileNames = efTree.getNames();
-        //For now, try to get the embeddedFileNames out of embeddedFiles or its kids.
-        //This code follows: pdfbox/examples/pdmodel/ExtractEmbeddedFiles.java
-        //If there is a need we could add a fully recursive search to find a non-null
-        //Map<String, COSObjectable> that contains the doc info.
-        if (embeddedFileNames != null) {
-            processEmbeddedDocNames(embeddedFileNames);
-        } else {
-            List<PDNameTreeNode<PDComplexFileSpecification>> kids = efTree.getKids();
-            if (kids == null) {
-                return;
-            }
-            for (PDNameTreeNode<PDComplexFileSpecification> node : kids) {
-                embeddedFileNames = node.getNames();
-                if (embeddedFileNames != null) {
-                    processEmbeddedDocNames(embeddedFileNames);
-                }
+        if (efTree == null) {
+            return;
+        }
+
+        //Set<COSObjectKey> seen = new HashSet<>();
+
+        Map<String, PDComplexFileSpecification> embeddedFileNames = new HashMap<>();
+        int depth = 0;
+        //recursively find embedded files
+        extractFilesfromEFTree(efTree, embeddedFileNames, depth);
+        processEmbeddedDocNames(embeddedFileNames);
+    }
+
+    private void extractFilesfromEFTree(PDNameTreeNode efTree, Map<String,
+            PDComplexFileSpecification> embeddedFileNames, int depth) throws IOException {
+        if (depth > MAX_RECURSION_DEPTH) {
+            throw new IOException("Hit max recursion depth");
+        }
+        Map<String, PDComplexFileSpecification> names = null;
+        try {
+            names = efTree.getNames();
+        } catch (IOException e) {
+            //LOG?
+        }
+        if (names != null) {
+            for (Map.Entry<String, PDComplexFileSpecification> e : names.entrySet()) {
+                embeddedFileNames.put(e.getKey(), e.getValue());
             }
         }
+
+        List<PDNameTreeNode<PDComplexFileSpecification>> kids = efTree.getKids();
+        if (kids == null) {
+            return;
+        } else {
+            for (PDNameTreeNode<PDComplexFileSpecification> node : kids) {
+                extractFilesfromEFTree(node, embeddedFileNames, depth+1);
+            }
+       }
     }
 
     private void processDoc(String name, PDFileSpecification spec, AttributesImpl attributes) throws TikaException, SAXException, IOException {
@@ -481,17 +493,19 @@ class AbstractPDF2XHTML extends PDFTextStripper {
 
                 if (annotation instanceof PDAnnotationFileAttachment) {
                     PDAnnotationFileAttachment fann = (PDAnnotationFileAttachment) annotation;
-                    PDComplexFileSpecification fileSpec = (PDComplexFileSpecification) fann.getFile();
-                    try {
-                        AttributesImpl attributes = new AttributesImpl();
-                        attributes.addAttribute("", "source", "source", "CDATA", "annotation");
-                        extractMultiOSPDEmbeddedFiles(fann.getAttachmentName(), fileSpec, attributes);
-                    } catch (SAXException e) {
-                        throw new IOExceptionWithCause("file embedded in annotation sax exception", e);
-                    } catch (TikaException e) {
-                        throw new IOExceptionWithCause("file embedded in annotation tika exception", e);
-                    } catch (IOException e) {
-                        handleCatchableIOE(e);
+                    if (fann.getFile() instanceof PDComplexFileSpecification) {
+                        PDComplexFileSpecification fileSpec = (PDComplexFileSpecification) fann.getFile();
+                        try {
+                            AttributesImpl attributes = new AttributesImpl();
+                            attributes.addAttribute("", "source", "source", "CDATA", "annotation");
+                            extractMultiOSPDEmbeddedFiles(fann.getAttachmentName(), fileSpec, attributes);
+                        } catch (SAXException e) {
+                            throw new IOExceptionWithCause("file embedded in annotation sax exception", e);
+                        } catch (TikaException e) {
+                            throw new IOExceptionWithCause("file embedded in annotation tika exception", e);
+                        } catch (IOException e) {
+                            handleCatchableIOE(e);
+                        }
                     }
                 } else if (annotation instanceof PDAnnotationWidget) {
                     handleWidget((PDAnnotationWidget)annotation);
@@ -749,7 +763,7 @@ class AbstractPDF2XHTML extends PDFTextStripper {
         if (catalog == null)
             return;
 
-        PDAcroForm form = catalog.getAcroForm();
+        PDAcroForm form = catalog.getAcroForm(null);
         if (form == null)
             return;
 
@@ -809,8 +823,8 @@ class AbstractPDF2XHTML extends PDFTextStripper {
     private void processAcroField(PDField field, final int currentRecursiveDepth)
             throws SAXException, IOException, TikaException {
 
-        if (currentRecursiveDepth >= MAX_ACROFORM_RECURSIONS) {
-            return;
+        if (currentRecursiveDepth >= MAX_RECURSION_DEPTH) {
+            throw new IOException("Hit max recursion depth.");
         }
 
         PDFormFieldAdditionalActions pdFormFieldAdditionalActions = field.getActions();
