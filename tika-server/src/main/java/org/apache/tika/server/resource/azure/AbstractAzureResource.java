@@ -1,13 +1,12 @@
 package org.apache.tika.server.resource.azure;
 
-import com.azure.storage.blob.BlobServiceClient;
-
 import com.azure.storage.blob.BlobContainerClient;
 import com.azure.storage.blob.BlobServiceClient;
 import com.azure.storage.blob.BlobServiceClientBuilder;
 import com.azure.storage.blob.models.BlobErrorCode;
 import com.azure.storage.blob.models.BlobStorageException;
-import javax.ws.rs.core.HttpHeaders;
+import org.apache.commons.codec.binary.Base64;
+
 import javax.ws.rs.core.MultivaluedMap;
 
 public class AbstractAzureResource {
@@ -16,6 +15,7 @@ public class AbstractAzureResource {
 
     protected static final String AZURE_CONTAINER = "X-TIKA-AZURE-CONTAINER";
     protected static final String AZURE_CONTAINER_DIRECTORY = "X-TIKA-AZURE-CONTAINER-DIRECTORY";
+    protected static final String AZURE_CONTAINER_DIRECTORY_BASE64ENCODED = "X-TIKA-AZURE-CONTAINER-DIRECTORY-BASE64ENCODED";
     protected static final String AZURE_METADATA_PREFIX = "X-TIKA-AZURE-META-";
 
     // Retrieve the connection string for use with the application. The storage
@@ -79,9 +79,14 @@ public class AbstractAzureResource {
 
     protected String GetContainerDirectory(MultivaluedMap<String, String> headers){
         String containerDirectory = null ;
+
         if ( headers.containsKey(AZURE_CONTAINER_DIRECTORY) )
         {
             containerDirectory = headers.getFirst(AZURE_CONTAINER_DIRECTORY);
+
+            if ( headers.containsKey(AZURE_CONTAINER_DIRECTORY_BASE64ENCODED) ) {
+                containerDirectory = new String(Base64.decodeBase64(containerDirectory.getBytes()));
+            }
         }
         return containerDirectory;
     }
