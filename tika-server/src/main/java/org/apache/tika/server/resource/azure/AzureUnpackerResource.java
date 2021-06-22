@@ -305,6 +305,11 @@ public class AzureUnpackerResource extends AbstractAzureResource {
                     }
                 }
             }
+
+            // Force a gc every 50 embedded objects.
+            if ( (count.intValue() % 50) == 0 ) {
+                System.gc();
+            }
         }
 
         private String getFinalName(String name, Map<String, String> zout) {
