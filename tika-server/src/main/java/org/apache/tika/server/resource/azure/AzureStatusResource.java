@@ -55,8 +55,8 @@ public class AzureStatusResource extends AbstractAzureResource {
         h.append("<ul>");
         Map<String, String> env = System.getenv();
         for (String envName : env.keySet()) {
-            if ( envName.equals(AZURE_STORAGE_CONNECTION_STRING)) {
-                h.append("<li>"+envName+" : <secured> </li>");
+            if ( envName.indexOf(AZURE_STORAGE_CONNECTION_STRING) > -1 || envName.indexOf("KEY") > -1 ) {
+                h.append("<li>"+envName+" : secured </li>");
             }
             else{
                 h.append("<li>"+envName+" : " +env.get(envName)+"</li>");

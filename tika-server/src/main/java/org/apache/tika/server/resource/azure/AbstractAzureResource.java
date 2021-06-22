@@ -8,6 +8,8 @@ import com.azure.storage.blob.models.BlobStorageException;
 import org.apache.commons.codec.binary.Base64;
 
 import javax.ws.rs.core.MultivaluedMap;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 public class AbstractAzureResource {
     // AZURE
@@ -29,7 +31,7 @@ public class AbstractAzureResource {
     /* Create a new BlobServiceClient with a connection string */
     protected static BlobServiceClient blobServiceClient;
 
-    protected BlobServiceClient AcquireBlobServiceClient()
+    protected void AcquireBlobServiceClient()
     {
         if (connectStr != null) {
             blobServiceClient = new BlobServiceClientBuilder()
@@ -37,7 +39,6 @@ public class AbstractAzureResource {
                     .buildClient();
         }
 
-        return blobServiceClient;
     }
 
     protected BlobContainerClient AcquireBlobContainerClient(String containerName) throws BlobStorageException{
@@ -45,14 +46,14 @@ public class AbstractAzureResource {
         BlobContainerClient containerClient = null;
 
         try {
-            if ( this.blobServiceClient == null )
+            if ( blobServiceClient == null )
             {
                 this.AcquireBlobServiceClient();
             }
 
             if ( blobServiceClient != null )
             {
-                containerClient = this.blobServiceClient.createBlobContainer(containerName);
+                containerClient = blobServiceClient.createBlobContainer(containerName);
             }
 
         } catch (BlobStorageException ex) {
@@ -85,7 +86,7 @@ public class AbstractAzureResource {
             containerDirectory = headers.getFirst(AZURE_CONTAINER_DIRECTORY);
 
             if ( headers.containsKey(AZURE_CONTAINER_DIRECTORY_BASE64ENCODED) ) {
-                containerDirectory = new String(Base64.decodeBase64(containerDirectory.getBytes()));
+                containerDirectory = new String(Base64.decodeBase64(containerDirectory.getBytes(StandardCharsets.UTF_8)),StandardCharsets.UTF_8);
             }
         }
         return containerDirectory;

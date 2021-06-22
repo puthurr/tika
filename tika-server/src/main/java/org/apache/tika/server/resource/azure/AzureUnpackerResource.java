@@ -20,17 +20,13 @@ package org.apache.tika.server.resource.azure;
 import com.azure.storage.blob.BlobClient;
 import com.azure.storage.blob.BlobContainerClient;
 import com.azure.storage.blob.BlobServiceClientBuilder;
-import com.azure.storage.blob.models.BlobErrorCode;
 import com.azure.storage.blob.models.BlobHttpHeaders;
 import com.azure.storage.blob.models.BlobStorageException;
+import com.azure.storage.blob.models.ParallelTransferOptions;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.mutable.MutableInt;
 import org.apache.poi.poifs.filesystem.*;
-import org.apache.poi.util.IOUtils;
-import org.apache.tika.exception.TikaMemoryLimitException;
 import org.apache.tika.extractor.EmbeddedDocumentExtractor;
-import org.apache.tika.io.BoundedInputStream;
-import org.apache.tika.io.IOExceptionWithCause;
 import org.apache.tika.io.TikaInputStream;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.metadata.TikaMetadataKeys;
@@ -59,8 +55,6 @@ import java.io.*;
 import java.util.*;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
-
-import com.azure.storage.blob.BlobServiceClient;
 
 @Path("/azure-unpack")
 public class AzureUnpackerResource extends AbstractAzureResource {
@@ -179,6 +173,10 @@ public class AzureUnpackerResource extends AbstractAzureResource {
         if (count.intValue() == 0 && !saveAll) {
             throw new WebApplicationException(Response.Status.NO_CONTENT);
         }
+
+        // Ask for GC whenever the JVM wants to execute.
+        System.gc();
+
         // Add the document metadata to index 0 and return
         metadataList.add(0, ParserUtils.cloneMetadata(metadata));
         // Wrap into a MetadataList object
@@ -212,14 +210,16 @@ public class AzureUnpackerResource extends AbstractAzureResource {
 
         public void parseEmbedded(InputStream inputStream, ContentHandler contentHandler, Metadata metadata, boolean b)
                 throws SAXException, IOException {
-            ByteArrayOutputStream bos = new ByteArrayOutputStream();
-            BoundedInputStream bis = new BoundedInputStream(MAX_ATTACHMENT_BYTES, inputStream);
-            IOUtils.copy(bis, bos);
-            if (bis.hasHitBound()) {
-                throw new IOExceptionWithCause(
-                        new TikaMemoryLimitException(MAX_ATTACHMENT_BYTES+1, MAX_ATTACHMENT_BYTES));
-            }
-            byte[] data = bos.toByteArray();
+
+//            ByteArrayOutputStream bos = new ByteArrayOutputStream();
+//            BoundedInputStream bis = new BoundedInputStream(MAX_ATTACHMENT_BYTES, inputStream);
+//            IOUtils.copy(bis, bos);
+//            if (bis.hasHitBound()) {
+//                throw new IOExceptionWithCause(
+//                        new TikaMemoryLimitException(MAX_ATTACHMENT_BYTES+1, MAX_ATTACHMENT_BYTES));
+//            }
+//            byte[] data = bos.toByteArray();
+            byte[] data = org.apache.commons.io.IOUtils.toByteArray(inputStream);
 
             String name = metadata.get(TikaMetadataKeys.RESOURCE_NAME_KEY);
             String contentType = metadata.get(org.apache.tika.metadata.HttpHeaders.CONTENT_TYPE);
@@ -275,7 +275,11 @@ public class AzureUnpackerResource extends AbstractAzureResource {
                 BlobClient blobClient = containerClient.getBlobClient(containerDirectory +"/" + finalName);
                 BlobHttpHeaders sysproperties = new BlobHttpHeaders();
                 sysproperties.setContentType(contentType);
-                blobClient.uploadWithResponse(new ByteArrayInputStream(data), data.length,null,sysproperties,blobMetadata,null,null,null,null );
+
+                Long blockSize = 10L * 1024L * 1024L; // 10 MB;
+                ParallelTransferOptions parallelTransferOptions = new ParallelTransferOptions().setBlockSizeLong(blockSize).setMaxConcurrency(5);
+
+                blobClient.uploadWithResponse(new ByteArrayInputStream(data), data.length,parallelTransferOptions,sysproperties,blobMetadata,null,null,null,null );
 
                 count.increment();
             } else {
@@ -293,6 +297,10 @@ public class AzureUnpackerResource extends AbstractAzureResource {
                         BlobClient blobClient = containerClient.getBlobClient(containerDirectory +"/" + finalName);
                         BlobHttpHeaders sysproperties = new BlobHttpHeaders();
                         sysproperties.setContentType(contentType);
+
+                        Long blockSize = 10L * 1024L * 1024L; // 10 MB;
+                        ParallelTransferOptions parallelTransferOptions = new ParallelTransferOptions().setBlockSizeLong(blockSize).setMaxConcurrency(5);
+
                         blobClient.uploadWithResponse(new ByteArrayInputStream(bos2.toByteArray()), bos2.toByteArray().length,null,sysproperties,blobMetadata,null,null,null,null );
                     }
                 }
