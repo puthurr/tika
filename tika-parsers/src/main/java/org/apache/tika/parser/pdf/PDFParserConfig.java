@@ -166,6 +166,9 @@ public class PDFParserConfig extends AbstractParserConfig implements Serializabl
     // Extract all PDF pages as images.
     private boolean allPagesAsImages = false;
 
+    // Extract the first page as image for creating a PDF cover
+    private boolean firstPageAsCoverImage = false;
+
     // Some single page PDF are actual scanned image but different scanners
     // may create graphics or separate the image from the text themselves.
     // This flag will convert the single page PDF into a single image. regardless of embedded images.
@@ -674,6 +677,21 @@ public class PDFParserConfig extends AbstractParserConfig implements Serializabl
     }
 
     /**
+     * @return firstPageAsCoverImage
+     */
+    public boolean getFirstPageAsCoverImage() {
+        return firstPageAsCoverImage;
+    }
+
+    /**
+     * Set the flag to extract all pages in a PDF as images.
+     * @param firstPageAsCoverImage
+     */
+    public void setFirstPageAsCoverImage(boolean firstPageAsCoverImage) {
+        this.firstPageAsCoverImage = firstPageAsCoverImage;
+    }
+
+    /**
      * @return PDF with a single page could be extracted as one rendered-page image
      */
     public boolean getSinglePagePDFAsImage() {
@@ -1024,6 +1042,7 @@ public class PDFParserConfig extends AbstractParserConfig implements Serializabl
 
         // PUTHURR
         if (getAllPagesAsImages() != (config.getAllPagesAsImages())) return false;
+        if (getFirstPageAsCoverImage() != (config.getFirstPageAsCoverImage())) return false;
         if (getSinglePagePDFAsImage() != (config.getSinglePagePDFAsImage())) return false;
         if (getStripedImagesHandling() != (config.getStripedImagesHandling())) return false;
         if (getStripedImagesThreshold() != (config.getStripedImagesThreshold())) return false;
@@ -1059,6 +1078,7 @@ public class PDFParserConfig extends AbstractParserConfig implements Serializabl
         result = 31 * result + Long.valueOf(getMaxMainMemoryBytes()).hashCode();
         // PUTHURR
         result = 31 * result + (getAllPagesAsImages()? 1 : 0);
+        result = 31 * result + (getFirstPageAsCoverImage()? 1 : 0);
         result = 31 * result + (getSinglePagePDFAsImage()? 1 : 0);
         result = 31 * result + (getStripedImagesHandling()? 1 : 0);
         result = 31 * result + getStripedImagesThreshold();
@@ -1094,6 +1114,7 @@ public class PDFParserConfig extends AbstractParserConfig implements Serializabl
                 ", maxMainMemoryBytes=" + maxMainMemoryBytes +
                 // puthurr
                 ", allPagesAsImages=" + allPagesAsImages +
+                ", firstPageAsCoverImage=" + firstPageAsCoverImage +
                 ", singlePagePDFAsImage=" + singlePagePDFAsImage +
                 ", stripedImagesHandling=" + stripedImagesHandling +
                 ", stripedImagesThreshold=" + stripedImagesThreshold +

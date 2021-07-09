@@ -233,6 +233,20 @@ class PDF2XHTML extends AbstractPDF2XHTML {
         // Initialized with the config parameter allPagesAsImages.
         boolean convertPageToImage = config.getAllPagesAsImages();
 
+        if ( convertPageToImage )
+        {
+            processPageAsImage(page);
+            metadata.add(TikaCoreProperties.TIKA_META_PREFIX+"PDFAllPagesAsImages", String.valueOf(true));
+            return;
+        }
+
+        if ( config.getFirstPageAsCoverImage() && pageIndex == 0 )
+        {
+            processPageAsImage(page);
+            metadata.add(TikaCoreProperties.TIKA_META_PREFIX+"PDFFirstPageAsCoverImage", String.valueOf(true));
+            return;
+        }
+
         // puthurr - striped-scanned images ( single image is split into multiple streams in the PDF)
         if ( page.hasContents() && config.getStripedImagesHandling() )
         {
